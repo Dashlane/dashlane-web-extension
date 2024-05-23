@@ -1,0 +1,23 @@
+import { PremiumStatusSpace } from '@dashlane/communication';
+export const mockNodePremiumSpace: PremiumStatusSpace = {
+    associatedEmail: 'mock',
+    billingAdmins: [{ login: 'mock' }],
+    color: 'mock',
+    companyName: 'mock',
+    info: { settingName: 'mock' },
+    invitationDate: 1224,
+    isBillingAdmin: false,
+    isSSOUser: false,
+    isTeamAdmin: false,
+    joinDate: 1224,
+    letter: 'mock',
+    membersNumber: 123,
+    planType: 'mock',
+    revokeDate: 123,
+    status: 'mock',
+    teamAdmins: [{ login: 'mock' }],
+    teamId: 'mock',
+    teamName: 'mock',
+    tier: 'business',
+    shouldDelete: false,
+};

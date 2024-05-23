@@ -1,0 +1,14 @@
+export const DASHLANE_DOWNLOAD_EXTENSION_URL = '*****';
+export const DASHLANE_BLOG_URL = '*****';
+export const DASHLANE_HELP_CENTER = '*****';
+export const LEAKED_MASTER_PASSWORD_HC_ARTICLE = `${DASHLANE_HELP_CENTER}/articles/360000038180`;
+export const PASSWORD_LESS_HELP_ARTICLE = '*****';
+export const WEAK_MASTER_PASSWORD_HC_ARTICLE = `${DASHLANE_HELP_CENTER}/articles/115003106029`;
+export const DASHLANE_CONTACT_SUPPORT_WITH_CHATBOT = `${DASHLANE_HELP_CENTER}/articles/4516905332370#chatbot`;
+export const DASHLANE_ARTICLE_WHAT_IS_VPN = '*****';
+export const DASHLANE_ARTICLE_SET_UP_VPN = '*****';
+export const DASHLANE_ARTICLE_HOTSPOT_SHIELD_VPN = '*****';
+export const DASHLANE_ARTICLE_DELETE_YOUR_ACCOUNT = '*****';
+export const DASHLANE_ARTICLE_RESET_YOUR_ACCOUNT = '*****';
+export const DASHLANE_ADMIN_HELP_CENTER = '*****';
+export const DASHLANE_B2B_DIRECT_BUY = '*****';

@@ -1,0 +1,5 @@
+export enum AccountRecoveryStep {
+    VERIFY_ACCOUNT,
+    CREATE_MASTER_PASSWORD,
+    ACCOUNT_RECOVERY_REQUEST
+}

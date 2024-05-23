@@ -1,0 +1,47 @@
+export const I18N_OTP_ERROR_KEYS = {
+    EMPTY_OTP: 'webapp_login_form_password_fieldset_security_code_error_empty_otp',
+    OTP_NOT_VALID: 'webapp_login_form_password_fieldset_security_code_error_otp_not_valid',
+    OTP_ALREADY_USED: 'webapp_login_form_password_fieldset_security_code_error_otp_already_used',
+    OTP_TOO_MANY_ATTEMPTS: 'webapp_login_form_password_fieldset_security_code_error_token_too_many_attempts',
+    UNKNOWN_ERROR: 'webapp_login_form_password_fieldset_security_code_error_unkown',
+    THROTTLED: 'webapp_login_form_password_fieldset_error_throttled',
+    NETWORK_ERROR: 'webapp_login_form_password_fieldset_network_error_offline',
+};
+export const I18N_TOKEN_ERROR_KEYS = {
+    EMPTY_TOKEN: 'webapp_login_form_password_fieldset_security_code_error_empty_token',
+    TOKEN_NOT_VALID: 'webapp_account_security_settings_two_factor_authentication_turn_off_authenticator_invalid_security_code',
+    REGISTER_DEVICE_FAILED: 'webapp_login_form_password_fieldset_security_code_error_token_not_valid',
+    TOKEN_LOCKED: 'webapp_login_form_password_fieldset_security_code_error_token_locked',
+    TOKEN_TOO_MANY_ATTEMPTS: 'webapp_login_form_password_fieldset_security_code_error_token_too_many_attempts',
+    TOKEN_ACCOUNT_LOCKED: 'webapp_login_form_password_fieldset_security_code_error_token_account_locked',
+    TOKEN_EXPIRED: 'webapp_login_form_password_fieldset_security_code_error_token_expired',
+    UNKNOWN_ERROR: 'webapp_login_form_password_fieldset_security_code_error_unkown',
+    THROTTLED: 'webapp_login_form_password_fieldset_error_throttled',
+    NETWORK_ERROR: 'webapp_login_form_password_fieldset_network_error_offline',
+};
+export const I18N_KEYS = {
+    CONFIRM_LOG_IN: 'webapp_login_form_password_fieldset_password_confirm_log_in',
+    FORGOT: 'webapp_login_form_password_fieldset_password_forgot',
+    SECURITY_CODE_BACKUP_CODE_ACCESS: "webapp_two_factor_authentication_cant_access_your_app",
+    SECURITY_CODE_BACKUP_CODE_DESCRIPTION: 'webapp_two_factor_authentication_use_backup_codes',
+    SECURITY_CODE_BACKUP_CODE_LABEL: "webapp_two_factor_authentication_backup_code_label",
+    SECURITY_CODE_BACKUP_CODE_LINK: "webapp_two_factor_authentication_use_backup_code",
+    SECURITY_CODE_CANT_ACCESS_BACKUP_CODES: "webapp_two_factor_authentication_cant_access_your_backup_codes",
+    SECURITY_CODE_DESCRIPTION: 'webapp_login_form_password_fieldset_security_code_description',
+    SECURITY_CODE_LINK: "webapp_two_factor_authentication_use_6_digits_code",
+    SECURITY_CODE_LOST_BACKUP_CODES: "webapp_two_factor_authentication_lost_your_backup_codes",
+    SECURITY_CODE_LOST_PHONE: "webapp_two_factor_authentication_lost_your_phone",
+    SECURITY_CODE_LOST_PHONE_LINK: "webapp_two_factor_authentication_reset_2fa",
+    SECURITY_CODE_OTP_DESCRIPTION: 'webapp_login_form_password_fieldset_security_code_otp_description',
+    SECURITY_CODE_RESENT: 'webapp_login_form_password_fieldset_security_code_resent',
+    TRUST_DEVICE: 'webapp_login_form_password_fieldset_trust_this_device',
+    TRUST_DEVICE_TOOLTIP: 'webapp_login_form_password_fieldset_trust_this_device_tooltip',
+    RESEND_TOKEN: 'webapp_login_form_password_fieldset_resend_token',
+    CANT_ACCESS_EMAIL: 'webapp_dashlane_authenticator_authentication_cant_access_your_email',
+    DIDNT_RECEIVE_CODE: 'webapp_dashlane_authenticator_authentication_didnt_receive_code',
+    USE_DASHLANE_AUTHENTICATOR_APP: 'webapp_dashlane_authenticator_authentication_use_dashlane_authenticator_app',
+};
+export const I18N_REMEMBER_ME_KEYS = {
+    LABEL: 'webapp_login_form_password_fieldset_remember_me',
+    WARNING_TEXT: 'webapp_login_form_password_fieldset_remember_me_warning_text',
+};
