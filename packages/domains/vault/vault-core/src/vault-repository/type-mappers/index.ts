@@ -1,0 +1,15 @@
+export { addressMapper } from "./address-mapper";
+export { bankAccountMapper } from "./bank-account-mapper";
+export { companyMapper } from "./company-mapper";
+export { credentialMapper } from "./credential-mapper";
+export { driversLicenseMapper } from "./drivers-license-mapper";
+export { emailMapper } from "./email-mapper";
+export { fiscalIdMapper } from "./fiscal-id-mapper";
+export { idCardMapper } from "./id-card-mapper";
+export { identityMapper } from "./identity-mapper";
+export { passportMapper } from "./passport-mapper";
+export { paymentCardMapper } from "./payment-card-mapper";
+export { phoneMapper } from "./phone-mapper";
+export { secureNoteMapper } from "./secure-note-mapper";
+export { socialSecurityIdMapper } from "./social-security-id-mapper";
+export { websiteMapper } from "./website-mapper";
