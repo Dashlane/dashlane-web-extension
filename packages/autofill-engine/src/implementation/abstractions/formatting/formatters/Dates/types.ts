@@ -1,0 +1,29 @@
+export enum DateFormat {
+  FORMAT_DD = "FORMAT_DD",
+  FORMAT_MM = "FORMAT_MM",
+  FORMAT_YY = "FORMAT_YY",
+  FORMAT_YYYY = "FORMAT_YYYY",
+  FORMAT_DD_MM = "FORMAT_DD_MM",
+  FORMAT_MM_DD = "FORMAT_MM_DD",
+  FORMAT_MM_YY = "FORMAT_MM_YY",
+  FORMAT_MM_YYYY = "FORMAT_MM_YYYY",
+  FORMAT_YY_MM = "FORMAT_YY_MM",
+  FORMAT_YYYY_MM = "FORMAT_YYYY_MM",
+  FORMAT_DD_MM_YY = "FORMAT_DD_MM_YY",
+  FORMAT_DD_MM_YYYY = "FORMAT_DD_MM_YYYY",
+  FORMAT_MM_DD_YY = "FORMAT_MM_DD_YY",
+  FORMAT_MM_DD_YYYY = "FORMAT_MM_DD_YYYY",
+  FORMAT_YYYY_MM_DD = "FORMAT_YYYY_MM_DD",
+  FORMAT_YY_MM_DD = "FORMAT_YY_MM_DD",
+}
+export enum DateSeparator {
+  SEPARATOR_NOTHING = " ",
+  SEPARATOR_DOT = ".",
+  SEPARATOR_TIRET = "-",
+  SEPARATOR_SLASH = "/",
+}
+export type ParsedDate = {
+  day?: string;
+  month?: string;
+  year?: string;
+};
