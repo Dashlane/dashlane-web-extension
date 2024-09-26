@@ -1,0 +1,76 @@
+node_modules/
+dist/
+build/
+!**/meta/build/
+!**/meta/gitlab/scripts/build/
+.cache/
+public/
+.git
+
+# PNPM
+.store/
+
+# Yarn
+# For more info, read: https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+yarn.lock
+
+# Typescript incremental build cache files
+*.tsbuildinfo
+
+# Webpack cache directories
+**/.webpack_cache/
+
+# ESLint cache
+.eslintcache
+
+# Jest coverage files
+coverage/
+test-results.json
+
+# Jest test reporters
+**/jest-stare/
+junit.xml
+test-report.html
+
+# mocha JUnit report files
+test-results.xml
+test-report.xml
+
+# karma e2e tests
+TESTS-*.xml
+
+# Sonar
+.scannerwork/
+sonar.xml
+
+# Misc
+*.log
+.DS_Store
+.idea/
+.vimrc
+
+# ignore linked documentation (They are already in the monorepo and don't need
+# to be re-included
+docs/parsed-monorepo/
+docs/api
+
+# tmp
+.pnpm-store/
+
+# Lokalise
+.lokalise
+.pnpm-store
+v8-compile-cache-0/
+
+# Mass Deploy config
+*.plist
+
+# Design System Tracking Scripts results
+ds-tracking/
+ds-adoption-report.md
