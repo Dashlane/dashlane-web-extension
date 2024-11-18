@@ -21,10 +21,7 @@ import { DataCaptureWebcardData } from "../../../Api/types/webcards/data-capture
 import { LinkedWebsiteUpdateConfirmationData } from "../../../Api/types/webcards/linked-website-update-confirmation-webcard";
 import { SavePasswordWebcardData } from "../../../Api/types/webcards/save-password-webcard";
 import { WebcardType } from "../../../Api/types/webcards/webcard-data-base";
-import {
-  checkHasLinkedWebsitesInContext,
-  checkHasSharedCollectionInSaveWebcard,
-} from "../../../config/feature-flips";
+import { checkHasSharedCollectionInSaveWebcard } from "../../../config/feature-flips";
 import {
   AutofillEngineActionsWithOptions,
   AutofillEngineActionTarget,
@@ -341,18 +338,16 @@ const capturePasswordFromPage = async (
   ) {
     return;
   }
-  if (await checkHasLinkedWebsitesInContext(context.connectors)) {
-    if (
-      await checkIfShouldBeAddedAsLinkedWebsite(
-        context,
-        actions,
-        url,
-        capturedCredentialData,
-        lastFollowUpNotificationItemId
-      )
-    ) {
-      return;
-    }
+  if (
+    await checkIfShouldBeAddedAsLinkedWebsite(
+      context,
+      actions,
+      url,
+      capturedCredentialData,
+      lastFollowUpNotificationItemId
+    )
+  ) {
+    return;
   }
   const credentialAlreadyInVault = await isCapturedCredentialAlreadyInVault(
     context,
@@ -588,18 +583,18 @@ export const captureDataFromPageHandler = async (
           { password: capturedCredentialData.capturedPassword }
         )
       );
-      if (
-        isSuccess(passwordRisks) &&
-        (passwordRisks.data.isCompromised || passwordRisks.data.isWeak)
-      ) {
+      if (isSuccess(passwordRisks)) {
+        const healthStatus = passwordRisks.data.isCompromised
+          ? "compromised"
+          : passwordRisks.data.isWeak
+          ? "weak"
+          : "safe";
         context.connectors.grapheneClient.loggedOutMonitoring.commands.sendRiskyPasswordLoggedOutLog(
           {
-            risk: passwordRisks.data.isCompromised
-              ? ActivityLogType.UserTypedCompromisedPassword
-              : ActivityLogType.UserTypedWeakPassword,
-            domain: new ParsedURL(sender.tab.url).getRootDomain(),
+            domain: new ParsedURL(sender.tab.url).getHostname(),
             dateTime: new Date().getTime(),
             uuid: uuidv4().toUpperCase(),
+            healthStatus: healthStatus,
           }
         );
       }

@@ -7,6 +7,7 @@ interface CredentialOperationTypeBase {
   readonly type: CredentialOperationType;
   readonly credentialId: string;
   readonly fullDomain: string;
+  readonly emailOrLogin: string;
 }
 interface UpdateCredentialOperation extends CredentialOperationTypeBase {
   readonly type: CredentialOperationType.UpdateCredential;

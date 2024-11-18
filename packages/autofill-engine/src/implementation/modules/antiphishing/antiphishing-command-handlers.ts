@@ -5,14 +5,7 @@ import { ParsedURL } from "@dashlane/url-parser";
 import { AuthenticatorUserVerificationSource } from "@dashlane/hermes";
 import { AutofillEngineContext } from "../../../Api/server/context";
 import {
-  checkHasNewUserVerificationForItemUnlock,
-  checkHasPhishingPrevention,
-} from "../../../config/feature-flips";
-import {
   AutofillConfirmationPasswordLessWebcardData,
-  MasterPasswordWebcardData,
-  PendingCopyOperation,
-  PendingOperationType,
   UserPasteDecision,
   UserVerificationUsageLogDetails,
   VaultIngredient,
@@ -25,7 +18,11 @@ import {
 } from "../../abstractions/messaging/action-serializer";
 import { getAutofillDataFromVault } from "../../abstractions/vault/get";
 import { HandlersForModuleCommands } from "../../commands/handlers";
-import { isPhishingPreventionWebcardMetadata } from "../../commands/private-types";
+import {
+  isPhishingPreventionWebcardMetadata,
+  PendingCopyOperation,
+  PendingOperationType,
+} from "../../commands/private-types";
 import { getAutofillProtectionContext } from "../authentication/password-protection";
 import { buildUserVerificationWebcardData } from "../authentication/user-verification/build-user-verification-webcard-data";
 import { getValueToFillFromVaultItem } from "../autofill/apply-autofill-recipe-handler";
@@ -36,8 +33,7 @@ async function followUpPasteAllowedByUser(
   actions: AutofillEngineActionsWithOptions,
   userDecision: UserPasteDecision,
   itemId: string,
-  vaultIngredient: VaultIngredient,
-  tabUrl: string
+  vaultIngredient: VaultIngredient
 ): Promise<void> {
   void context.grapheneClient.autofillSecurity.commands.disablePhishingPreventionForUrl(
     {
@@ -48,8 +44,7 @@ async function followUpPasteAllowedByUser(
   const vaultItem = await getAutofillDataFromVault(
     context,
     vaultIngredient.type,
-    itemId,
-    tabUrl
+    itemId
   );
   if (vaultItem) {
     await showFollowUpNotificationWebcard(
@@ -75,11 +70,6 @@ export const AntiPhishingCommandHandlers: HandlersForModuleCommands<
     itemId,
     vaultIngredient
   ) => {
-    const isPhishingPreventionFeatureFlipEnabled =
-      await checkHasPhishingPrevention(context.connectors);
-    if (!sender.url && !isPhishingPreventionFeatureFlipEnabled) {
-      return;
-    }
     let hostnameHash: string | undefined = undefined;
     if (vaultIngredient.type === VaultSourceType.Credential) {
       try {
@@ -126,8 +116,7 @@ export const AntiPhishingCommandHandlers: HandlersForModuleCommands<
     const vaultItem = await getAutofillDataFromVault(
       context,
       ingredient.type,
-      itemId,
-      sender.tab.url
+      itemId
     );
     if (!vaultItem) {
       return;
@@ -144,44 +133,27 @@ export const AntiPhishingCommandHandlers: HandlersForModuleCommands<
         vaultIngredient: ingredient,
         previouslyCopiedProperties,
       };
-      if (await checkHasNewUserVerificationForItemUnlock(context.connectors)) {
-        const isSSOUser = await context.connectors.carbon.getIsSSOUser();
-        const accountType =
-          await context.connectors.carbon.getAccountAuthenticationType();
-        const isPasswordLessUser =
-          isSSOUser || accountType !== "masterPassword";
-        const usageLogDetails: UserVerificationUsageLogDetails = {
-          source: AuthenticatorUserVerificationSource.CopyVaultItem,
-        };
-        const webcardData = isPasswordLessUser
-          ? ({
-              webcardId,
-              webcardType: WebcardType.AutofillConfirmationPasswordLess,
-              pendingCopyOperation,
-              formType: "login",
-            } as AutofillConfirmationPasswordLessWebcardData)
-          : await buildUserVerificationWebcardData(
-              context,
-              pendingCopyOperation,
-              usageLogDetails,
-              webcardId
-            );
-        actions.updateWebcard(
-          AutofillEngineActionTarget.MainFrame,
-          webcardData
-        );
-      } else {
-        const webcard: MasterPasswordWebcardData = {
-          webcardType: WebcardType.MasterPassword,
-          webcardId,
-          formType: "login",
-          neverAskAgainMode: itemProtectionContext.neverAskAgainMode,
-          userLogin: (await context.connectors.carbon.getUserLogin()) ?? "",
-          wrongPassword: false,
-          pendingOperation: pendingCopyOperation,
-        };
-        actions.updateWebcard(AutofillEngineActionTarget.SenderFrame, webcard);
-      }
+      const isSSOUser = await context.connectors.carbon.getIsSSOUser();
+      const accountType =
+        await context.connectors.carbon.getAccountAuthenticationType();
+      const isPasswordLessUser = isSSOUser || accountType !== "masterPassword";
+      const usageLogDetails: UserVerificationUsageLogDetails = {
+        source: AuthenticatorUserVerificationSource.CopyVaultItem,
+      };
+      const webcardData = isPasswordLessUser
+        ? ({
+            webcardId,
+            webcardType: WebcardType.AutofillConfirmationPasswordLess,
+            pendingCopyOperation,
+            formType: "login",
+          } as AutofillConfirmationPasswordLessWebcardData)
+        : await buildUserVerificationWebcardData(
+            context,
+            pendingCopyOperation,
+            usageLogDetails,
+            webcardId
+          );
+      actions.updateWebcard(AutofillEngineActionTarget.MainFrame, webcardData);
     } else {
       const valueToCopy = await getValueToFillFromVaultItem(context, {
         ingredient,
@@ -202,10 +174,7 @@ export const AntiPhishingCommandHandlers: HandlersForModuleCommands<
     userDecision,
     metadata
   ) => {
-    const hasPhishingPreventionFF = await checkHasPhishingPrevention(
-      context.connectors
-    );
-    if (!sender.url || !sender.tab?.url || !hasPhishingPreventionFF) {
+    if (!sender.url || !sender.tab?.url) {
       return;
     }
     actions.permissionToPaste(
@@ -223,8 +192,7 @@ export const AntiPhishingCommandHandlers: HandlersForModuleCommands<
         actions,
         userDecision,
         phishingMetadata.itemId,
-        phishingMetadata.vaultIngredient,
-        sender.tab.url
+        phishingMetadata.vaultIngredient
       );
     }
   },

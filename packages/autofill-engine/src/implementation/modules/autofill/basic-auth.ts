@@ -16,7 +16,7 @@ import {
 } from "../../../Api/types/logger";
 import { logException } from "../../abstractions/logs/exception-logs";
 import { getCredentialsAllowedOnThisUrl } from "./autologin";
-const basicAuthUrls = ["*****"];
+const basicAuthUrls = ["__REDACTED__"];
 const timeoutDurationMs = 3000;
 const buildStateForBasicAuth = (): State => {
   return {

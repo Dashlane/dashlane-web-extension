@@ -45,6 +45,7 @@ import {
   selectWebauthnCryptoAlgorithm,
   WebauthnCryptoAlgorithm,
 } from "./webauthn-crypto-algorithms";
+import { getAvailableUserVerificationMethods } from "../user-verification/get-available-user-verification-methods";
 export const emptyAAGUID = new Uint8Array(16).fill(0);
 export const dashlaneAAGUID = new Uint8Array([
   0x53, 0x11, 0x26, 0xd6, 0xe7, 0x17, 0x41, 0x5c, 0x93, 0x20, 0x3d, 0x9a, 0xa6,
@@ -70,10 +71,10 @@ const isAuthenticatorSelectionRequestValid = async (
   options: PublicKeyCredentialCreationOptionsJSONFuture
 ) => {
   const { authenticatorSelection, hints } = options;
+  const availableMethods = await getAvailableUserVerificationMethods(context);
   if (
     authenticatorSelection?.userVerification === "required" &&
-    (await context.connectors.carbon.getAvailableUserVerificationMethods())
-      .length === 0
+    availableMethods.length === 0
   ) {
     return false;
   }
@@ -170,6 +171,7 @@ export const webauthnCreateHandler = async (
       void logRegisterWithPasskeyEvent(
         context,
         request,
+        sender,
         CeremonyStatus.Failure,
         errorName
       );
@@ -412,6 +414,7 @@ export const webauthnCreateUserConfirmedHandler = async (
     void logRegisterWithPasskeyEvent(
       context,
       request,
+      _sender,
       CeremonyStatus.Success,
       undefined,
       msToRegistration
@@ -424,6 +427,7 @@ export const webauthnCreateUserConfirmedHandler = async (
     void logRegisterWithPasskeyEvent(
       context,
       request,
+      _sender,
       CeremonyStatus.Failure,
       errorName
     );

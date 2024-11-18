@@ -16,7 +16,7 @@ export enum DateFormat {
   FORMAT_YYYY_MM_DD = "FORMAT_YYYY_MM_DD",
   FORMAT_YY_MM_DD = "FORMAT_YY_MM_DD",
 }
-export enum DateSeparator {
+export enum DateSeparatorValue {
   SEPARATOR_NOTHING = " ",
   SEPARATOR_DOT = ".",
   SEPARATOR_TIRET = "-",

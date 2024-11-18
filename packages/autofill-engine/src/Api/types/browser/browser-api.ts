@@ -1,4 +1,5 @@
 import {
+  actionOpenPopup,
   contextMenusCreate,
   contextMenusOnClicked,
   contextMenusRemoveAll,
@@ -22,6 +23,9 @@ import {
 } from "@dashlane/webextensions-apis";
 interface Listener<T extends Function, Args extends any[] = []> {
   addListener: (callback: T, ...params: Args) => void;
+}
+interface Action {
+  openPopup: (options: chrome.action.OpenPopupOptions) => Promise<void>;
 }
 interface Tabs {
   create: typeof tabsCreate;
@@ -89,6 +93,7 @@ interface ContextMenus {
   removeAll: typeof contextMenusRemoveAll;
 }
 export interface BrowserApi {
+  action: Action;
   runtime: Runtime;
   storage: Storage;
   tabs: Tabs;
@@ -100,6 +105,9 @@ export class WebExtensionApiManager {
   protected browserApi: BrowserApi;
   constructor() {
     this.browserApi = {
+      action: {
+        openPopup: actionOpenPopup,
+      },
       runtime: {
         connect: runtimeConnect,
         getURL: runtimeGetURL,

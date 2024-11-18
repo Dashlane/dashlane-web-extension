@@ -22,7 +22,6 @@ import {
 } from "./autofill";
 import { AutofillEngineClientType } from "./client-type";
 import { DataCaptureWebcardItem } from "./data-capture";
-import { PendingOperation } from "./pending-operation";
 import {
   AssertionCredentialJSON,
   WebauthnCreationRequest,
@@ -40,6 +39,7 @@ import {
   WebcardMetadataType,
 } from "./webcards/webcard-data-base";
 import { WebcardItem } from "./webcards/webcard-item";
+import { SendPropertyCopiedActivityLogParams } from "../../implementation/abstractions/logs/activity-logs";
 export enum UserVerificationResult {
   Success = "success",
   Failure = "failure",
@@ -70,6 +70,7 @@ export class AutofillEngineCommands {
     settings: AutofillDropdownWebcardPasswordGenerationSettings
   ): void {}
   validateMasterPassword(password: string): void {}
+  validatePinCode(pinCode: string): void {}
   resetProtectedItemsTimerAndApplyRecipe(
     autofillDetails: AutofillDetails
   ): void {}
@@ -104,6 +105,7 @@ export class AutofillEngineCommands {
     webcardId: string,
     credentialInformation: {
       id: string;
+      title: string;
       newPassword: string;
       onlyForThisSubdomain: boolean;
       spaceId?: string;
@@ -148,6 +150,7 @@ export class AutofillEngineCommands {
   getUserFeatureFlips(): void {}
   openNewTabWithUrl(url: string): void {}
   openWebapp(params: OpenParams): void {}
+  openPopup(params: chrome.action.OpenPopupOptions): void {}
   logFormSubmit(
     logInformation: FormSubmitLogOptions,
     formInformation: FormInformation
@@ -213,9 +216,8 @@ export class AutofillEngineCommands {
     metadata: WebcardMetadataStore,
     webcardId: string
   ): void {}
-  userValidatedMasterPassword(
-    pendingOperationData: PendingOperation,
-    webcardId: string
-  ): void {}
   removeLinkedWebsite(credentialId: string, linkedWebsite: string): void {}
+  sendPropertyCopiedActivityLog(
+    params: SendPropertyCopiedActivityLogParams
+  ): void {}
 }

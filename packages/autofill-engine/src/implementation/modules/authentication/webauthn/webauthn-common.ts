@@ -3,8 +3,6 @@ import {
   PasskeyItemView,
   PremiumStatusSpaceItemView,
   PublicKeyCredentialDescriptorJSON,
-  PublicKeyCredentialRequestOptionsJSONFuture,
-  UserVerificationMethods,
   VaultAutofillView,
 } from "@dashlane/communication";
 import { base64UrlToArrayBuffer } from "@dashlane/framework-encoding";
@@ -16,11 +14,13 @@ import { ParsedURL } from "@dashlane/url-parser";
 import { AutofillEngineContext } from "../../../../Api/server/context";
 import { BrowserApi } from "../../../../Api/types/browser/browser-api";
 import { UserVerificationUsageLogDetails } from "../../../../Api/types/webcards/user-verification-webcard";
-import { isWebauthnRequestWebcardMetadata } from "../../../../implementation/commands/private-types";
 import {
-  AbstractWebcardMetadata,
+  isWebauthnRequestWebcardMetadata,
   PendingOperationType,
   PendingWebauthnRequestOperation,
+} from "../../../../implementation/commands/private-types";
+import {
+  AbstractWebcardMetadata,
   WebauthnErrorName,
   WebauthnOperationType,
   WebauthnRequest,
@@ -39,8 +39,10 @@ import {
 import { BROWSER_MAIN_FRAME_ID } from "../../../abstractions/messaging/common";
 import { getFormattedWebcardItem } from "../../autofill/get-formatted-webcard-item";
 import { getPremiumStatusSpaceItemView } from "../../autofill/user-focus-on-element-handler";
-import { buildUserVerificationWebcardData } from "../user-verification/build-user-verification-webcard-data";
 import { getAllPasskeysForThisDomainFromVault } from "../vault";
+import { getAvailableUserVerificationMethods } from "../user-verification/get-available-user-verification-methods";
+import { buildUserVerificationWebcardData } from "../user-verification/build-user-verification-webcard-data";
+import { UserVerificationMethods } from "@dashlane/authentication-contracts";
 export class WebauthnUseFallback extends Error {
   public readonly errorName?: WebauthnErrorName;
   constructor(options?: { logError?: WebauthnErrorName }) {
@@ -105,7 +107,7 @@ export const getEffectiveDomainForOrigin = (
       requestOrigin: string;
     }
   | undefined => {
-  if (!requestOrigin?.startsWith("*****")) {
+  if (!requestOrigin?.startsWith("__REDACTED__")) {
     return;
   }
   const parsedRequestOrigin = new ParsedURL(requestOrigin);
@@ -233,6 +235,7 @@ export const webauthnUserCanceledHandler = (
       void logRegisterWithPasskeyEvent(
         context,
         request,
+        _sender,
         CeremonyStatus.Cancelled
       );
       actions.webauthnCreateResponse(
@@ -245,6 +248,7 @@ export const webauthnUserCanceledHandler = (
       void logAuthenticateWithPasskeyEvent(
         context,
         request,
+        _sender,
         CeremonyStatus.Cancelled
       );
       actions.webauthnGetResponse(
@@ -321,23 +325,32 @@ export const getCredentialIdFormat = (
 };
 export const generateRandomizedTypedArray = (byteLength: number) =>
   crypto.getRandomValues(new Uint8Array(byteLength));
+const isValidUserVerificationRequirement = (value: string) =>
+  ["discouraged", "preferred", "required"].includes(value);
 export const handleUserVerification = async (
   context: AutofillEngineContext,
   actions: AutofillEngineActionsWithOptions,
   request: WebauthnRequest,
   confirmationWebcardId: string
 ): Promise<"continue" | "stop"> => {
-  const userVerificationRequested =
+  const userVerificationOption =
     request.type === WebauthnOperationType.Create
       ? request.options.authenticatorSelection?.userVerification
       : request.options.userVerification;
-  const availableMethods =
-    await context.connectors.carbon.getAvailableUserVerificationMethods();
-  const hasOnlyMPCheckUVMethod = availableMethods.every(
-    (method) => method === UserVerificationMethods.MasterPassword
+  const userVerificationRequested =
+    userVerificationOption !== undefined &&
+    isValidUserVerificationRequirement(userVerificationOption)
+      ? userVerificationOption
+      : "preferred";
+  const availableMethods = await getAvailableUserVerificationMethods(context);
+  const hasOnlyMpOrPinCheckUVMethod = availableMethods.every(
+    (method) =>
+      method === UserVerificationMethods.MasterPassword ||
+      method === UserVerificationMethods.Pin
   );
   const needUserVerification =
-    (userVerificationRequested === "preferred" && !hasOnlyMPCheckUVMethod) ||
+    (userVerificationRequested === "preferred" &&
+      !hasOnlyMpOrPinCheckUVMethod) ||
     userVerificationRequested === "required";
   if (!request.userVerificationDone && needUserVerification) {
     const usageLogDetails: UserVerificationUsageLogDetails = {

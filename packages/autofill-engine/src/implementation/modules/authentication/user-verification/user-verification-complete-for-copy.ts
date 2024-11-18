@@ -1,12 +1,13 @@
 import { AutofillEngineContext } from "../../../../Api/server/context";
 import { FollowUpNotificationWebcardData } from "../../../../Api/types/webcards/follow-up-notification-webcard";
 import { UserVerificationResult } from "../../../../client";
-import { PendingCopyOperation, WebcardType } from "../../../../types";
+import { WebcardType } from "../../../../types";
 import {
   AutofillEngineActionsWithOptions,
   AutofillEngineActionTarget,
 } from "../../../abstractions/messaging/action-serializer";
 import { getAutofillDataFromVault } from "../../../abstractions/vault/get";
+import { PendingCopyOperation } from "../../../commands/private-types";
 import { getValueToFillFromVaultItem } from "../../autofill/apply-autofill-recipe-handler";
 import { getFormattedFollowUpNotificationWebcardData } from "../../autofill/get-formatted-webcard-item";
 export const userVerificationCompleteForCopy = async (
@@ -27,8 +28,7 @@ export const userVerificationCompleteForCopy = async (
     const vaultItem = await getAutofillDataFromVault(
       context,
       vaultIngredient.type,
-      itemId,
-      sender.tab.url
+      itemId
     );
     if (!vaultItem) {
       return;
@@ -41,6 +41,9 @@ export const userVerificationCompleteForCopy = async (
       vaultItem,
       vaultIngredient.type
     );
+    if (!webcardData) {
+      return;
+    }
     const followUpNotificationWebcard: FollowUpNotificationWebcardData = {
       webcardType: WebcardType.FollowUpNotification,
       webcardId,

@@ -1,6 +1,5 @@
 import {
   PremiumStatusSpaceItemView,
-  UserVerificationMethods,
   VaultAutofillView,
 } from "@dashlane/communication";
 import { AutofillEngineContext } from "../../../../Api/server/context";
@@ -16,6 +15,8 @@ import {
   isRpIdInvalidForEffectiveDomain,
   validateWebauthnRequestSender,
 } from "./webauthn-common";
+import { UserVerificationMethods } from "@dashlane/authentication-contracts";
+import { getAvailableUserVerificationMethods } from "../user-verification/get-available-user-verification-methods";
 export const buildWebcardItemsForWebauthnConditionalUi = async (
   context: AutofillEngineContext,
   sender: chrome.runtime.MessageSender,
@@ -55,13 +56,15 @@ export const buildWebcardItemsForWebauthnConditionalUi = async (
     usablePasskeyItems
   );
   const userVerificationRequested = request.options.userVerification;
-  const availableMethods =
-    await context.connectors.carbon.getAvailableUserVerificationMethods();
-  const hasOnlyMPCheckUVMethod = availableMethods.every(
-    (method) => method === UserVerificationMethods.MasterPassword
+  const availableMethods = await getAvailableUserVerificationMethods(context);
+  const hasOnlyMpOrPinCheckUVMethod = availableMethods.every(
+    (method) =>
+      method === UserVerificationMethods.MasterPassword ||
+      method === UserVerificationMethods.Pin
   );
   const needUserVerification =
-    (userVerificationRequested === "preferred" && !hasOnlyMPCheckUVMethod) ||
+    (userVerificationRequested === "preferred" &&
+      !hasOnlyMpOrPinCheckUVMethod) ||
     userVerificationRequested === "required";
   if (needUserVerification) {
     return result.map(({ webcardItem, vaultItem }) => ({

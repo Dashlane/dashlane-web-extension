@@ -158,7 +158,7 @@ export function getFormattedFollowUpNotificationWebcardData<
 >(
   vaultItem: VaultAutofillViewInterfaces[T],
   itemType: T
-): FollowUpNotificationWebcardItem {
+): FollowUpNotificationWebcardItem | undefined {
   switch (itemType) {
     case VaultSourceType.Credential: {
       const credentialItem = vaultItem as CredentialAutofillView;
@@ -203,6 +203,6 @@ export function getFormattedFollowUpNotificationWebcardData<
       };
     }
     default:
-      throw new Error(`Error: vault type not supported`);
+      return;
   }
 }

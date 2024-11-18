@@ -8,7 +8,7 @@ import {
 import { showPersistentWebcard } from "../../../implementation/abstractions/webcardPersistence/persistent-webcards";
 import { AutofillEngineActionsWithOptions } from "../../../implementation/abstractions/messaging/action-serializer";
 import { AutofillEngineContext } from "../../../Api/server/context";
-const DASHLANE_WEBSITE_REGEXP = "*****";
+const DASHLANE_WEBSITE_REGEXP = "__REDACTED__";
 const TRY_AUTOFILL_DEMO_PAGE = "try-autofill-demo";
 const buildOnboardingNotificationWebcardData = (
   configuration: OnboardingNotificationConfiguration

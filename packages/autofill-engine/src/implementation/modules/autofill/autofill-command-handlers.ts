@@ -10,7 +10,6 @@ import { queryVaultItemsHandler } from "./query-vault-items-handler";
 import { userFocusOnElementHandler } from "./user-focus-on-element-handler";
 import { webcardItemSelectedHandler } from "./webcard-item-selected-handler";
 import { logAutofillPerformedEventHandler } from "./log-autofill-performed-event-handler";
-import { userValidatedMasterPasswordHandler } from "./user-validated-master-password-handler";
 import { getCredentialsAtRiskByIdsHandler } from "./get-credentials-at-risk-by-ids-handler";
 export const AutofillCommandHandlers: HandlersForModuleCommands<
   | "userFocusOnElement"
@@ -21,7 +20,6 @@ export const AutofillCommandHandlers: HandlersForModuleCommands<
   | "queryVaultItems"
   | "getVaultItemDetails"
   | "webcardItemSelected"
-  | "userValidatedMasterPassword"
   | "getCredentialsAtRiskByIds"
 > = {
   userFocusOnElement: userFocusOnElementHandler,
@@ -57,6 +55,5 @@ export const AutofillCommandHandlers: HandlersForModuleCommands<
   queryVaultItems: queryVaultItemsHandler,
   getVaultItemDetails: getVaultItemDetailsHandler,
   webcardItemSelected: webcardItemSelectedHandler,
-  userValidatedMasterPassword: userValidatedMasterPasswordHandler,
   getCredentialsAtRiskByIds: getCredentialsAtRiskByIdsHandler,
 };

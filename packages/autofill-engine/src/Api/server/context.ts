@@ -10,6 +10,7 @@ import { AutofillEngineExceptionLogger } from "../types/logger";
 import { WebcardData } from "../types/webcards/webcard-data";
 import { AutofillEngineState } from "./state";
 import { AutofillEngineApplicationDependencies } from "./application-dependencies";
+import { PageCaptureBackground } from "@dashlane/page-capture";
 export interface AutofillEngineInjectedConnectors {
   carbon: CarbonApiEvents;
   legacyCarbon: typeof CarbonMaverickConnector;
@@ -71,6 +72,7 @@ export interface AutofillEngineContext {
   readonly browserApi: BrowserApi;
   readonly command?: BaseAutofillEngineCommand;
   readonly connectors: AutofillEngineConnectors;
+  readonly launchCapture?: PageCaptureBackground["activate"];
   readonly grapheneClient: ClientsOf<AutofillEngineApplicationDependencies>;
   readonly logException: AutofillEngineExceptionLogger;
 }

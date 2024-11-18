@@ -1,10 +1,8 @@
 import { AutofillEngineContext } from "../../../../Api/server/context";
 import { UserVerificationResult } from "../../../../client";
-import {
-  PendingWebauthnRequestOperation,
-  WebauthnOperationType,
-} from "../../../../types";
+import { WebauthnOperationType } from "../../../../types";
 import { AutofillEngineActionsWithOptions } from "../../../abstractions/messaging/action-serializer";
+import { PendingWebauthnRequestOperation } from "../../../commands/private-types";
 import { webauthnUserCanceledHandler } from "../webauthn/webauthn-common";
 import { webauthnCreateUserConfirmedHandler } from "../webauthn/webauthn-create";
 import { webauthnGetUserConfirmedHandler } from "../webauthn/webauthn-get";

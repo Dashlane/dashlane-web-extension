@@ -64,11 +64,13 @@ import {
   isExtraLabelInFieldClassification,
   isLabelInFormClassification,
 } from "../autofill/utils";
-import { checkHasOneClickFormFill } from "../../../config/feature-flips";
 import { forgetDataCaptureStepData } from "../dataCapture/credential-capture-helpers";
 import { getUserAutofillCorrections } from "./user-autofill-correction";
 import { isAnalyisEnabledOnUrl } from "./utils";
-import { fetchAutofillableVaultViewsForIngredient } from "../autofill/user-focus-on-element-handler";
+import {
+  fetchAutofillableVaultViewsForIngredient,
+  MAX_NUMBER_OF_ITEMS_IN_DROPDOWN,
+} from "../autofill/user-focus-on-element-handler";
 const extractMatchingAndNonMatchingExtraValues = <
   T extends FieldMainLabelsType
 >(
@@ -355,7 +357,6 @@ const getPartNumberBasedOnCurrentAndPreviousField = (
 const createAutofillRecipesForForm = (
   form: InputForm,
   userAutofillCorrections: UserAutofillCorrection[],
-  hasOneClickFormFillFeature: boolean,
   disabledSourceTypes: string[]
 ): AutofillRecipeByFieldId => {
   const autofillRecipesByFieldId: AutofillRecipeByFieldId = {};
@@ -413,10 +414,7 @@ const createAutofillRecipesForForm = (
       );
     }
   });
-  if (
-    !isLabelInFormClassification(form.classification, "login") &&
-    hasOneClickFormFillFeature
-  ) {
+  if (!isLabelInFormClassification(form.classification, "login")) {
     addPostfillRecipes(autofillRecipesByFieldId, autofillRecipesBySourceType);
   }
   return autofillRecipesByFieldId;
@@ -457,7 +455,6 @@ const createUnrecognizedFields = (
 const createAutofillRecipes = (
   results: AnalysisResults,
   userAutofillCorrections: UserAutofillCorrection[],
-  hasOneClickFormFillFeature: boolean,
   disabledSourceTypes: string[]
 ): AutofillRecipesByFormId => {
   const recipesByForm: AutofillRecipesByFormId = {};
@@ -471,7 +468,6 @@ const createAutofillRecipes = (
       recipesByField: createAutofillRecipesForForm(
         form,
         userAutofillCorrections,
-        hasOneClickFormFillFeature,
         disabledSourceTypes
       ),
     };
@@ -499,17 +495,34 @@ const insertDataAvailabilityInRecipe = async (
       continue;
     }
     const autofillIngredient = ingredientInRecipe.ingredient;
-    autofillRecipeForField.knownValue =
-      !isVaultSourceType(sourceType) ||
-      (autofillIngredient.type === sourceType &&
+    if (autofillIngredient.type === VaultSourceType.Credential) {
+      autofillRecipeForField.knownValue =
+        autofillIngredient.type === sourceType &&
         isVaultIngredient(autofillIngredient) &&
         (
           await fetchAutofillableVaultViewsForIngredient(
             context,
-            tabUrl,
-            autofillIngredient
+            "",
+            autofillIngredient,
+            new ParsedURL(tabUrl).getRootDomain(),
+            MAX_NUMBER_OF_ITEMS_IN_DROPDOWN
           )
-        ).length > 0);
+        ).length > 0;
+    } else {
+      autofillRecipeForField.knownValue =
+        !isVaultSourceType(sourceType) ||
+        (autofillIngredient.type === sourceType &&
+          isVaultIngredient(autofillIngredient) &&
+          (
+            await fetchAutofillableVaultViewsForIngredient(
+              context,
+              tabUrl,
+              autofillIngredient,
+              undefined,
+              MAX_NUMBER_OF_ITEMS_IN_DROPDOWN
+            )
+          ).length > 0);
+    }
   }
 };
 const populateAutofillRecipesWithDataAvailability = async (
@@ -549,15 +562,11 @@ export const analysisResultsAvailableHandler = async (
   }
   const tabRootDomain = new ParsedURL(tabUrl).getRootDomain();
   const tabFullDomain = new ParsedURL(tabUrl).getHostname();
-  let hasOneClickFormFillFeature = false;
   const { loggedIn }: GetLoginStatus =
     await context.connectors.carbon.getUserLoginStatus();
   let userAutofillCorrectionsOnDomain: UserAutofillCorrection[] = [];
   let disabledSourceTypes: AutofillableDataModel[] = [];
   if (loggedIn) {
-    hasOneClickFormFillFeature = await checkHasOneClickFormFill(
-      context.connectors
-    );
     const autofillSettings = await getQueryValue(
       context.grapheneClient.autofillSettings.queries.getAutofillSettings()
     );
@@ -571,7 +580,6 @@ export const analysisResultsAvailableHandler = async (
   const autofillRecipes = createAutofillRecipes(
     results,
     userAutofillCorrectionsOnDomain,
-    hasOneClickFormFillFeature,
     disabledSourceTypes
   );
   const unrecognizedFields = createUnrecognizedFields(
@@ -633,6 +641,7 @@ export const analysisResultsAvailableHandler = async (
           sortCriteria: [{ field: "lastUse", direction: "descend" }],
           filterCriteria: [],
         },
+        limit: 1,
       })
     ).length > 0;
   if (

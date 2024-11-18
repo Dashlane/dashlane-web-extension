@@ -47,6 +47,7 @@ export interface ClassicDropdownWebcardData
   extends AutofillDropdownWebcardDataBase {
   readonly configuration: AutofillDropdownWebcardConfiguration.Classic;
   readonly items: WebcardItem[];
+  readonly moreItemsAvailable?: boolean;
   readonly withSearch: boolean;
   readonly withNonDashlaneKeyButton?: boolean;
   readonly webauthnRequest?: WebauthnRequest;

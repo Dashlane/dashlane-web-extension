@@ -1,7 +1,7 @@
 import { parse as dateParser } from "date-fns";
 import { DAY_LABELS_MAP } from "./day-labels";
-import { DateFormat, DateSeparator, ParsedDate } from "./types";
 import { MONTH_LABELS_MAP } from "./month-labels";
+import { DateFormat, DateSeparatorValue, ParsedDate } from "./types";
 export const parseDateFromVault = (date: string): Date | null => {
   if (!date) {
     return null;
@@ -21,15 +21,16 @@ export const getDateFormat = (
 };
 export const getDateSeparator = (
   dateSeparator?: string,
-  defaultDateSeparator: DateSeparator = DateSeparator.SEPARATOR_SLASH
+  defaultDateSeparator: DateSeparatorValue = DateSeparatorValue.SEPARATOR_SLASH
 ) => {
-  return dateSeparator && Object.keys(DateSeparator).includes(dateSeparator)
-    ? DateSeparator[dateSeparator as keyof typeof DateSeparator]
+  return dateSeparator &&
+    Object.keys(DateSeparatorValue).includes(dateSeparator)
+    ? DateSeparatorValue[dateSeparator as keyof typeof DateSeparatorValue]
     : defaultDateSeparator;
 };
 export const formatDate = (
   dateFormat: DateFormat,
-  dateSeparator: DateSeparator,
+  dateSeparator: DateSeparatorValue,
   date: ParsedDate = { day: "", month: "", year: "" }
 ): string => {
   if (!date.day && !date.month && !date.year) {

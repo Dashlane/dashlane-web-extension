@@ -14,6 +14,7 @@ import { startWebAuthnUserVerificationFlowHandler } from "./user-verification/st
 import { userVerificationCompleteHandler } from "./user-verification/user-verification-complete-handler";
 import { validateWebAuthnUserVerificationFlowHandler } from "./user-verification/validate-webauthn-user-verification-flow-handler";
 import { validateMasterPasswordHandler } from "./validate-master-password-handler";
+import { validatePinCodeHandler } from "./validate-pin-code-handler";
 import {
   webauthnUseOtherAuthenticatorHandler,
   webauthnUserCanceledHandler,
@@ -45,6 +46,7 @@ export const AuthenticationCommandHandlers: HandlersForModuleCommands<
   | "webauthnUserCanceled"
   | "webauthnIsConditionalUiSupported"
   | "userVerificationComplete"
+  | "validatePinCode"
 > = {
   startWebAuthnUserVerificationFlow: startWebAuthnUserVerificationFlowHandler,
   validateWebAuthnUserVerificationFlow:
@@ -124,6 +126,7 @@ export const AuthenticationCommandHandlers: HandlersForModuleCommands<
     });
   },
   validateMasterPassword: validateMasterPasswordHandler,
+  validatePinCode: validatePinCodeHandler,
   resetProtectedItemsTimerAndApplyRecipe: async (
     context,
     actions,

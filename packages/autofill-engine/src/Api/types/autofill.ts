@@ -18,17 +18,17 @@ import {
   FormType,
   MatchType,
 } from "@dashlane/hermes";
+import { RiskType } from "@dashlane/password-security-contracts";
 import { AggregatedFieldContent } from "@dashlane/tiresias";
+import {
+  DateFormat,
+  DateSeparatorValue,
+  ParsedDate,
+} from "../../implementation/abstractions/formatting/formatters/Dates/types";
 import { InputField } from "./analysis";
 import { WebauthnGetConditionalUiRequest } from "./webauthn";
 import { SrcElementDetails } from "./webcards/autofill-dropdown-webcard";
 import { WebcardType } from "./webcards/webcard-data-base";
-import { RiskType } from "@dashlane/password-security-contracts";
-import {
-  DateFormat,
-  DateSeparator,
-  ParsedDate,
-} from "../../implementation/abstractions/formatting/formatters/Dates/types";
 const isVaultDataSource = (
   dataSource: AutofillDataSource
 ): dataSource is VaultDataSource => isVaultSourceType(dataSource.type);
@@ -158,7 +158,7 @@ export interface FillDateOperation {
   type: VaultSourceType;
   date: ParsedDate;
   format: DateFormat;
-  separator: DateSeparator;
+  separator: DateSeparatorValue;
 }
 export interface ClickOperation extends AutofillOperationBase {
   operationType: AutofillOperationType.Click;

@@ -8,7 +8,7 @@ import {
   getDateSeparator,
   parseDateFromVault,
 } from "../Dates/helpers";
-import { DateFormat, DateSeparator, ParsedDate } from "../Dates/types";
+import { DateFormat, DateSeparatorValue, ParsedDate } from "../Dates/types";
 export function formatFullName(identity: IdentityAutofillView): string {
   let middleOrLastName = "";
   let fullName = "";
@@ -52,7 +52,10 @@ const formatBirthDate = (
   }
   return formatDate(
     getDateFormat(fieldFormat?.dateFormat, DateFormat.FORMAT_MM_DD_YYYY),
-    getDateSeparator(fieldFormat?.dateSeparator, DateSeparator.SEPARATOR_SLASH),
+    getDateSeparator(
+      fieldFormat?.dateSeparator,
+      DateSeparatorValue.SEPARATOR_SLASH
+    ),
     parsedDate
   );
 };
@@ -62,7 +65,7 @@ export const formatBirthDay = (
 ): string => {
   const day = formatBirthDate(identity, {
     dateFormat: DateFormat.FORMAT_DD,
-    dateSeparator: DateSeparator.SEPARATOR_NOTHING,
+    dateSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
   });
   if (fieldFormat?.optionLabels && fieldFormat.optionValues) {
     return findDayInSelectOptions(
@@ -79,7 +82,7 @@ export const formatBirthMonth = (
 ): string => {
   const month = formatBirthDate(identity, {
     dateFormat: DateFormat.FORMAT_MM,
-    dateSeparator: DateSeparator.SEPARATOR_NOTHING,
+    dateSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
   });
   if (fieldFormat?.optionLabels && fieldFormat.optionValues) {
     return findMonthInSelectOptions(

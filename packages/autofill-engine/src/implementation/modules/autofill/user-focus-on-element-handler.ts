@@ -39,7 +39,6 @@ import {
   WebcardType,
 } from "../../../Api/types/webcards/webcard-data-base";
 import { WebcardItem } from "../../../Api/types/webcards/webcard-item";
-import { checkHasNewSubdomainManagement } from "../../../config/feature-flips";
 import { parseFormClassifications } from "../../../config/helpers/parser";
 import {
   AutofillEngineActionsWithOptions,
@@ -69,11 +68,13 @@ import {
   isLabelInFormClassification,
   isUrlUnsecure,
 } from "./utils";
+export const MAX_NUMBER_OF_ITEMS_IN_DROPDOWN = 20;
 export const fetchAutofillableVaultViewsForIngredient = async (
   context: AutofillEngineContext,
   tabUrl: string,
   vaultIngredient: VaultIngredient,
-  searchValue?: string
+  searchValue?: string,
+  limit?: number
 ): Promise<VaultAutofillView[]> => {
   let items: VaultAutofillView[] = [];
   const vaultType = vaultIngredient.type;
@@ -93,17 +94,20 @@ export const fetchAutofillableVaultViewsForIngredient = async (
         filterCriteria: [
           { field: "domain", type: "equals", value: tabRootDomain },
         ],
-        maxNumberOfItems: 1,
       },
+      limit: 1,
     });
   } else if (searchValue) {
-    items = (await searchAllAutofillDataFromVault({
-      context,
-      searchQuery: searchValue,
-      domain: tabUrl,
-      itemTypes: [vaultType],
-      sorting: { property: "lastUse", direction: "descend" },
-    })) as VaultAutofillView[];
+    items = (
+      await searchAllAutofillDataFromVault({
+        context,
+        searchQuery: searchValue,
+        domain: tabUrl,
+        itemTypes: [vaultType],
+        sorting: { property: "lastUse", direction: "descend" },
+        limit,
+      })
+    ).items as VaultAutofillView[];
   } else {
     items = await getAllAutofillDataFromVault({
       context,
@@ -118,18 +122,13 @@ export const fetchAutofillableVaultViewsForIngredient = async (
         ],
         filterCriteria: [],
       },
+      limit,
     });
   }
   return asyncArrayFilterHelper(items, async (item) => {
     const isCredential = vaultType === VaultSourceType.Credential;
-    const hasNewSubdomainManagementFeatureEnabled =
-      await checkHasNewSubdomainManagement(context.connectors);
     const isAllowedOnThisUrl = isCredential
-      ? isCredentialAllowedOnThisUrl(
-          item as CredentialAutofillView,
-          tabUrl,
-          hasNewSubdomainManagementFeatureEnabled
-        )
+      ? isCredentialAllowedOnThisUrl(item as CredentialAutofillView, tabUrl)
       : true;
     return (
       isAllowedOnThisUrl &&
@@ -256,6 +255,7 @@ async function buildWebcardItemsForVaultSource(
   vaultType: VaultSourceType,
   autofillRecipe: AutofillRecipe,
   premiumStatusSpaces: PremiumStatusSpaceItemView[],
+  limit: number,
   searchValue?: string
 ): Promise<
   {
@@ -283,7 +283,8 @@ async function buildWebcardItemsForVaultSource(
       context,
       tabUrl,
       vaultIngredient,
-      searchValue
+      searchValue,
+      limit
     )
   )
     .filter((item) => {
@@ -342,6 +343,16 @@ async function buildWebcardItemsAndMetadata(
   ][];
   await Promise.all(
     autofillRecipesEntries.map(async ([sourceType, autofillRecipe]) => {
+      const webcardItemsCount = Object.keys(webcardItemsByType).reduce(
+        (acc, items) => acc + items.length,
+        0
+      );
+      if (
+        webcardItemsCount >= MAX_NUMBER_OF_ITEMS_IN_DROPDOWN &&
+        isVaultSourceType(sourceType)
+      ) {
+        return;
+      }
       if (
         sourceType === OtherSourceType.WebauthnConditionalUI &&
         focusInformations.conditionalUiRequest
@@ -378,15 +389,17 @@ async function buildWebcardItemsAndMetadata(
           );
           return;
         }
-        webcardItemsByType[sourceType] = await buildWebcardItemsForVaultSource(
+        const items = await buildWebcardItemsForVaultSource(
           context,
           tabUrl,
           focusInformations,
           sourceType,
           autofillRecipe,
           premiumStatusSpaces,
+          MAX_NUMBER_OF_ITEMS_IN_DROPDOWN - webcardItemsCount + 1,
           searchValue
         );
+        webcardItemsByType[sourceType] = items;
       }
     })
   );
@@ -485,6 +498,7 @@ async function buildClassicDropdownWebcardData(
     webcardType: WebcardType.AutofillDropdown,
     configuration: AutofillDropdownWebcardConfiguration.Classic,
     items: webcardItems,
+    moreItemsAvailable: webcardItems.length > MAX_NUMBER_OF_ITEMS_IN_DROPDOWN,
     formType: focusInformations.formClassification,
     srcElement: focusInformations,
     autofillRecipes,

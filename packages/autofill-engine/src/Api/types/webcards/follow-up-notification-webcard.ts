@@ -1,6 +1,16 @@
 import { VaultSourceType } from "@dashlane/autofill-contracts";
 import { VaultIngredient } from "../autofill";
 import { WebcardDataBase, WebcardType } from "./webcard-data-base";
+import {
+  UserCopiedBankAccountField,
+  UserCopiedCredentialField,
+  UserCopiedCreditCardField,
+} from "@dashlane/risk-monitoring-contracts";
+export interface VaultTypeToAuditLogTypeFields {
+  [VaultSourceType.Credential]: UserCopiedCredentialField["properties"]["field"];
+  [VaultSourceType.BankAccount]: UserCopiedBankAccountField["properties"]["field"];
+  [VaultSourceType.PaymentCard]: UserCopiedCreditCardField["properties"]["field"];
+}
 type SomeFollowUpNotificationWebcardItem<
   T extends keyof FollowUpNotificationWebcardItemProperties
 > = FollowUpNotificationWebcardItemBase<T> &

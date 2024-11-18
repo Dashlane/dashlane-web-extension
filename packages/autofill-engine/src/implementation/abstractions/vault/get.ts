@@ -1,4 +1,3 @@
-import { firstValueFrom } from "rxjs";
 import {
   AddressDataQuery,
   BankAccountDataQuery,
@@ -19,11 +18,12 @@ import {
   SocialSecurityIdDataQuery,
   VaultAutofillView,
 } from "@dashlane/communication";
-import { ParsedURL } from "@dashlane/url-parser";
 import { getQueryValue } from "@dashlane/framework-application";
 import { getSuccess, isFailure, isSuccess } from "@dashlane/framework-types";
+import { ParsedURL } from "@dashlane/url-parser";
+import { firstValueFrom } from "rxjs";
 import {
-  AutofillViews,
+  SearchAutofillDataQueryResult,
   VaultAutofillViewInterfaces,
   VaultQueryAssociator,
   VaultSortingQuery,
@@ -35,15 +35,20 @@ import {
   VaultItemTypeToResultDictionary,
 } from "@dashlane/vault-contracts";
 import { AutofillEngineContext } from "../../../Api/server/context";
-import { FieldFormat, VaultIngredient } from "../../../types";
 import {
   checkHasFrozenAccountFF,
-  checkHasGrapheneMigrationV3Dev,
+  checkHasWebcardsPerformanceImprovement,
 } from "../../../config/feature-flips";
+import { FieldFormat, VaultIngredient } from "../../../types";
 import { ETLD_WITH_STRICT_FULLDOMAIN_MATCH } from "../../modules/autofill/urls-lists";
 import { formatAddress } from "../formatting/formatters/Address/vault-ingredient";
 import { formatIban } from "../formatting/formatters/BankAccount/vault-ingredient";
 import { fullLocalizedCountry } from "../formatting/formatters/Countries/vault-ingredient";
+import {
+  DateFormat,
+  DateSeparatorValue,
+  ParsedDate,
+} from "../formatting/formatters/Dates/types";
 import {
   getDriverLicenseParsedExpirationDate,
   getDriverLicenseParsedIssueDate,
@@ -68,16 +73,12 @@ import {
   getPassportParsedExpirationDate,
   getPassportParsedIssueDate,
 } from "../formatting/formatters/Passport/vault-ingredient";
+import { formatPassword } from "../formatting/formatters/Password/helpers";
 import {
   formatCardNumber,
   formatExpirationMonth,
   getParsedExpirationDate,
 } from "../formatting/formatters/PaymentCard/vault-ingredient";
-import {
-  DateFormat,
-  DateSeparator,
-  ParsedDate,
-} from "../formatting/formatters/Dates/types";
 type GetNumberOfItemsFromVaultArgs<T extends VaultSourceType> =
   VaultQueryAssociator<T> & {
     context: AutofillEngineContext;
@@ -86,6 +87,7 @@ type GetItemsFromVaultArgs<T extends VaultSourceType> =
   GetNumberOfItemsFromVaultArgs<T> & {
     searchQuery?: string;
     url?: string;
+    limit?: number;
   };
 type PasswordLimitStatus = {
   shouldShowPasswordLimitReached: boolean;
@@ -99,7 +101,7 @@ export async function getAutofillDataFromVault<T extends VaultSourceType>(
   itemId: string,
   url = ""
 ): Promise<VaultAutofillViewInterfaces[T] | undefined> {
-  const rootDomain = new ParsedURL(url).getRootDomain();
+  const rootDomain = url ? new ParsedURL(url).getRootDomain() : undefined;
   if (itemType === VaultSourceType.GeneratedPassword) {
     return context.connectors.carbon.getSingleGeneratedPasswordForAutofill(
       itemId
@@ -195,10 +197,6 @@ export function getAllAutofillDataFromVaultOld<T extends VaultSourceType>({
       return context.connectors.carbon
         .getMultipleIdentitiesForAutofill(SORTING as IdentityDataQuery)
         .then((result) => result.items) as Result;
-    case VaultSourceType.NoteCategory:
-      return context.connectors.carbon
-        .getNoteCategories()
-        .then((result) => result.items) as Result;
     case VaultSourceType.Note:
       return context.connectors.carbon
         .getMultipleNotesForAutofill(SORTING as NoteDataQuery)
@@ -243,9 +241,10 @@ export async function getAllAutofillDataFromVault<T extends VaultSourceType>({
   vaultType,
   queryOptions,
   url = "",
+  limit,
 }: GetItemsFromVaultArgs<T>): Promise<VaultAutofillViewInterfaces[T][]> {
   if (
-    (await checkHasGrapheneMigrationV3Dev(context.connectors)) &&
+    (await checkHasWebcardsPerformanceImprovement(context.connectors)) &&
     vaultType !== VaultSourceType.GeneratedPassword
   ) {
     try {
@@ -257,23 +256,32 @@ export async function getAllAutofillDataFromVault<T extends VaultSourceType>({
       if (vaultType === VaultSourceType.Passkey) {
         domain = parsedUrl.getHostname();
       }
+      const shouldBeFilteredByDomain =
+        vaultType === VaultSourceType.Credential ||
+        vaultType === VaultSourceType.Passkey;
       const sort = queryOptions?.sortCriteria[0];
       const result = await firstValueFrom(
-        context.connectors.grapheneClient.autofillData.queries.getMultipleAutofillData(
+        context.connectors.grapheneClient.autofillData.queries.searchAutofillData(
           {
-            itemType: vaultType,
+            searchQuery: shouldBeFilteredByDomain ? domain : "",
+            itemTypes: [vaultType],
             domain,
             sorting: sort
               ? { property: sort.field, direction: sort.direction }
               : undefined,
-            filters: undefined,
+            pagination: limit
+              ? {
+                  pageSize: limit,
+                  pageNumber: 1,
+                }
+              : undefined,
           }
         )
       );
       if (isFailure(result)) {
         throw new Error(result.error);
       }
-      return result.data as VaultAutofillViewInterfaces[T][];
+      return result.data.items as VaultAutofillViewInterfaces[T][];
     } catch (err) {
       if (err instanceof Error) {
         err.message = "error in get all autofill data query: " + err.message;
@@ -295,13 +303,15 @@ export async function searchAllAutofillDataFromVault({
   itemTypes,
   domain,
   sorting,
+  limit,
 }: {
   context: AutofillEngineContext;
   searchQuery: string;
   itemTypes?: VaultSourceType[];
   domain?: string;
   sorting?: VaultSortingQuery;
-}) {
+  limit?: number;
+}): Promise<SearchAutofillDataQueryResult> {
   try {
     const result = await firstValueFrom(
       context.connectors.grapheneClient.autofillData.queries.searchAutofillData(
@@ -310,13 +320,19 @@ export async function searchAllAutofillDataFromVault({
           itemTypes,
           domain,
           sorting,
+          pagination: limit
+            ? {
+                pageSize: limit,
+                pageNumber: 1,
+              }
+            : undefined,
         }
       )
     );
     if (isFailure(result)) {
       throw new Error(result.tag);
     }
-    return result.data as AutofillViews[];
+    return result.data;
   } catch (err) {
     throw new Error("error in search autofill data query: " + err);
   }
@@ -340,7 +356,6 @@ const mapSourceTypeToVaultItemType = {
   [VaultSourceType.Phone]: VaultItemType.Phone,
   [VaultSourceType.SocialSecurityId]: VaultItemType.SocialSecurityId,
   [VaultSourceType.Secret]: VaultItemType.Secret,
-  [VaultSourceType.NoteCategory]: null,
 };
 export async function getNumberOfItemsFromVault<T extends VaultSourceType>({
   context,
@@ -397,6 +412,7 @@ const getFormatterForVaultItem: Partial<{
   },
   [VaultSourceType.Credential]: {
     otpSecret: formatOTP,
+    password: formatPassword,
   },
   [VaultSourceType.Passport]: {
     expirationDay: formatPassportExpirationDay,
@@ -424,7 +440,7 @@ export const fetchSpecialFormatterForVaultIngredient = (
 export interface ParsedDateWithFieldFormat {
   date: ParsedDate | undefined;
   defaultFormat: DateFormat;
-  defaultSeparator: DateSeparator;
+  defaultSeparator: DateSeparatorValue;
 }
 export const getParsedDateForIngredient = (
   ingredient: VaultIngredient,
@@ -442,13 +458,13 @@ export const getParsedDateForIngredient = (
           return {
             date: getParsedIdentityBirthDate(vaultItem),
             defaultFormat: DateFormat.FORMAT_MM_DD_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_SLASH,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_SLASH,
           };
         case "birthYear":
           return {
             date: { year: vaultItem.birthYear },
             defaultFormat: DateFormat.FORMAT_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_NOTHING,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
           };
       }
       return undefined;
@@ -460,13 +476,13 @@ export const getParsedDateForIngredient = (
           return {
             date: getParsedExpirationDate(vaultItem),
             defaultFormat: DateFormat.FORMAT_MM_YY,
-            defaultSeparator: DateSeparator.SEPARATOR_SLASH,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_SLASH,
           };
         case "expireYear":
           return {
             date: { year: vaultItem.expireYear },
             defaultFormat: DateFormat.FORMAT_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_NOTHING,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
           };
       }
       return undefined;
@@ -478,25 +494,25 @@ export const getParsedDateForIngredient = (
           return {
             date: getDriverLicenseParsedExpirationDate(vaultItem),
             defaultFormat: DateFormat.FORMAT_DD_MM_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_SLASH,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_SLASH,
           };
         case "expirationYear":
           return {
             date: { year: String(vaultItem.expirationYear) },
             defaultFormat: DateFormat.FORMAT_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_NOTHING,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
           };
         case "issueDateFull":
           return {
             date: getDriverLicenseParsedIssueDate(vaultItem),
             defaultFormat: DateFormat.FORMAT_DD_MM_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_SLASH,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_SLASH,
           };
         case "issueYear":
           return {
             date: { year: String(vaultItem.issueYear) },
             defaultFormat: DateFormat.FORMAT_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_NOTHING,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
           };
       }
       return undefined;
@@ -508,25 +524,25 @@ export const getParsedDateForIngredient = (
           return {
             date: getIdCardParsedExpirationDate(vaultItem),
             defaultFormat: DateFormat.FORMAT_DD_MM_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_SLASH,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_SLASH,
           };
         case "expirationYear":
           return {
             date: { year: String(vaultItem.expirationYear) },
             defaultFormat: DateFormat.FORMAT_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_NOTHING,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
           };
         case "issueDateFull":
           return {
             date: getIdCardParsedIssueDate(vaultItem),
             defaultFormat: DateFormat.FORMAT_DD_MM_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_SLASH,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_SLASH,
           };
         case "issueYear":
           return {
             date: { year: String(vaultItem.issueYear) },
             defaultFormat: DateFormat.FORMAT_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_NOTHING,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
           };
       }
       return undefined;
@@ -538,25 +554,25 @@ export const getParsedDateForIngredient = (
           return {
             date: getPassportParsedExpirationDate(vaultItem),
             defaultFormat: DateFormat.FORMAT_DD_MM_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_SLASH,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_SLASH,
           };
         case "expirationYear":
           return {
             date: { year: String(vaultItem.expirationYear) },
             defaultFormat: DateFormat.FORMAT_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_NOTHING,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
           };
         case "issueDateFull":
           return {
             date: getPassportParsedIssueDate(vaultItem),
             defaultFormat: DateFormat.FORMAT_DD_MM_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_SLASH,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_SLASH,
           };
         case "issueYear":
           return {
             date: { year: String(vaultItem.issueYear) },
             defaultFormat: DateFormat.FORMAT_YYYY,
-            defaultSeparator: DateSeparator.SEPARATOR_NOTHING,
+            defaultSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
           };
       }
       return undefined;

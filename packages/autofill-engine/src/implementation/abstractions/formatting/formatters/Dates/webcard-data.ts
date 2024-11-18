@@ -1,7 +1,7 @@
 import { parse as dateParser, isValid } from "date-fns";
-import { canonizeMonth, formatDate } from "./helpers";
-import { DateFormat, DateSeparator, ParsedDate } from "./types";
+import { canonizeMonth } from "./helpers";
 import { MONTH_LABELS_MAP } from "./month-labels";
+import { ParsedDate } from "./types";
 export const formatBirthdateForDataCapture = (
   birthDateParsed: ParsedDate
 ): string => {

@@ -1,4 +1,4 @@
-import type { UserVerificationMethod } from "@dashlane/communication";
+import { UserVerificationMethods } from "@dashlane/authentication-contracts";
 import { AuthenticatorUserVerificationSource } from "@dashlane/hermes";
 import {
   WebcardDataBase,
@@ -18,8 +18,8 @@ export interface UserVerificationWebcardData extends WebcardDataBase {
   readonly webcardType: WebcardType.UserVerification;
   readonly userLogin: string;
   readonly neverAskAgainMode: NeverAskAgainMode;
-  readonly availableMethods: UserVerificationMethod[];
-  readonly defaultMethod?: UserVerificationMethod;
+  readonly availableMethods: UserVerificationMethods[];
+  readonly defaultMethod?: UserVerificationMethods;
   readonly usageLogDetails: UserVerificationUsageLogDetails;
   readonly metadata: WebcardMetadataStore &
     Required<Pick<WebcardMetadataStore, WebcardMetadataType.PendingOperation>>;

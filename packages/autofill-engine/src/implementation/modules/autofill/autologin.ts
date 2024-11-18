@@ -20,11 +20,7 @@ import {
   AutofillEngineContext,
   MultiStepsLogin,
 } from "../../../Api/server/context";
-import {
-  checkHasAskBeforeAutologin,
-  checkHasDisableAutologinSetting,
-  checkHasNewSubdomainManagement,
-} from "../../../config/feature-flips";
+import { checkHasAskBeforeAutologin } from "../../../config/feature-flips";
 import { AutologinSelectionWebcardData, WebcardType } from "../../../types";
 import {
   AutofillEngineActionsWithOptions,
@@ -113,14 +109,8 @@ export const getCredentialsAllowedOnThisUrl = async (
       filterCriteria: [],
     },
   });
-  const hasNewSubdomainManagementFeatureEnabled =
-    await checkHasNewSubdomainManagement(context.connectors);
   return credentialsUnfiltered.filter((cred) =>
-    isCredentialAllowedOnThisUrl(
-      cred,
-      url,
-      hasNewSubdomainManagementFeatureEnabled
-    )
+    isCredentialAllowedOnThisUrl(cred, url)
   );
 };
 export const findFirstRecipeForAutologin = (
@@ -169,14 +159,10 @@ export const isAutologinAllowedOnTheTab = async (
   if (!loggedIn) {
     return false;
   }
-  const hasDisableAutologinSettingFF = await checkHasDisableAutologinSetting(
-    context.connectors
-  );
   const autofillSettingsQuery = await getQueryValue(
     context.grapheneClient.autofillSettings.queries.getAutofillSettings()
   );
   if (
-    hasDisableAutologinSettingFF &&
     isSuccess(autofillSettingsQuery) &&
     autofillSettingsQuery.data.isAutologinDisabled
   ) {

@@ -1,7 +1,7 @@
 import { PaymentCardAutofillView } from "@dashlane/autofill-contracts";
 import { FieldFormat } from "../../../../../types";
 import { formatDate, getDateFormat, getDateSeparator } from "../Dates/helpers";
-import { DateFormat, DateSeparator, ParsedDate } from "../Dates/types";
+import { DateFormat, DateSeparatorValue, ParsedDate } from "../Dates/types";
 export const getParsedExpirationDate = (
   selectedVaultItem: PaymentCardAutofillView
 ): ParsedDate => {
@@ -17,7 +17,10 @@ export const formatExpirationDate = (
   const parsedDate = getParsedExpirationDate(selectedVaultItem);
   return formatDate(
     getDateFormat(fieldFormat?.dateFormat, DateFormat.FORMAT_MM_YY),
-    getDateSeparator(fieldFormat?.dateSeparator, DateSeparator.SEPARATOR_SLASH),
+    getDateSeparator(
+      fieldFormat?.dateSeparator,
+      DateSeparatorValue.SEPARATOR_SLASH
+    ),
     parsedDate
   );
 };
@@ -27,7 +30,7 @@ export const formatExpirationMonth = (
 ): string =>
   formatExpirationDate(selectedVaultItem, {
     dateFormat: fieldFormat?.dateFormat ?? DateFormat.FORMAT_MM,
-    dateSeparator: DateSeparator.SEPARATOR_NOTHING,
+    dateSeparator: DateSeparatorValue.SEPARATOR_NOTHING,
   });
 export const formatCardNumber = (
   selectedVaultItem: PaymentCardAutofillView,

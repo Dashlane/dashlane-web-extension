@@ -10,7 +10,6 @@ import { DataCaptureWebcardData } from "./data-capture-webcard";
 import { FeedbackNotificationWebcardData } from "./feedback-notification-webcard";
 import { FollowUpNotificationWebcardData } from "./follow-up-notification-webcard";
 import { LinkedWebsiteUpdateConfirmationData } from "./linked-website-update-confirmation-webcard";
-import { MasterPasswordWebcardData } from "./master-password-webcard";
 import { OnboardingNotificationWebcardData } from "./onboarding-notification-webcard";
 import { PhishingPreventionWebcardData } from "./phishing-prevention-webcard";
 import { SavePasswordWebcardData } from "./save-password-webcard";
@@ -29,7 +28,6 @@ export type WebcardData =
   | FeedbackNotificationWebcardData
   | FollowUpNotificationWebcardData
   | LinkedWebsiteUpdateConfirmationData
-  | MasterPasswordWebcardData
   | OnboardingNotificationWebcardData
   | PhishingPreventionWebcardData
   | SavePasswordWebcardData

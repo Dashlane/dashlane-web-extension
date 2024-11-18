@@ -1,10 +1,10 @@
 import { AutofillEngineContext } from "../../../../Api/server/context";
 import { UserVerificationResult } from "../../../../client";
-import { PendingApplyAutofillDetailsOperation } from "../../../../types";
 import {
   AutofillEngineActionsWithOptions,
   AutofillEngineActionTarget,
 } from "../../../abstractions/messaging/action-serializer";
+import { PendingApplyAutofillDetailsOperation } from "../../../commands/private-types";
 import { applyAutofillRecipeForVaultDataSourceHandler } from "../../autofill/apply-autofill-recipe-handler";
 import { disableAccessProtectionForVaultItemHandler } from "../password-protection";
 export const userVerificationCompleteForAutofill = async (

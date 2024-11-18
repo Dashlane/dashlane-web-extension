@@ -1,6 +1,6 @@
 import {
   AbstractWebcardMetadata,
-  PendingOperation,
+  AutofillDetailsForVaultDataSource,
   VaultIngredient,
   WebauthnRequest,
   WebcardMetadataStore,
@@ -63,3 +63,26 @@ export function pushWebcardMetadataInStore(
 export function newWebcardMetadataStore(metadata: WebcardMetadata) {
   return pushWebcardMetadataInStore({}, metadata);
 }
+export enum PendingOperationType {
+  CopyValue = "copyValue",
+  ApplyAutofillDetails = "applyAutofillDetails",
+  Webauthn = "webauthnRequest",
+}
+export interface PendingCopyOperation {
+  readonly type: PendingOperationType.CopyValue;
+  readonly itemId: string;
+  readonly vaultIngredient: VaultIngredient;
+  readonly previouslyCopiedProperties: VaultIngredient["property"][];
+}
+export interface PendingApplyAutofillDetailsOperation {
+  readonly type: PendingOperationType.ApplyAutofillDetails;
+  readonly data: AutofillDetailsForVaultDataSource;
+}
+export interface PendingWebauthnRequestOperation {
+  readonly type: PendingOperationType.Webauthn;
+  readonly request: WebauthnRequest;
+}
+export type PendingOperation =
+  | PendingApplyAutofillDetailsOperation
+  | PendingCopyOperation
+  | PendingWebauthnRequestOperation;

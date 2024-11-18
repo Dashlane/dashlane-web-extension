@@ -29,28 +29,6 @@ async function hasFeatureFlip(
   }
   return getSuccess(result) ?? false;
 }
-export async function checkHasPhishingPrevention(
-  connectors: AutofillEngineConnectors
-): Promise<boolean> {
-  return (
-    (await hasFeatureFlip(
-      connectors,
-      AutofillFeatureFlips.PhishingPreventionOnPasteDev
-    )) ||
-    (await hasFeatureFlip(
-      connectors,
-      AutofillFeatureFlips.PhishingPreventionOnPaste
-    ))
-  );
-}
-export async function checkHasOneClickFormFill(
-  connectors: AutofillEngineConnectors
-): Promise<boolean> {
-  return await hasFeatureFlip(
-    connectors,
-    AutofillFeatureFlips.AutofillWebOneClickFormFill
-  );
-}
 export async function checkHasPasskeySupport(
   connectors: AutofillEngineConnectors
 ): Promise<boolean> {
@@ -62,22 +40,6 @@ export async function checkHasAskBeforeAutologin(
   return await hasFeatureFlip(
     connectors,
     AutofillFeatureFlips.AutofillWebAskBeforeAutologin
-  );
-}
-export async function checkHasNewSubdomainManagement(
-  connectors: AutofillEngineConnectors
-): Promise<boolean> {
-  return await hasFeatureFlip(
-    connectors,
-    AutofillFeatureFlips.AutofillWebNewSubdomainManagement
-  );
-}
-export async function checkHasDisableAutologinSetting(
-  connectors: AutofillEngineConnectors
-): Promise<boolean> {
-  return await hasFeatureFlip(
-    connectors,
-    AutofillFeatureFlips.DisableAutologin
   );
 }
 export async function checkHasDisabledPasswordWarning(
@@ -102,20 +64,12 @@ export async function checkHasFrozenAccountFF(
     PASSWORD_LIMIT_FEATURE_FLIPS.B2CFreeUserFrozenState
   );
 }
-export async function checkHasLinkedWebsitesInContext(
+export async function checkHasWebcardsPerformanceImprovement(
   connectors: AutofillEngineConnectors
 ) {
   return await hasFeatureFlip(
     connectors,
-    AutofillFeatureFlips.LinkedWebsitesInContextDev
-  );
-}
-export async function checkHasGrapheneMigrationV3Dev(
-  connectors: AutofillEngineConnectors
-) {
-  return await hasFeatureFlip(
-    connectors,
-    AutofillFeatureFlips.GrapheneMigrationV3Dev
+    AutofillFeatureFlips.WebcardsPerformanceImprovement
   );
 }
 export async function checkHasInAppPasswordHealth(
@@ -126,14 +80,6 @@ export async function checkHasInAppPasswordHealth(
     AutofillFeatureFlips.InAppPasswordHealthBadges
   );
 }
-export async function checkHasNewUserVerificationForItemUnlock(
-  connectors: AutofillEngineConnectors
-) {
-  return await hasFeatureFlip(
-    connectors,
-    AutofillFeatureFlips.NewUserVerificationForItemUnlock
-  );
-}
 export const checkHasSharedCollectionInSaveWebcard = async (
   connectors: AutofillEngineConnectors
 ) =>
@@ -141,11 +87,11 @@ export const checkHasSharedCollectionInSaveWebcard = async (
     connectors,
     AutofillFeatureFlips.SharedCollectionInSaveWebcard
   );
-export async function checkHasAutofillAuditLogs(
+export async function checkHasFUNAuditLogs(
   connectors: AutofillEngineConnectors
 ) {
-  return await hasFeatureFlip(
-    connectors,
-    AutofillFeatureFlips.AutofillAuditLogs
-  );
+  return await hasFeatureFlip(connectors, AutofillFeatureFlips.FunAuditLogs);
 }
+export const checkHasVortexEnabled = async (
+  connectors: AutofillEngineConnectors
+) => await hasFeatureFlip(connectors, AutofillFeatureFlips.EnableVortex);

@@ -29,7 +29,7 @@ export class AutofillEngineActions {
     performanceMetrics?: WebcardPerformanceMetrics
   ): void {}
   updateWebcard(webcardData: WebcardData): void {}
-  updateWebcardItems(webcardItems: WebcardItem[]): void {}
+  updateWebcardItems(webcardItems: WebcardItem[], itemsCount: number): void {}
   updateWebcardItemDetails<T extends VaultSourceType>(
     itemId: string,
     itemType: T,
@@ -49,6 +49,17 @@ export class AutofillEngineActions {
     operations: AutofillOperations
   ): void {}
   setMasterPasswordValidationResult(isPasswordValidated: boolean): void {}
+  setPinCodeValidationResult(
+    data:
+      | {
+          success: true;
+          isPinCodeCorrect: boolean;
+          remainingAttempts: number;
+        }
+      | {
+          success: false;
+        }
+  ): void {}
   updateTabActiveInfo(isTabActive: boolean): void {}
   updateUserLoginStatus(isLoggedIn: boolean): void {}
   updateUserFeatureFlips(features: FeatureFlips): void {}

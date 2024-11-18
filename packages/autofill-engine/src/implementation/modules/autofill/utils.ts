@@ -40,7 +40,7 @@ export const areWeOnTheUserMailProviderWebsite = (
   const emailProviderDomain = stripTLD(getEmailDomain(email));
   return domainsToCompareTo.includes(emailProviderDomain);
 };
-export const isUrlUnsecure = (url: string) => url.startsWith("*****");
+export const isUrlUnsecure = (url: string) => url.startsWith("__REDACTED__");
 export const areMainLabelsInFieldClassification = (
   fieldClassification: string,
   searchedLabels: FieldMainLabelsType[]
@@ -94,21 +94,11 @@ const doCredentialAndTabUrlPortsMatch = (
     [];
   return credUrlPort.length > 0 ? credUrlPort[0] === tabUrlPort[0] : true;
 };
-const deepCompareUrls = (
-  currentUrl: string,
-  toCompareUrl: string,
-  hasNewSubdomainManagementFF: boolean
-): boolean => {
+const deepCompareUrls = (currentUrl: string, toCompareUrl: string): boolean => {
   const parsedCurrentUrl = new ParsedURL(currentUrl);
   const parsedToCompareUrl = new ParsedURL(toCompareUrl);
   const sameDomains =
     parsedCurrentUrl.getRootDomain() === parsedToCompareUrl.getRootDomain();
-  const sameSubdomains =
-    hasNewSubdomainManagementFF ||
-    parsedCurrentUrl.getSubdomainWithoutLeadingWww()
-      ? parsedCurrentUrl.getSubdomainWithoutLeadingWww() ===
-        parsedToCompareUrl.getSubdomainWithoutLeadingWww()
-      : true;
   let samePath = true;
   if (
     parsedToCompareUrl.getPathname() &&
@@ -123,12 +113,11 @@ const deepCompareUrls = (
     toCompareUrl,
     parsedToCompareUrl.getRootDomain()
   );
-  return sameDomains && sameSubdomains && samePath && samePorts;
+  return sameDomains && samePath && samePorts;
 };
 export const isCredentialAllowedOnThisUrl = (
   credItemDetail: CredentialAutofillView,
-  tabUrl: string,
-  hasNewSubdomainManagementFeatureEnabled: boolean
+  tabUrl: string
 ): boolean => {
   const parsedTabURL = new ParsedURL(tabUrl);
   const tabEtld = parsedTabURL.getETLD();
@@ -147,17 +136,9 @@ export const isCredentialAllowedOnThisUrl = (
     META_DOMAINS_WITH_STRICT_FULLDOMAIN_MATCH.includes(tabRootDomain);
   if (credItemDetail.subdomainOnly || pageUrlIsMetaDomain) {
     return (
-      deepCompareUrls(
-        tabUrl,
-        credUrl,
-        hasNewSubdomainManagementFeatureEnabled
-      ) ||
+      deepCompareUrls(tabUrl, credUrl) ||
       credItemDetail.userAddedLinkedWebsites.some((website) =>
-        deepCompareUrls(
-          tabUrl,
-          website,
-          hasNewSubdomainManagementFeatureEnabled
-        )
+        deepCompareUrls(tabUrl, website)
       )
     );
   }

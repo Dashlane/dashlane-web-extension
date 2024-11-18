@@ -1,4 +1,7 @@
-import { userVerificationApi } from "@dashlane/authentication-contracts";
+import {
+  pinCodeApi,
+  userVerificationApi,
+} from "@dashlane/authentication-contracts";
 import {
   autofillDataApi,
   autofillSecurityApi,
@@ -22,6 +25,7 @@ import {
   activityLogsApi,
   loggedOutMonitoringApi,
 } from "@dashlane/risk-monitoring-contracts";
+import { sessionApi } from "@dashlane/session-contracts";
 export type AutofillEngineApplicationDependencies = {
   readonly autofillData: typeof autofillDataApi;
   readonly autofillSecurity: typeof autofillSecurityApi;
@@ -32,6 +36,7 @@ export type AutofillEngineApplicationDependencies = {
   readonly otp: typeof otpApi;
   readonly passwordHealth: typeof passwordHealthApi;
   readonly passwordLimit: typeof passwordLimitApi;
+  readonly pinCode: typeof pinCodeApi;
   readonly userVerification: typeof userVerificationApi;
   readonly vaultItemsCrud: typeof vaultItemsCrudApi;
   readonly loggedOutMonitoring: typeof loggedOutMonitoringApi;
@@ -39,4 +44,5 @@ export type AutofillEngineApplicationDependencies = {
   readonly sharingCollections: typeof sharingCollectionsApi;
   readonly subscriptionCode: typeof subscriptionCodeApi;
   readonly activityLogs: typeof activityLogsApi;
+  readonly session: typeof sessionApi;
 };

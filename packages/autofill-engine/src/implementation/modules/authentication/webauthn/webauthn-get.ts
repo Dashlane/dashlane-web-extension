@@ -1,4 +1,4 @@
-import { PasskeyItemView } from "@dashlane/communication";
+import { PasskeyItemView, WebAuthnKeyAlgorithm } from "@dashlane/communication";
 import { arrayBufferToBase64Url } from "@dashlane/framework-encoding";
 import { CeremonyStatus } from "@dashlane/hermes";
 import { v4 as uuidv4 } from "uuid";
@@ -34,6 +34,7 @@ import {
   WebauthnUseFallback,
 } from "./webauthn-common";
 import { supportedWebauthnAlgorithms } from "./webauthn-crypto-algorithms";
+import { getAvailableUserVerificationMethods } from "../user-verification/get-available-user-verification-methods";
 const handleShowWebauthnWebcards = async (
   actions: AutofillEngineActionsWithOptions,
   context: AutofillEngineContext,
@@ -132,10 +133,10 @@ export const webauthnGetHandler = async (
     }
     const { effectiveDomain } = validateWebauthnRequestSender(sender, request);
     isRpIdValidForDomain(request, context, effectiveDomain);
+    const availableMethods = await getAvailableUserVerificationMethods(context);
     if (
       request.options.userVerification === "required" &&
-      (await context.connectors.carbon.getAvailableUserVerificationMethods())
-        .length === 0
+      availableMethods.length === 0
     ) {
       throw new WebauthnUseFallback({
         logError: WebauthnErrorName.NotSupportedError,
@@ -164,6 +165,7 @@ export const webauthnGetHandler = async (
       void logAuthenticateWithPasskeyEvent(
         context,
         request,
+        sender,
         CeremonyStatus.Failure,
         errorName
       );
@@ -255,7 +257,10 @@ export const webauthnGetUserConfirmedHandler = async (
       (algorithm) =>
         algorithm.coseAlgorithmIdentifier === passkeyItem.keyAlgorithm
     );
-    if (cryptoAlgorithm === undefined) {
+    if (
+      cryptoAlgorithm === undefined ||
+      passkeyItem.keyAlgorithm === WebAuthnKeyAlgorithm.CloudPasskey
+    ) {
       throw new WebauthnSendError(WebauthnErrorName.NotSupportedError);
     }
     const signature = await cryptoAlgorithm.sign(
@@ -295,9 +300,11 @@ export const webauthnGetUserConfirmedHandler = async (
     void logAuthenticateWithPasskeyEvent(
       context,
       request,
+      _sender,
       CeremonyStatus.Success,
       undefined,
-      msToAuthentication
+      msToAuthentication,
+      passkeyItem.userDisplayName
     );
   } catch (exception) {
     const errorName =
@@ -307,6 +314,7 @@ export const webauthnGetUserConfirmedHandler = async (
     void logAuthenticateWithPasskeyEvent(
       context,
       request,
+      _sender,
       CeremonyStatus.Failure,
       errorName
     );

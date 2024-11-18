@@ -2,11 +2,13 @@ import { AutofillEngineContext } from "../../../../Api/server/context";
 import { UserVerificationResult } from "../../../../client";
 import {
   AbstractWebcardMetadata,
-  PendingOperationType,
   WebcardMetadataType,
 } from "../../../../types";
 import { AutofillEngineActionsWithOptions } from "../../../abstractions/messaging/action-serializer";
-import { isPendingOperationWebcardMetadata } from "../../../commands/private-types";
+import {
+  isPendingOperationWebcardMetadata,
+  PendingOperationType,
+} from "../../../commands/private-types";
 import { userVerificationCompleteForAutofill } from "./user-verification-complete-for-autofill";
 import { userVerificationCompleteForCopy } from "./user-verification-complete-for-copy";
 import { userVerificationCompleteForWebauthn } from "./user-verification-complete-for-webauthn";

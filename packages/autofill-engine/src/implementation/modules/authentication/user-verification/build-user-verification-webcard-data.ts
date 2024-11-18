@@ -1,14 +1,17 @@
-import { UserVerificationMethods } from "@dashlane/communication";
+import { UserVerificationMethods } from "@dashlane/authentication-contracts";
 import { AutofillEngineContext } from "../../../../Api/server/context";
 import {
   NeverAskAgainMode,
-  PendingOperation,
   UserVerificationUsageLogDetails,
   UserVerificationWebcardData,
   WebcardMetadataType,
   WebcardType,
 } from "../../../../types";
-import { PendingOperationWebcardMetadata } from "../../../commands/private-types";
+import {
+  PendingOperation,
+  PendingOperationWebcardMetadata,
+} from "../../../commands/private-types";
+import { getAvailableUserVerificationMethods } from "./get-available-user-verification-methods";
 import { v4 as uuidv4 } from "uuid";
 export async function buildUserVerificationWebcardData(
   context: AutofillEngineContext,
@@ -16,10 +19,10 @@ export async function buildUserVerificationWebcardData(
   usageLogDetails: UserVerificationUsageLogDetails,
   webcardId: string = uuidv4()
 ): Promise<UserVerificationWebcardData> {
-  const availableMethods =
-    await context.connectors.carbon.getAvailableUserVerificationMethods();
+  const availableMethods = await getAvailableUserVerificationMethods(context);
   const methodsPreferenceOrder = [
-    UserVerificationMethods.Webauthn,
+    UserVerificationMethods.Biometrics,
+    UserVerificationMethods.Pin,
     UserVerificationMethods.MasterPassword,
   ];
   const defaultMethod = methodsPreferenceOrder.find((method) =>

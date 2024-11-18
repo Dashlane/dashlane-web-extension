@@ -7,7 +7,6 @@ export enum WebcardType {
   FeedbackNotification = "feedback-notification",
   FollowUpNotification = "follow-up-notification",
   LinkedWebsiteUpdateConfirmation = "linked-website-update-confirmation",
-  MasterPassword = "master-password",
   OnboardingNotification = "notification",
   PhishingPrevention = "phishing-prevention",
   SavePassword = "save-password",

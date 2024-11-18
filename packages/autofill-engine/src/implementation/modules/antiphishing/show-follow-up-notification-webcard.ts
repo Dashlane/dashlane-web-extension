@@ -1,4 +1,7 @@
-import { VaultAutofillViewInterfaces } from "@dashlane/autofill-contracts";
+import {
+  VaultAutofillViewInterfaces,
+  VaultSourceType,
+} from "@dashlane/autofill-contracts";
 import { getQueryValue } from "@dashlane/framework-application";
 import { isSuccess } from "@dashlane/framework-types";
 import { v4 as uuidv4 } from "uuid";
@@ -38,6 +41,9 @@ export async function showFollowUpNotificationWebcard<
     vaultItem,
     vaultIngredient.type
   );
+  if (!webcardData) {
+    return;
+  }
   let key: keyof FollowUpNotificationWebcardItem;
   for (key in webcardData) {
     if (webcardData[key] === "") {

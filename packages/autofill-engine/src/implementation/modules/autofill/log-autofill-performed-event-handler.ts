@@ -8,7 +8,6 @@ import { AutofillPerformedInfos } from "../../../types";
 import { AutofillEngineActionsWithOptions } from "../../abstractions/messaging/action-serializer";
 import { ParsedURL } from "@dashlane/url-parser";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
-import { checkHasAutofillAuditLogs } from "../../../config/feature-flips";
 import { makeItemUsageActivityLog } from "../../abstractions/logs/activity-logs";
 export const logAutofillPerformedEventHandler = async (
   context: AutofillEngineContext,
@@ -18,9 +17,6 @@ export const logAutofillPerformedEventHandler = async (
 ): Promise<void> => {
   const { temporaryEmitPasswordAutofillPerformedEvent } =
     context.connectors.grapheneClient.autofillTracking.commands;
-  const hasAutofillAuditLogsFF = await checkHasAutofillAuditLogs(
-    context.connectors
-  );
   let log: UserPerformedAutofillCredential | UserPerformedAutofillPayment;
   if (infos.type === VaultSourceType.Credential) {
     log = makeItemUsageActivityLog<UserPerformedAutofillCredential>(
@@ -47,7 +43,8 @@ export const logAutofillPerformedEventHandler = async (
       }
     );
   }
-  if (hasAutofillAuditLogsFF) {
+  const premiumStatus = await context.connectors.carbon.getNodePremiumStatus();
+  if (premiumStatus.b2bStatus?.currentTeam) {
     await context.connectors.grapheneClient.activityLogs.commands.storeActivityLogs(
       {
         activityLogs: [log],

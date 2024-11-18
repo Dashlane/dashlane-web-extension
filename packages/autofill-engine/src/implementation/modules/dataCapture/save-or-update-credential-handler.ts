@@ -39,7 +39,7 @@ export const saveCredentialHandler = async (
     return;
   }
   const state = await context.state.tab.get();
-  const { url } = credentialInformation;
+  const { url, emailOrLogin } = credentialInformation;
   const fullDomain = new ParsedURL(url).getHostname();
   await forgetPersistentWebcard(context, webcardId);
   const { credentialId } = await saveCredential(context, credentialInformation);
@@ -49,6 +49,7 @@ export const saveCredentialHandler = async (
       type: CredentialOperationType.SaveCredential,
       credentialId,
       fullDomain,
+      emailOrLogin,
     },
     webcardId,
     formType: "",
@@ -77,6 +78,7 @@ export const updateCredentialHandler = async (
   webcardId: string,
   credentialInformation: {
     id: string;
+    title: string;
     newPassword: string;
     onlyForThisSubdomain: boolean;
     spaceId?: string;
@@ -88,7 +90,7 @@ export const updateCredentialHandler = async (
     return;
   }
   const fullDomain = new ParsedURL(sender.tab?.url ?? "").getHostname();
-  const { id, newPassword, onlyForThisSubdomain, spaceId } =
+  const { id, title, newPassword, onlyForThisSubdomain, spaceId } =
     credentialInformation;
   await forgetPersistentWebcard(context, webcardId);
   await updateCredential(context, {
@@ -103,6 +105,7 @@ export const updateCredentialHandler = async (
       type: CredentialOperationType.UpdateCredential,
       fullDomain,
       credentialId: id,
+      emailOrLogin: title,
     },
     webcardId,
     formType: "",

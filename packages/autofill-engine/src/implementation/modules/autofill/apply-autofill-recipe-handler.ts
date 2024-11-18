@@ -42,17 +42,16 @@ import {
   SomeVaultIngredient,
   VaultIngredient,
 } from "../../../Api/types/autofill";
-import {
-  checkHasDisabledPasswordWarning,
-  checkHasLinkedWebsitesInContext,
-  checkHasOneClickFormFill,
-} from "../../../config/feature-flips";
+import { checkHasDisabledPasswordWarning } from "../../../config/feature-flips";
 import {
   LinkedWebsiteUpdateConfirmationData,
-  PendingOperationType,
   WebcardType,
 } from "../../../types";
 import { isAddressLocaleFromGBorIE } from "../../abstractions/formatting/formatters/Address/helpers";
+import {
+  getDateFormat,
+  getDateSeparator,
+} from "../../abstractions/formatting/formatters/Dates/helpers";
 import {
   AutofillEngineActionsWithOptions,
   AutofillEngineActionTarget,
@@ -64,6 +63,7 @@ import {
   getParsedDateForIngredient,
 } from "../../abstractions/vault/get";
 import { showPersistentWebcard } from "../../abstractions/webcardPersistence/persistent-webcards";
+import { PendingOperationType } from "../../commands/private-types";
 import {
   askUserToConfirmAuthenticationForAutofill,
   getAutofillProtectionContext,
@@ -81,7 +81,6 @@ import {
   isIngredientValidForCredential,
   isPropertyInVaultItem,
 } from "./utils";
-import { DateFormat, DateSeparator } from "../../../client";
 interface AutofillOperationInsertionArgs {
   context: AutofillEngineContext;
   operations: AutofillOperations;
@@ -247,12 +246,14 @@ const insertFillOperationsInAutofillOperationsForVaultIngredient = async ({
         ? {
             type: dataSource.type,
             date: parsedDate.date,
-            format:
-              (ingredient.format?.dateFormat as DateFormat | undefined) ??
-              parsedDate.defaultFormat,
-            separator:
-              (ingredient.format?.dateSeparator as DateSeparator | undefined) ??
-              parsedDate.defaultSeparator,
+            format: getDateFormat(
+              ingredient.format?.dateFormat,
+              parsedDate.defaultFormat
+            ),
+            separator: getDateSeparator(
+              ingredient.format?.dateSeparator,
+              parsedDate.defaultSeparator
+            ),
           }
         : {
             type: dataSource.type,
@@ -438,6 +439,7 @@ const addAutofillOperationsForPostfillRecipes = async (
           filterCriteria: [],
           maxNumberOfItems: 1,
         },
+        limit: 1,
       });
       if (
         items.length > 0 &&
@@ -521,7 +523,6 @@ const addAsLinkedWebsiteIfNeeded = async (
   const tabHostName = parsedURL.getHostname();
   if (
     selectedVaultItem?.vaultType === VaultSourceType.Credential &&
-    (await checkHasLinkedWebsitesInContext(context.connectors)) &&
     new ParsedURL(selectedVaultItem.url).getHostname() !== tabHostName
   ) {
     const credentialPreferences = await firstValueFrom(
@@ -611,8 +612,7 @@ export const applyAutofillRecipeForVaultDataSourceHandler = async (
   const selectedVaultItem = await getAutofillDataFromVault(
     context,
     autofillDetails.dataSource.type,
-    autofillDetails.dataSource.vaultId,
-    sender.tab.url
+    autofillDetails.dataSource.vaultId
   );
   const operations = await buildAutofillOperations(
     context,
@@ -621,10 +621,7 @@ export const applyAutofillRecipeForVaultDataSourceHandler = async (
     selectedVaultItem
   );
   if (operations[AutofillOperationType.Fill].length > 0) {
-    if (
-      autofillDetails.autofillRecipe.postfillRecipes &&
-      (await checkHasOneClickFormFill(context.connectors))
-    ) {
+    if (autofillDetails.autofillRecipe.postfillRecipes) {
       await addAutofillOperationsForPostfillRecipes(
         context,
         operations,

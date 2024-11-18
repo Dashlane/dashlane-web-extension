@@ -7,7 +7,6 @@ import { ParsedURL } from "@dashlane/url-parser";
 import { v4 as uuidv4 } from "uuid";
 import { AutofillEngineContext } from "../../../Api/server/context";
 import { PhishingPreventionWebcardData } from "../../../Api/types/webcards/phishing-prevention-webcard";
-import { checkHasPhishingPrevention } from "../../../config/feature-flips";
 import {
   VaultIngredient,
   WebcardMetadataType,
@@ -28,6 +27,7 @@ import { newWebcardMetadataStore } from "../../commands/private-types";
 import { META_DOMAINS_WITH_STRICT_FULLDOMAIN_MATCH } from "../autofill/urls-lists";
 import { isUrlUnsecure } from "../autofill/utils";
 import { showFollowUpNotificationWebcard } from "./show-follow-up-notification-webcard";
+import { VaultItemType } from "@dashlane/vault-contracts";
 const URL_PROTOCOL_REGEXP = /^[A-Za-z+\-.]+:\/\//;
 const showPhishingPreventionWebcard = (
   actions: AutofillEngineActionsWithOptions,
@@ -78,7 +78,8 @@ async function getCredentialItemInfo(
   const parsedVaultItemUrl = new ParsedURL(vaultItem.url);
   const rootDomain = parsedVaultItemUrl.getRootDomain();
   const hostname = parsedVaultItemUrl.getHostname();
-  const urlProtocol = URL_PROTOCOL_REGEXP.exec(vaultItem.url)?.[0] ?? "*****";
+  const urlProtocol =
+    URL_PROTOCOL_REGEXP.exec(vaultItem.url)?.[0] ?? "__REDACTED__";
   const dashlaneDefinedLinkedWebsites = (
     await getDashlaneDefinedLinkedWebsites(context, vaultItem.url)
   ).filter((linkedRootDomain) => linkedRootDomain !== rootDomain);
@@ -147,10 +148,11 @@ async function makeCredentialDataPasteDecision(
     return { decision: "noAction" };
   }
   if (shouldWarnAboutPhishing && action.pasteBlocked) {
+    const showSubdomain = vaultItemDomainWithProtocol === tabDomainWithProtocol;
     return {
       decision: "showWebcard",
       vaultItemRootDomain: vaultItemDomainWithProtocol,
-      tabRootDomain: tabDomainWithProtocol,
+      tabRootDomain: showSubdomain ? tabHostname : tabDomainWithProtocol,
     };
   }
   return { decision: "allowPaste", vaultItem };
@@ -179,13 +181,10 @@ async function makeDataPasteDecision(
   if ((await checkIsAccountFrozen(context)).isB2CFrozen) {
     return { decision: "allowPaste", vaultItem };
   }
-  const hasPhishingPreventionFF = await checkHasPhishingPrevention(
-    context.connectors
-  );
   const hasPhishingPreventionCapability = await getPhishingPreventionCapability(
     context
   );
-  if (!hasPhishingPreventionFF || !hasPhishingPreventionCapability) {
+  if (!hasPhishingPreventionCapability) {
     return { decision: "allowPaste", vaultItem };
   }
   if (vaultItem.vaultType === VaultSourceType.Credential) {

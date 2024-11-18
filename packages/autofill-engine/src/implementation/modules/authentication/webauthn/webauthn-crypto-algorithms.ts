@@ -1,3 +1,4 @@
+import { WebAuthnKeyAlgorithm } from "@dashlane/communication";
 import { base64UrlToArrayBuffer } from "@dashlane/framework-encoding";
 import * as cbor from "cbor";
 import { BrowserApi } from "../../../../Api/types/browser/browser-api";
@@ -37,7 +38,7 @@ export type WebauthnCryptoAlgorithm = {
 };
 export const supportedWebauthnAlgorithms: WebauthnCryptoAlgorithm[] = [
   {
-    coseAlgorithmIdentifier: -7,
+    coseAlgorithmIdentifier: WebAuthnKeyAlgorithm.ES256,
     async generateNewKeyPair(browserApi: BrowserApi) {
       const subtleCrypto = browserApi.crypto.subtle;
       const key = await subtleCrypto.generateKey(

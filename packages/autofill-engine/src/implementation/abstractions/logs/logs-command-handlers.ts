@@ -5,6 +5,7 @@ import { HandlersForModuleCommands } from "../../commands/handlers";
 import { logException } from "./exception-logs";
 import { logFormSubmitHandler } from "./form-submit-log";
 import { logRightClickMenuHandler } from "./right-click-menu-log";
+import { sendPropertyCopiedActivityLogHandler } from "./activity-logs";
 const handleLogError = (error: Error) => {
   if (!error.message.includes("TIMED_OUT")) {
     throw error;
@@ -16,6 +17,7 @@ export const LogsCommandHandlers: HandlersForModuleCommands<
   | "logException"
   | "logFormSubmit"
   | "logRightClickMenu"
+  | "sendPropertyCopiedActivityLog"
 > = {
   logEvent: async (context, _actions, _sender, event: Event): Promise<void> => {
     await context.connectors.carbon.logEvent({ event }).catch(handleLogError);
@@ -51,6 +53,7 @@ export const LogsCommandHandlers: HandlersForModuleCommands<
     );
     return Promise.resolve();
   },
+  sendPropertyCopiedActivityLog: sendPropertyCopiedActivityLogHandler,
   logFormSubmit: logFormSubmitHandler,
   logRightClickMenu: logRightClickMenuHandler,
 };

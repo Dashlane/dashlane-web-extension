@@ -3,14 +3,21 @@ import {
   VaultSourceType,
 } from "@dashlane/autofill-contracts";
 import { AutofillEngineContext } from "../../../Api/server/context";
-import { AutofillRecipeBySourceType, SrcElementDetails } from "../../../types";
+import {
+  AutofillRecipeBySourceType,
+  SrcElementDetails,
+  WebcardItem,
+} from "../../../types";
 import {
   AutofillEngineActionsWithOptions,
   AutofillEngineActionTarget,
 } from "../../abstractions/messaging/action-serializer";
 import { searchAllAutofillDataFromVault } from "../../abstractions/vault/get";
 import { getFormattedWebcardItem } from "./get-formatted-webcard-item";
-import { buildAutofillDropdownWebcardItems } from "./user-focus-on-element-handler";
+import {
+  buildAutofillDropdownWebcardItems,
+  MAX_NUMBER_OF_ITEMS_IN_DROPDOWN,
+} from "./user-focus-on-element-handler";
 export interface QueryVaultItemsOptions {
   autofillRecipes: AutofillRecipeBySourceType;
   formClassification: string;
@@ -43,37 +50,42 @@ export const queryVaultItemsHandler = async (
   if (!tabUrl) {
     return;
   }
-  const fetchInEntireVault = async () => {
-    const items = await searchAllAutofillDataFromVault({
+  let items: WebcardItem[] = [];
+  let count = 0;
+  if (options) {
+    items = (
+      await buildAutofillDropdownWebcardItems(
+        context,
+        tabUrl,
+        sender,
+        {
+          formClassification: options.formClassification,
+          autofillRecipes: options.autofillRecipes,
+          ...options.srcElementDetails,
+        },
+        queryString
+      )
+    ).webcardItems;
+    count = items.length;
+  } else {
+    const result = await searchAllAutofillDataFromVault({
       context,
       searchQuery: queryString,
       itemTypes: SEARCHABLE_IN_WEBCARDS,
       sorting: { property: "lastUse", direction: "descend" },
+      limit: MAX_NUMBER_OF_ITEMS_IN_DROPDOWN,
     });
-    return items.map((item) =>
+    items = result.items.map((item) =>
       getFormattedWebcardItem({
         vaultType: item.vaultType,
         vaultItem: item as VaultAutofillViewInterfaces[typeof item.vaultType],
       })
     );
-  };
-  const webcardItems = options
-    ? (
-        await buildAutofillDropdownWebcardItems(
-          context,
-          tabUrl,
-          sender,
-          {
-            formClassification: options.formClassification,
-            autofillRecipes: options.autofillRecipes,
-            ...options.srcElementDetails,
-          },
-          queryString
-        )
-      ).webcardItems
-    : await fetchInEntireVault();
+    count = result.count;
+  }
   actions.updateWebcardItems(
     AutofillEngineActionTarget.SenderFrame,
-    webcardItems
+    items,
+    count
   );
 };
