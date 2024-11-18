@@ -1,12 +1,12 @@
-import { AppLogger } from "../application/logger";
 import { Injectable } from "../dependency-injection";
 import { FileDownloadEmitterChannel } from "./file-download-emitter";
+import { FileDownloadLogger } from "./file-download-logger";
 @Injectable()
 export class FileDownloadService {
-  private readonly logger: AppLogger;
+  private readonly logger: FileDownloadLogger;
   private readonly emitterChannel: FileDownloadEmitterChannel;
   public constructor(
-    logger: AppLogger,
+    logger: FileDownloadLogger,
     emitterChannel: FileDownloadEmitterChannel
   ) {
     this.logger = logger;
@@ -17,7 +17,7 @@ export class FileDownloadService {
     mimeType: string,
     fileContent: ArrayBuffer
   ) {
-    this.logger.log(`downloading file ${fileName}`);
-    this.emitterChannel.send(fileName, mimeType, fileContent);
+    this.logger.info(`downloading file ${fileName}`);
+    return this.emitterChannel.send(fileName, mimeType, fileContent);
   }
 }

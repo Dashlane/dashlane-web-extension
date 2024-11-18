@@ -1,14 +1,11 @@
 import { Provider, Scope } from "@nestjs/common";
-import { ContextIdFactory, REQUEST } from "@nestjs/core";
+import { REQUEST } from "@nestjs/core";
 import {
   ApplicationPipelineData,
   PipelineType,
 } from "./nest-request-response-bus";
 import { assertUnreachable } from "@dashlane/framework-types";
-import {
-  FrameworkRequestContextValues,
-  RequestContext,
-} from "../../request-context/request-context";
+import { RequestContext } from "../../request-context/request-context";
 export const RequestContextProvider: Provider = {
   provide: RequestContext,
   scope: Scope.REQUEST,
@@ -20,17 +17,13 @@ export const RequestContextProvider: Provider = {
         case PipelineType.Event:
         case PipelineType.Query:
         case PipelineType.Cron:
-          return request.context;
         case PipelineType.Init:
-          return new RequestContext();
+          return request.context;
         default:
           assertUnreachable(request);
       }
     };
     const context = createContext();
-    context.getOrAdd(FrameworkRequestContextValues.UseCaseId, () =>
-      String(ContextIdFactory.getByRequest(request).id)
-    );
     return context;
   },
 };

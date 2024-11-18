@@ -7,7 +7,11 @@ import { Inject } from "@nestjs/common";
 import { Injectable } from "../dependency-injection/injectable.decorator";
 import { ModuleApiNameProviderToken } from "../dependency-injection/module.internal";
 import { NodeEventBroker } from "./node-event-broker";
-import { RequestContext } from "../request-context/request-context";
+import {
+  FrameworkRequestContextValues,
+  RequestContext,
+} from "../request-context/request-context";
+import { ContextIdFactory } from "@nestjs/core/helpers/context-id-factory.js";
 export interface EventEmitter<TApi extends AnyModuleApi> {
   sendEvent: <TEventName extends string & keyof TApi["events"]>(
     name: TEventName,
@@ -39,13 +43,14 @@ export class ContextlessBaseEventEmitter<TApi extends AnyModuleApi> {
   public sendEvent<TEventName extends string & keyof TApi["events"]>(
     name: TEventName,
     event: BodyOfEvent<TApi["events"][TEventName]>,
-    context?: RequestContext
+    inboundContext?: RequestContext
   ): Promise<void> {
-    return this.broker.publishEvent(
-      this.apiName,
-      name,
-      event,
-      context ?? new RequestContext()
-    );
+    const context =
+      inboundContext ??
+      new RequestContext().withValue(
+        FrameworkRequestContextValues.UseCaseId,
+        String(ContextIdFactory.create().id)
+      );
+    return this.broker.publishEvent(this.apiName, name, event, context);
   }
 }

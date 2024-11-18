@@ -23,7 +23,7 @@ import {
   FrameworkRequestContextValues,
   RequestContext,
 } from "../../request-context/request-context";
-import { AppLogger } from "../../application/logger";
+import { AppLogger } from "../../logging/logger";
 const DefaultCodecs: Record<
   UseCaseScope,
   AbstractClass<Codec<ArrayBuffer, ArrayBuffer>>
@@ -48,7 +48,8 @@ export function createStorageProviders(
       public encryptionCodec: Codec<ArrayBuffer, ArrayBuffer>,
       public serializationCodec: Codec<ArrayBuffer, unknown>,
       public transportStorageCodec: Codec<string, ArrayBuffer>,
-      public backend: IStorage<string>
+      public backend: IStorage<string>,
+      public appLogger: AppLogger
     ) {}
   }
   class BuildableStorage extends StorageType {
@@ -57,7 +58,8 @@ export function createStorageProviders(
         deps.encryptionCodec,
         deps.serializationCodec,
         deps.transportStorageCodec,
-        deps.backend
+        deps.backend,
+        deps.appLogger
       );
     }
   }
@@ -106,7 +108,8 @@ export function createStorageProviders(
         encryptionCodec,
         serializationCodec,
         transportStorageCodec,
-        backend
+        backend,
+        logger
       );
     },
   };

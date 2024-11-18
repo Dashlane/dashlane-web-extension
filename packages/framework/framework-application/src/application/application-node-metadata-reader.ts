@@ -15,7 +15,7 @@ import {
 import { StoreClassDefinition } from "../state/store/store.types";
 import { ModuleCronDefinition } from "../tasks";
 import { LocallyImplementedApisOf } from "./app.types";
-import { AppLogger } from "./logger";
+import { AppLogger } from "../logging/logger";
 import { ConfigurationProvider } from "./nest-adapters/app-module";
 export const checkIfAllApisAreImplemented = <
   TAppDefinition extends AnyAppDefinition,
@@ -46,14 +46,15 @@ export const checkIfAllApisAreImplemented = <
     (implementation) => !exposedApis.has(implementation)
   );
   if (unImplementedApis.length > 0) {
-    throw new Error(
-      "These APIs are not implemented " + JSON.stringify(unImplementedApis)
+    console.error(
+      "These APIs are not implemented ",
+      JSON.stringify(unImplementedApis)
     );
   }
   if (implementationWithoutApis.length > 0) {
-    throw new Error(
-      "Some implementations do not have APIS " +
-        JSON.stringify(implementationWithoutApis)
+    console.error(
+      "Some implementations do not have APIS",
+      JSON.stringify(implementationWithoutApis)
     );
   }
 };

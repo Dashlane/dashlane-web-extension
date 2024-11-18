@@ -6,6 +6,7 @@ import {
 } from "@dashlane/framework-services";
 import { StoreStorageDefinition } from "./storage.types";
 import { IStorage, isVersionedData, VersionedData } from "./types";
+import { AppLogger } from "../../application";
 const MAX_OBJECT_SHAPE_INFO_STRING_LENGTH = 40;
 export class Storage<TStorage> implements IStorage<TStorage> {
   constructor(
@@ -13,7 +14,8 @@ export class Storage<TStorage> implements IStorage<TStorage> {
     private serializationCodec: Codec<ArrayBuffer, unknown>,
     private transportStorageCodec: Codec<string, ArrayBuffer>,
     private backend: IStorage<string>,
-    private definition: StoreStorageDefinition<TStorage>
+    private definition: StoreStorageDefinition<TStorage>,
+    private appLogger: AppLogger
   ) {
     this.codec = combineCodecs(
       transportStorageCodec,
@@ -60,47 +62,25 @@ export class Storage<TStorage> implements IStorage<TStorage> {
         );
       }
       const newContent = definition.migrateStorageSchema(decoded);
-      if (!definition.typeGuard(newContent)) {
-        throw new Error(
-          `Unable to migrate storage data due to typeguard failure` +
-            ` (storage name: ${storageName}, data shape: ${this.printDataShapeInfo(
-              newContent
-            )})`
-        );
-      }
-      await this.writeWithVersion(newContent);
-      return newContent;
+      const safeNewContent = this.getTypecheckedData(newContent, "read");
+      await this.writeWithVersion(safeNewContent);
+      return safeNewContent;
     } else if (schemaVersionInStorage > currentSchemaVersion) {
       throw new Error(
         "Unable to read storage data with a more recent version" +
           ` than current schema (storage name: ${storageName})`
       );
     } else {
-      if (!definition.typeGuard(content)) {
-        throw new Error(
-          `Unable to read storage data due to typeguard failure` +
-            ` (storage name: ${storageName}, data shape: ${this.printDataShapeInfo(
-              content
-            )})`
-        );
-      }
+      const safeContent = this.getTypecheckedData(content, "read");
       if (hasBypassedDecryption) {
-        await this.writeWithVersion(content);
+        await this.writeWithVersion(safeContent);
       }
-      return content;
+      return safeContent;
     }
   }
   write(data: TStorage) {
-    if (!this.definition.typeGuard(data)) {
-      const { storageName } = this.definition;
-      throw new Error(
-        `Failed to write storage data due to typeguard failure` +
-          ` (storage name: ${storageName}, data shape: ${this.printDataShapeInfo(
-            data
-          )})`
-      );
-    }
-    return this.writeWithVersion(data);
+    const safeData = this.getTypecheckedData(data, "write");
+    return this.writeWithVersion(safeData);
   }
   clear(): Promise<void> {
     return this.backend.clear();
@@ -133,6 +113,34 @@ export class Storage<TStorage> implements IStorage<TStorage> {
         throw error;
       }
     }
+  }
+  private getTypecheckedData(
+    data: unknown,
+    operation: "read" | "write"
+  ): TStorage {
+    try {
+      if (!this.definition.typeGuard(data)) {
+        throw new Error(`Typeguard check failed`);
+      }
+    } catch (e) {
+      const { storageName, initialValue } = this.definition;
+      const errorMessage = `Failed to ${operation} storage data because of typeguard failure`;
+      const contextualInfo = {
+        details: e instanceof Error ? e.message : "",
+        storageInfo: `(storage name: ${storageName}, data shape: ${this.printDataShapeInfo(
+          data
+        )})`,
+      };
+      const typeGuardFailError = new Error(errorMessage, {
+        cause: JSON.stringify(contextualInfo),
+      });
+      this.appLogger.error(errorMessage, contextualInfo);
+      if (this.definition.isCache) {
+        return initialValue;
+      }
+      throw typeGuardFailError;
+    }
+    return data;
   }
   private printDataShapeInfo(data: unknown) {
     if (!!data && typeof data === "object") {

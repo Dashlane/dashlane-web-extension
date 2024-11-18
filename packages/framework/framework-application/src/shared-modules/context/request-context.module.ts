@@ -6,6 +6,8 @@ import { ActiveUserStore } from "./request-context.store";
 import { Module } from "../../dependency-injection/module.decorators";
 import { RequestContextEventsEmitter } from "./events-emitter";
 import { requestContextApi } from "@dashlane/framework-contracts";
+import { createLoggerProvider } from "../../logging";
+import { RequestContextLogger } from "./request-context-logger";
 @Module({
   api: requestContextApi,
   handlers: {
@@ -18,7 +20,10 @@ import { requestContextApi } from "@dashlane/framework-contracts";
     },
   },
   stores: [ActiveUserStore],
-  providers: [RequestContextEventsEmitter],
+  providers: [
+    RequestContextEventsEmitter,
+    createLoggerProvider(RequestContextLogger),
+  ],
   domainName: "framework",
 })
 export class RequestContextModule {}

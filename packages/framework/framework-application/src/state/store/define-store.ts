@@ -35,6 +35,7 @@ const configurationToDefinition = <TStore, TStorage = unknown>(
     storage: defineStorageClass({
       ...conf.storage,
       storageName: conf.storeName,
+      isCache: conf.isCache ?? false,
     }),
     capacity: isStoreConfiguration(conf) ? conf.capacity : undefined,
   };

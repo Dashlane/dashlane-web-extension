@@ -8,8 +8,9 @@ import {
   requestContextApi,
 } from "@dashlane/framework-contracts";
 import { PassthroughCodec } from "@dashlane/framework-services";
-import { filter, firstValueFrom } from "rxjs";
+import { distinctUntilChanged, filter, firstValueFrom } from "rxjs";
 import { NestFactory } from "@nestjs/core";
+import { ContextIdFactory } from "@nestjs/core/helpers/context-id-factory.js";
 import { App, AppParam, MandatoryLocalModuleDeclarations } from "./app.types";
 import { getSubscriptionsFromMetadata } from "./get-subscriptions-from-metadata";
 import { AppModule } from "./nest-adapters/app-module";
@@ -18,8 +19,8 @@ import { AppLifeCycle } from "./app-lifecycle";
 import { NodeEventBroker } from "../client/node-event-broker";
 import { CqrsBroker } from "../client/cqrs-broker";
 import { createCqrsClients } from "../client/create-cqrs-clients";
+import { ObservableQueriesCache } from "../client/observable-queries-cache";
 import {
-  DefaultLogger,
   DefaultTimers,
   ThrowJsonFetcher,
 } from "../start-application-node-defaults";
@@ -42,19 +43,30 @@ import { ParameterProviderType } from "../dependency-injection/parameter-provide
 import { doFrameworkInit } from "./nest-adapters/do-framework-init";
 import { parameterProviderToNestProvider } from "./nest-adapters/nest-provider";
 import { StoreList } from "../state/store/store-list";
-import { ExceptionLoggingModule } from "../logging/exception/exception-logging.module";
-import { DEFAULT_EXCEPTION_LOGGING_CONFIG } from "../logging/exception/exception-logging.config";
-import { RequestContext } from "../request-context/request-context";
+import { ExceptionLoggingModule } from "../exception-logging/exception-logging.module";
+import { DEFAULT_DIAGNOSTICS_LOGS_PROCESSOR } from "../diagnostics/config";
+import { DEFAULT_EXCEPTION_LOGGING_CONFIG } from "../exception-logging/exception-logging.config";
 import { ActiveUserInterceptor } from "./nest-adapters/interceptors/active-user.interceptor";
 import { Class } from "@dashlane/framework-types";
 import { CronRepository } from "../tasks/cron-repository";
 import { CronsBroker } from "../tasks/crons-broker";
 import { NodeModulesIntrospection } from "../dependency-injection/module.types";
-import { UseCaseStacktraceInterceptor } from "../logging/exception/use-case-stacktrace.interceptor";
+import { UseCaseStacktraceInterceptor } from "../exception-logging/use-case-stacktrace.interceptor";
 import { createModuleClientsProviders } from "./module-client";
 import { getUserUseCaseScopeProvider } from "../use-case-scope/user-use-case-scope-provider";
 import { resolveModuleDeclarationShorthand } from "../dependency-injection/module";
-import { RequestContextModule } from "../index";
+import { ExceptionLogger } from "../exception-logging/exception-logger";
+import { ExceptionCriticalityValues } from "../exception-logging/exception-logging.types";
+import { RequestContextModule } from "../shared-modules/context/request-context.module";
+import { AppLogger } from "../logging/logger";
+import { DiagnosticsModule } from "../diagnostics/module";
+import { provideValue } from "../dependency-injection/parameter-provider";
+import { DiagnosticsLogsSources } from "../diagnostics/infra";
+import { ContextLessCqrsClient } from "../client/cqrs-client.service";
+import {
+  FrameworkRequestContextValues,
+  RequestContext,
+} from "../request-context/request-context";
 const ALL_BASE_INTERCEPTORS: Class<NestInterceptor>[] = [
   UseCaseStacktraceInterceptor,
   ActiveUserInterceptor,
@@ -69,12 +81,18 @@ export const startApplicationNode = async <
   currentNode,
   implementations,
   otherModules = [],
-  logger = new DefaultLogger(),
   storeInfrastructureFactory = new MemoryStoreInfrastructureFactory(),
   channelsListener = NoDynamicChannels,
   timers = new DefaultTimers(),
   keyValueStorageInfrastructure = new MemoryKeyValueStorageInfrastructure(),
   managedStorageInfrastructure = new MemoryManagedStorageInfrastructure(),
+  logger = AppLogger.create({
+    container: "framework",
+    module: "kernel",
+    domain: "framework",
+    infra: keyValueStorageInfrastructure,
+  }),
+  externalLoggers = [],
   jsonFetcher = new ThrowJsonFetcher(),
   cronSource = new TimerBasedCronSource(timers),
   defaultDeviceStorageEncryptionCodec = {
@@ -86,16 +104,17 @@ export const startApplicationNode = async <
     useClass: PassthroughCodec,
   },
   exceptionLogging = DEFAULT_EXCEPTION_LOGGING_CONFIG,
+  diagnosticsLogProcessor = DEFAULT_DIAGNOSTICS_LOGS_PROCESSOR,
 }: AppParam<TAppDefinition, TCurrentNode>): Promise<App<TAppDefinition>> => {
   try {
-    console.log("[background/framework] Starting application node");
+    logger.debug("Starting application node");
     const onAbort = (() => {
-      console.error("[background/framework] Unexpected call to process.abort");
+      logger.error("Unexpected call to process.abort");
       throw new Error("Aborted");
     }) as never;
     process.abort = onAbort;
     const onExit = (() => {
-      console.error("[background/framework] Unexpected call to process.exit");
+      logger.error("Unexpected call to process.exit");
       throw new Error("Exited");
     }) as never;
     process.exit = onExit;
@@ -115,6 +134,15 @@ export const startApplicationNode = async <
     const internalModules = [
       RequestContextModule,
       ExceptionLoggingModule.configure(exceptionLogging),
+      DiagnosticsModule.configure({
+        externalDiagnosticsLogsSources: provideValue(
+          new DiagnosticsLogsSources([
+            logger.diagnostics.getLogsStream$(),
+            ...externalLoggers.map((logr) => logr.diagnostics.getLogsStream$()),
+          ])
+        ),
+        processorAdapter: diagnosticsLogProcessor,
+      }),
     ];
     const modulesDeclaration = [
       ...internalModules,
@@ -194,7 +222,7 @@ export const startApplicationNode = async <
         token: DefaultEncryptionCodecForUserData,
         parameterProvider: defaultUserStorageEncryptionCodec,
       });
-    const lifeCycle = new AppLifeCycle();
+    const lifeCycle = new AppLifeCycle(logger);
     const introspection = new NodeModulesIntrospection(
       new Set(eventHandlers),
       allDeclarations
@@ -203,6 +231,22 @@ export const startApplicationNode = async <
       augmentedAppDefinition
     );
     const userUseCaseScopeProvider = getUserUseCaseScopeProvider();
+    const queriesCache = new ObservableQueriesCache(lifeCycle);
+    const contextLessClient = new ContextLessCqrsClient(
+      nodeConfiguration,
+      cqrsBroker,
+      queriesCache
+    );
+    lifeCycle.addAppReadyHook(() => {
+      const userSubscription = contextLessClient
+        .getClient(requestContextApi)
+        .queries.activeUser()
+        .pipe(distinctUntilChanged())
+        .subscribe(() => {
+          queriesCache.clearUserCache();
+        });
+      return () => userSubscription.unsubscribe();
+    });
     const appModule = AppModule.create<TAppDefinition, TCurrentNode>({
       nodeConfiguration,
       brokers: { cqrs: cqrsBroker, event: eventsBroker },
@@ -222,36 +266,64 @@ export const startApplicationNode = async <
       introspection,
       moduleClientsProviders,
       userUseCaseScopeProvider,
+      queriesCache,
     });
-    console.log("[background/framework] Creating NestApplication...");
+    logger.debug("Creating NestApplication");
     const app = await NestFactory.create(appModule, httpAdapter, {
-      logger,
+      logger: AppLogger.createNull(),
     });
-    console.log("[background/framework] Initializing NestApplication...");
+    httpAdapter.setAppInstance(app);
+    logger.debug("Initializing NestApplication");
     const nestApp = await app.init();
-    await doFrameworkInit(onFrameworkInits, nestApp);
-    app.listen(DUMMY_ADDRESS);
-    const isListening = httpAdapter.isListening$.pipe(filter((x) => !!x));
-    await firstValueFrom(isListening);
-    lifeCycle.addShutdownHook(() => app.close());
-    await lifeCycle.startup();
+    const exceptionLogger = await nestApp.resolve<ExceptionLogger>(
+      ExceptionLogger
+    );
+    try {
+      await doFrameworkInit(onFrameworkInits, nestApp, exceptionLogger, logger);
+      logger.debug("Start CQRS, event & CRON brokers");
+      app.listen(DUMMY_ADDRESS);
+      const isListening = httpAdapter.isListening$.pipe(filter((x) => !!x));
+      await firstValueFrom(isListening);
+      lifeCycle.addShutdownHook(() => app.close());
+      await lifeCycle.startup(exceptionLogger);
+    } catch (initError) {
+      void exceptionLogger.captureException(
+        initError,
+        {
+          origin: "exceptionBoundary",
+          domainName: "framework",
+          moduleName: "kernel",
+        },
+        ExceptionCriticalityValues.CRITICAL
+      );
+      throw initError;
+    }
     return {
       stop: () => lifeCycle.shutDown(),
-      createClient: () => createCqrsClients(augmentedAppDefinition, cqrsBroker),
-      sendEvent: (sourceModule, eventName, eventPayload, context) => {
+      createClient: () =>
+        createCqrsClients<TAppDefinition, TCurrentNode>(
+          currentNode,
+          augmentedAppDefinition,
+          cqrsBroker,
+          queriesCache
+        ),
+      sendEvent: (sourceModule, eventName, eventPayload, inboundContext) => {
+        const context =
+          inboundContext ??
+          new RequestContext().withValue(
+            FrameworkRequestContextValues.UseCaseId,
+            String(ContextIdFactory.create().id)
+          );
         return eventsBroker.publishEvent(
           sourceModule,
           eventName,
           eventPayload,
-          context ?? new RequestContext()
+          context
         );
       },
     };
   } catch (error) {
-    console.error(
-      "[background/framework] Exception when starting application node",
-      error
-    );
+    logger.error("Exception when starting application node", { error });
     throw error;
   }
 };

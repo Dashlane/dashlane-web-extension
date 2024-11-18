@@ -10,12 +10,11 @@ import { IQueryHandler } from "../../cqrs/queries.types";
 import { ICommandHandler } from "../../cqrs/commands.types";
 import { CommandHandler } from "../../cqrs/commands.decorators";
 import { RequestContextEventsEmitter } from "./events-emitter";
-import { disableVerbosePipelineLogs } from "../../logging/exception/exception-logging.interceptor";
+import { RequestContextLogger } from "./request-context-logger";
 @QueryHandler(ActiveUserQuery)
 export class ActiveUserHandler implements IQueryHandler<ActiveUserQuery> {
   constructor(private activeUserStore: ActiveUserStore) {}
   public execute() {
-    disableVerbosePipelineLogs();
     return this.activeUserStore.state$.pipe(
       map((x) => x.userName),
       distinctUntilChanged(),
@@ -29,7 +28,8 @@ export class SetActiveUserHandler
 {
   constructor(
     private activeUserStore: ActiveUserStore,
-    private eventEmitter: RequestContextEventsEmitter
+    private eventEmitter: RequestContextEventsEmitter,
+    private logger: RequestContextLogger
   ) {}
   public async execute({
     body: { userName },
@@ -42,9 +42,12 @@ export class SetActiveUserHandler
       userName,
     });
     if (userName) {
+      this.logger.debug(`Active user set`);
       this.eventEmitter.sendEvent("activeUserSet", {
         userName: userName,
       });
+    } else {
+      this.logger.debug(`Active user unset`);
     }
     return success(undefined);
   }

@@ -3,14 +3,14 @@ import { ContextId } from "@nestjs/core";
 import { firstValueFrom, map } from "rxjs";
 import { getSuccess, isSuccess } from "@dashlane/framework-types";
 import { featureFlipsApi } from "@dashlane/framework-contracts";
-import { ExceptionLogger } from "../logging/exception";
+import { ExceptionLogger } from "../exception-logging/exception-logger";
 import { ICronTaskHandler, ModuleCronDefinition } from "./cron.types";
 import {
   FrameworkRequestContextValues,
   RequestContext,
 } from "../request-context/request-context";
-import { ApplicationRequestError } from "../logging/exception/exception-logging.interceptor";
-import { UseCaseStacktraceRepository } from "../logging/exception/use-case-stacktrace-repository";
+import { ApplicationRequestError } from "../exception-logging/exception-logging.interceptor";
+import { UseCaseStacktraceRepository } from "../exception-logging/use-case-stacktrace-repository";
 import { CqrsClient } from "../client";
 export class CronTaskHandlerExceptionBoundary implements ICronTaskHandler {
   public constructor(

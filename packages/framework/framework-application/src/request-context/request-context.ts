@@ -35,11 +35,11 @@ export class RequestContext {
     }
     return this.get(key);
   }
-  public getOrAddSync<T>(key: string, factory: () => T): T | undefined {
+  public getOrAddSync<T>(key: string, factory: () => T): T {
     if (!this.has(key)) {
       this.set(key, factory());
     }
-    return this.get(key);
+    return this.get(key) as T;
   }
   public set<T>(key: string, value: T) {
     this.entries[key] = value;

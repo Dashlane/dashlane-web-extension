@@ -5,6 +5,7 @@ import {
   StoreStorageDefinition,
 } from "./storage.types";
 import { IStorage } from "./types";
+import { AppLogger } from "../../logging/logger";
 export const defineStorageClass = <TStorage>(
   definition: StoreStorageDefinition<TStorage>
 ): StoreStorageClassDefinition<TStorage> => {
@@ -15,14 +16,16 @@ export const defineStorageClass = <TStorage>(
       encryptionCodec: Codec<ArrayBuffer, ArrayBuffer>,
       serializationCodec: Codec<ArrayBuffer, unknown>,
       transportStorageCodec: Codec<string, ArrayBuffer>,
-      backend: IStorage<string>
+      backend: IStorage<string>,
+      appLogger: AppLogger
     ) {
       super(
         encryptionCodec,
         serializationCodec,
         transportStorageCodec,
         backend,
-        definition
+        definition,
+        appLogger
       );
     }
   };

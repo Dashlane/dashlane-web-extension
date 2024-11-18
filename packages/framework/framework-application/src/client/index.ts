@@ -10,3 +10,4 @@ export {
 } from "./define-event-emitter";
 export { createApplicationClient } from "./create-application-client";
 export { getQueryValue } from "./get-query-value";
+export * from "./observable-queries-cache";

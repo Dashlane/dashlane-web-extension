@@ -7,10 +7,14 @@ import {
   ModuleDeclaration,
   ParameterProvider,
 } from "../dependency-injection";
+import { LogHttpRequestsInterceptor } from "./log-http-requests.http-interceptor";
+import { Mv3ExtensionResilienceModuleLogger } from "../mv3-extension-resilience/mv3-extension-resilience-logger";
+import { createLoggerProvider } from "../logging/module-logger";
 const GLOBAL_HTTP_INTERCEPTOR_PROVIDERS: ClassImplementing<HttpInterceptor>[] =
   [];
 @Module({
   providers: [
+    createLoggerProvider(Mv3ExtensionResilienceModuleLogger),
     {
       asyncFactory: async (backend: HttpBackend, moduleRef: ModuleRef) => {
         const client = new HttpClient(backend);
@@ -54,3 +58,4 @@ export class HttpModule {
     GLOBAL_HTTP_INTERCEPTOR_PROVIDERS.push(interceptorClass);
   }
 }
+HttpModule.addGlobalInterceptor(LogHttpRequestsInterceptor);

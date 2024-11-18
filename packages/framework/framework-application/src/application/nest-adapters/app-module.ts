@@ -22,7 +22,7 @@ import { NodeEventBroker } from "../../client/node-event-broker";
 import { NodeConfiguration } from "../../messaging/node-configuration";
 import { StoreInfrastructureFactory } from "../../state/store/store-infrastructure-factory";
 import { AppLifeCycle } from "../app-lifecycle";
-import { AppLogger } from "../logger";
+import { AppLogger } from "../../logging/logger";
 import { BaseNestController } from "./base-nest-controller";
 import { AppTimers } from "../app-timers";
 import { CommandRefresherFactory } from "../../cqrs/cqrs-command-refresher";
@@ -50,6 +50,7 @@ import { RequestContext } from "../../request-context/request-context";
 import { Class } from "@dashlane/framework-types";
 import { NodeModulesIntrospection } from "../../dependency-injection/module.types";
 import { UserUseCaseScope } from "../../use-case-scope/user-use-case-scope";
+import { ObservableQueriesCacheBase } from "../../client/observable-queries-cache";
 export interface BrokersOf<
   TAppDefinition extends AnyAppDefinition,
   TCurrentNode extends NodeIdentifiersOf<TAppDefinition>
@@ -80,6 +81,7 @@ export interface AppModuleParams<
   introspection: NodeModulesIntrospection;
   moduleClientsProviders: Array<NestFactoryProvider | NestValueProvider>;
   userUseCaseScopeProvider: NestFactoryProvider;
+  queriesCache: ObservableQueriesCacheBase<TAppDefinition>;
 }
 export class AppModule {
   private static globalInterceptors: Class<NestInterceptor>[] = [];
@@ -108,6 +110,7 @@ export class AppModule {
     introspection,
     moduleClientsProviders,
     userUseCaseScopeProvider,
+    queriesCache,
   }: AppModuleParams<TAppDefinition, TCurrentNode>): DynamicModule {
     return {
       module: AppModule,
@@ -131,6 +134,10 @@ export class AppModule {
         {
           provide: CqrsBroker,
           useValue: brokers.cqrs,
+        },
+        {
+          provide: ObservableQueriesCacheBase,
+          useValue: queriesCache,
         },
         {
           provide: NodeEventBroker,
@@ -184,6 +191,7 @@ export class AppModule {
         NodeConfiguration,
         CqrsBroker,
         NodeEventBroker,
+        ObservableQueriesCacheBase,
         CqrsClient,
         ContextLessCqrsClient,
         ...configProviders.map(({ provide }) => provide),

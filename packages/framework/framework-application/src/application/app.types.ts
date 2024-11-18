@@ -13,7 +13,7 @@ import { Channel } from "../messaging/channel";
 import { ChannelsListener } from "../messaging/channels-listener";
 import { StoreInfrastructureFactory } from "../state/store/store-infrastructure-factory";
 import { AppTimers } from "./app-timers";
-import { AppLogger } from "./logger";
+import { AppLogger } from "../logging/logger";
 import {
   DefaultEncryptionCodecForDeviceData,
   DefaultEncryptionCodecForUserData,
@@ -27,8 +27,9 @@ import {
   ModuleDeclarationShorthand,
 } from "../dependency-injection/module.types";
 import { ParameterProvider } from "../dependency-injection/parameter-provider.types";
-import { ExceptionLoggingModuleConfig } from "../logging/exception/exception-logging.config";
+import { ExceptionLoggingModuleConfig } from "../exception-logging/exception-logging.config";
 import { RequestContext } from "../request-context/request-context";
+import { DiagnosticsLogProcessor } from "../diagnostics/infra";
 export type LocallyImplementedApisOf<
   TAppDefinition extends AnyAppDefinition,
   TCurrentNode extends NodeIdentifiersOf<TAppDefinition> | null
@@ -86,6 +87,7 @@ export interface AppParam<
   >;
   readonly otherModules?: (ModuleDeclaration | ModuleDeclarationShorthand)[];
   readonly logger?: AppLogger;
+  readonly externalLoggers?: AppLogger[];
   readonly storeInfrastructureFactory?: StoreInfrastructureFactory;
   readonly keyValueStorageInfrastructure?: KeyValueStorageInfrastructure;
   readonly managedStorageInfrastructure?: ManagedStorageInfrastructure;
@@ -95,6 +97,7 @@ export interface AppParam<
   readonly defaultDeviceStorageEncryptionCodec?: ParameterProvider<DefaultEncryptionCodecForDeviceData>;
   readonly defaultUserStorageEncryptionCodec?: ParameterProvider<DefaultEncryptionCodecForUserData>;
   readonly exceptionLogging?: ExceptionLoggingModuleConfig;
+  readonly diagnosticsLogProcessor?: ParameterProvider<DiagnosticsLogProcessor>;
 }
 export interface App<TAppDefinition extends AnyAppDefinition> {
   stop: () => Promise<void>;

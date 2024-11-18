@@ -11,7 +11,7 @@ import type { Channel } from "./channel";
 import type { ChannelsListener } from "./channels-listener";
 export class NodeConfiguration<
   TAppDefinition extends AnyAppDefinition = AnyAppDefinition,
-  TCurrentNode extends NodeIdentifiersOf<TAppDefinition> | null = null,
+  TCurrentNode extends NodeIdentifiersOf<TAppDefinition> | null = NodeIdentifiersOf<TAppDefinition>,
   TSubscriptions extends LocalSubscriptions<
     TAppDefinition,
     TCurrentNode

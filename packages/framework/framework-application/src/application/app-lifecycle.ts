@@ -1,3 +1,6 @@
+import { ExceptionLogger } from "../exception-logging/exception-logger";
+import { ExceptionCriticalityValues } from "../exception-logging/exception-logging.types";
+import { AppLogger } from "../logging";
 export type ShutdownHook = () => void | Promise<void>;
 export type StartupHook = () =>
   | void
@@ -6,6 +9,7 @@ export type StartupHook = () =>
   | Promise<ShutdownHook>;
 export type ExternalComponentReadyCondition = () => Promise<unknown | void>;
 export class AppLifeCycle {
+  constructor(private readonly logger?: AppLogger) {}
   private readonly shutdownHooks: ShutdownHook[] = [];
   private readonly externalComponentReadyConditions: ExternalComponentReadyCondition[] =
     [];
@@ -27,8 +31,8 @@ export class AppLifeCycle {
       this.shutdownHooks.splice(idx, 1);
     }
   }
-  public startup() {
-    const promise = this.waitAndTriggerAppReady();
+  public startup(exceptionLogger?: ExceptionLogger) {
+    const promise = this.waitAndTriggerAppReady(exceptionLogger);
     if (!this.externalComponentReadyConditions.length) {
       return promise;
     }
@@ -42,44 +46,67 @@ export class AppLifeCycle {
       }
     }
   }
-  private async waitAndTriggerAppReady() {
-    console.log(
-      "[background/framework] Waiting for external components before running startup hooks..."
+  private async waitAndTriggerAppReady(exceptionLogger?: ExceptionLogger) {
+    this.logger?.debug(
+      `Waiting for external components before running startup hooks`
     );
-    try {
-      await Promise.all(
-        this.externalComponentReadyConditions.map((condition) => condition())
+    const results = await Promise.allSettled(
+      this.externalComponentReadyConditions.map((condition) => condition())
+    );
+    results.forEach((result) => {
+      if (result.status !== "rejected") {
+        return;
+      }
+      const cause = result.reason;
+      const error = new Error("Failed to init external component", {
+        cause,
+      });
+      this.logger?.error(`${error.message}`, { cause });
+      void exceptionLogger?.captureException(
+        error,
+        {
+          origin: "exceptionBoundary",
+          domainName: "framework",
+          moduleName: "kernel",
+        },
+        ExceptionCriticalityValues.CRITICAL
       );
-    } catch (error) {
-      console.error(
-        "[background/framework] Failed waiting for external components",
-        error
-      );
-      throw error;
-    }
-    await this.executeStartupHooks(this.appReadyHooks);
+    });
+    this.logger?.debug(
+      " Done waiting for external components before running startup hooks"
+    );
+    await this.executeStartupHooks(this.appReadyHooks, exceptionLogger);
   }
-  private async executeStartupHooks(hooks: StartupHook[]) {
+  private async executeStartupHooks(
+    hooks: StartupHook[],
+    exceptionLogger?: ExceptionLogger
+  ) {
     let count = 1;
     while (hooks.length > 0) {
       const hook = hooks.shift();
       if (hook) {
-        console.log(`[background/framework] Executing startup hook ${count}`);
+        this.logger?.debug(`Executing startup hook ${count}`);
         try {
           const shutdownHook = await hook();
           if (shutdownHook) {
             this.addShutdownHook(shutdownHook);
           }
-          console.log(
-            `[background/framework] Done executing startup hook ${count}`
-          );
+          this.logger?.debug(`Done executing startup hook ${count}`);
           count++;
-        } catch (error) {
-          console.error(
-            `[background/framework] Failed executing startup hook`,
-            error
+        } catch (causeError) {
+          const error = new Error("Failed executing startup hook", {
+            cause: causeError,
+          });
+          this.logger?.error(`${error.message}`, { cause: causeError });
+          void exceptionLogger?.captureException(
+            error,
+            {
+              origin: "exceptionBoundary",
+              domainName: "framework",
+              moduleName: "kernel",
+            },
+            ExceptionCriticalityValues.CRITICAL
           );
-          throw error;
         }
       }
     }

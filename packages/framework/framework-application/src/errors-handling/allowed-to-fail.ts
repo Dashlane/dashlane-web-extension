@@ -12,11 +12,11 @@ import { ApplicationRequest } from "../application/nest-adapters/nest-request-re
 import {
   type ExceptionCriticality,
   ExceptionCriticalityValues,
-} from "../logging/exception/exception-logging.types";
-import { ExceptionLogger } from "../logging/exception/exception-logger";
+} from "../exception-logging/exception-logging.types";
+import { ExceptionLogger } from "../exception-logging/exception-logger";
 import { FrameworkRequestContextValues } from "../request-context/request-context";
-import { ApplicationRequestError } from "../logging/exception/exception-logging.interceptor";
-import { UseCaseStacktraceRepository } from "../logging/exception/use-case-stacktrace-repository";
+import { ApplicationRequestError } from "../exception-logging/exception-logging.interceptor";
+import { UseCaseStacktraceRepository } from "../exception-logging/use-case-stacktrace-repository";
 type MethodToProtect = () => Promise<unknown> | unknown;
 type Options = {
   methodName?: string;

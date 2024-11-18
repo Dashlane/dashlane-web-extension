@@ -4,27 +4,42 @@ import { ContextId } from "@nestjs/core";
 import { REQUEST_CONTEXT_ID } from "@nestjs/core/router/request/request-constants.js";
 import { OnFrameworkInit } from "../../dependency-injection/module.types";
 import {
-  ApplicationPipelineData,
+  ApplicationInitPipelineData,
   PipelineType,
 } from "./nest-request-response-bus";
+import {
+  ExceptionCriticalityValues,
+  ExceptionLogger,
+} from "../../exception-logging";
+import {
+  FrameworkRequestContextValues,
+  RequestContext,
+} from "../../request-context/request-context";
+import { AppLogger } from "../../logging";
 export async function doFrameworkInit(
   onFrameworkInits: {
     moduleName: string;
     initClass: Class<OnFrameworkInit>;
   }[],
-  nestApp: INestApplication
+  nestApp: INestApplication,
+  exceptionLogger: ExceptionLogger,
+  logger: AppLogger
 ): Promise<void> {
-  console.log("[background/framework] Run modules initialization handlers...");
+  logger.debug(" Run modules initialization handlers...");
   const initContext: ContextId = Object.freeze({ id: -1 });
   const initPromises = onFrameworkInits.map(
     async ({ moduleName, initClass }) => {
       try {
-        console.log(
-          `[background/framework] Running module initialization handler ${moduleName}`
-        );
-        const request: ApplicationPipelineData = {
+        logger.debug(`Running module initialization handler ${moduleName}`);
+        const request: ApplicationInitPipelineData = {
           type: PipelineType.Init,
           [REQUEST_CONTEXT_ID]: initContext,
+          module: moduleName,
+          name: "init",
+          context: new RequestContext().withValue(
+            FrameworkRequestContextValues.UseCaseId,
+            String(initContext.id)
+          ),
         };
         nestApp.registerRequestByContextId(request, initContext);
         const instance = await nestApp.resolve<OnFrameworkInit>(
@@ -35,20 +50,29 @@ export async function doFrameworkInit(
           }
         );
         await instance.onFrameworkInit();
-        console.log(
-          `[background/framework] Done running module initialization handler ${moduleName}`
+        logger.debug(
+          `Done running module initialization handler ${moduleName}`
         );
-      } catch (error) {
-        console.error(
-          `[background/framework] Failed running module initialization handler ${moduleName}`,
-          error
+      } catch (causeError) {
+        const error = new Error(
+          `Failed running module initialization handler ${moduleName}`,
+          {
+            cause: causeError,
+          }
         );
-        throw error;
+        logger.debug(` ${error.message}`, { cause: causeError });
+        void exceptionLogger.captureException(
+          error,
+          {
+            origin: "exceptionBoundary",
+            moduleName: "kernel",
+            domainName: "framework",
+          },
+          ExceptionCriticalityValues.CRITICAL
+        );
       }
     }
   );
   await Promise.all(initPromises);
-  console.log(
-    "[background/framework] Done running modules initialization handlers"
-  );
+  logger.debug("Done running modules initialization handlers");
 }
