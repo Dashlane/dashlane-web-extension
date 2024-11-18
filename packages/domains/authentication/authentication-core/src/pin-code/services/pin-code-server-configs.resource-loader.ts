@@ -26,7 +26,7 @@ export class PinCodeServerConfigResourceLoader extends JsonApplicationResourceLo
   ) {
     super(
       `/assets/pin-code.${
-        serverApiClient.baseUrl === "*****" ? "prod" : "*****"
+        serverApiClient.baseUrl === "__REDACTED__" ? "prod" : "__REDACTED__"
       }.config.json`,
       fetcher
     );

@@ -1,5 +1,5 @@
 import { Injectable } from "@dashlane/framework-application";
-import { Status, UserGroupDownload } from "@dashlane/server-sdk/v1";
+import { Status } from "@dashlane/server-sdk/v1";
 import { base64ToArrayBuffer, pemToPkcs8 } from "@dashlane/framework-encoding";
 import {
   CollectionUserAccess,
@@ -9,27 +9,33 @@ import {
   SharedCollectionUserGroup,
   SharedItem,
   SharedItemAccessLinkTypes,
+  SharedItemDecryptionLink,
+  SharingUserGroup,
 } from "@dashlane/sharing-contracts";
 import { SharingCryptographyService } from "./sharing-cryptography.service";
 import {
   CurrentUserWithKeyPair,
   CurrentUserWithKeysGetterService,
-  UserGroupsGetterService,
 } from "../../sharing-carbon-helpers";
-import {
-  SharedCollectionAccessLinkTypes,
-  SharedCollectionState,
-} from "../../sharing-collections/data-access/shared-collections.state";
+import { SharedCollectionState } from "../../sharing-collections/data-access/shared-collections.state";
+import { SharingUserGroupsRepository } from "../../sharing-recipients/services/user-groups.repository";
+import { SharedCollectionAccessLinkTypes } from "../../utils/mappers/collection-access-types";
 @Injectable()
 export class SharingDecryptionService {
   public constructor(
     private sharingCrypto: SharingCryptographyService,
     private currentUserGetter: CurrentUserWithKeysGetterService,
-    private userGroupsGetter: UserGroupsGetterService
+    private userGroupsRepository: SharingUserGroupsRepository
   ) {}
   public async decryptItemGroupKey(sharedItem: SharedItem) {
     const currentUser = await this.currentUserGetter.getCurrentUserWithKeys();
     const { accessLink } = sharedItem;
+    return this.decryptItemGroupKeyFromAccessLink(accessLink, currentUser);
+  }
+  public async decryptItemGroupKeyFromAccessLink(
+    accessLink: SharedItemDecryptionLink | undefined,
+    currentUser: CurrentUserWithKeyPair
+  ) {
     if (accessLink?.accessType === SharedItemAccessLinkTypes.User) {
       return this.decryptResourceKeyViaUserMember(accessLink, currentUser);
     }
@@ -59,10 +65,12 @@ export class SharingDecryptionService {
         itemGroupKey,
         base64ToArrayBuffer(sharedItem.itemKey)
       );
-      return this.sharingCrypto.decryptContentAndConvertXMLToVaultItem(
-        itemKey,
-        content
-      );
+      const result =
+        await this.sharingCrypto.decryptContentAndConvertXMLToVaultItem(
+          itemKey,
+          content
+        );
+      return result;
     } catch (error) {
       return null;
     }
@@ -78,6 +86,12 @@ export class SharingDecryptionService {
     if (accessLink?.accessType === SharedCollectionAccessLinkTypes.UserGroup) {
       return this.decryptViaGroupMember(accessLink, currentUser);
     }
+  }
+  public async decryptSharedCollectionKeyForCurrentUser(
+    collection: SharedCollectionState
+  ) {
+    const currentUser = await this.currentUserGetter.getCurrentUserWithKeys();
+    return this.decryptSharedCollectionKey(collection, currentUser);
   }
   public async decryptResourceKeyViaUserMember(
     accessLink: {
@@ -158,41 +172,46 @@ export class SharingDecryptionService {
     accessLink: CollectionUserGroupAccess,
     currentUser: CurrentUserWithKeyPair
   ) {
-    const {
-      encryptedResourceKey,
-      collectionEncryptedKey,
-      collectionPrivateKey,
-      groupEncryptedKey,
-      groupPrivateKey,
-    } = accessLink;
-    if (
-      !collectionEncryptedKey ||
-      !collectionPrivateKey ||
-      !groupEncryptedKey ||
-      !groupPrivateKey
-    ) {
+    try {
+      const {
+        encryptedResourceKey,
+        collectionEncryptedKey,
+        collectionPrivateKey,
+        groupEncryptedKey,
+        groupPrivateKey,
+      } = accessLink;
+      if (
+        !collectionEncryptedKey ||
+        !collectionPrivateKey ||
+        !groupEncryptedKey ||
+        !groupPrivateKey
+      ) {
+        return null;
+      }
+      const clearUserGroupPrivateKey =
+        await this.sharingCrypto.decryptEncapsulatedPrivateKey(
+          pemToPkcs8(currentUser.privateKey),
+          groupEncryptedKey,
+          groupPrivateKey
+        );
+      const clearCollectionPrivateKey =
+        await this.sharingCrypto.decryptEncapsulatedPrivateKey(
+          clearUserGroupPrivateKey,
+          collectionEncryptedKey,
+          collectionPrivateKey
+        );
+      const clearResourceKey = await this.sharingCrypto.decryptResourceKey(
+        clearCollectionPrivateKey,
+        base64ToArrayBuffer(encryptedResourceKey)
+      );
+      return clearResourceKey;
+    } catch (error) {
       return null;
     }
-    const clearUserGroupPrivateKey =
-      await this.sharingCrypto.decryptEncapsulatedPrivateKey(
-        pemToPkcs8(currentUser.privateKey),
-        groupEncryptedKey,
-        groupPrivateKey
-      );
-    const clearCollectionPrivateKey =
-      await this.sharingCrypto.decryptEncapsulatedPrivateKey(
-        clearUserGroupPrivateKey,
-        collectionEncryptedKey,
-        collectionPrivateKey
-      );
-    return await this.sharingCrypto.decryptResourceKey(
-      clearCollectionPrivateKey,
-      base64ToArrayBuffer(encryptedResourceKey)
-    );
   }
   public async decryptCollectionKey(
     collectionDownload: SharedCollection,
-    expectedStatus: Status = Status.Accepted
+    expectedStatus = Status.Accepted
   ) {
     const currentUser = await this.currentUserGetter.getCurrentUserWithKeys();
     const userMemberOfCollection = collectionDownload.users?.find(
@@ -207,15 +226,13 @@ export class SharingDecryptionService {
         currentUser
       );
     }
-    const userGroups = await this.userGroupsGetter.getCarbonUserGroups();
-    const myUserGroups = userGroups.filter((userGroup) =>
-      userGroup.users.some(
-        (user) =>
-          user.userId === currentUser.login &&
-          user.status === expectedStatus &&
-          !user.proposeSignatureUsingAlias &&
-          user.groupKey
-      )
+    const userGroups = Object.values(
+      await this.userGroupsRepository.getUserGroups()
+    );
+    const myUserGroups = userGroups.filter(
+      (userGroup) =>
+        userGroup.groupKey &&
+        userGroup.acceptedUsers?.some((user) => user === currentUser.login)
     );
     const userGroupMemberOfCollection = collectionDownload.userGroups?.find(
       (userGroup) =>
@@ -253,7 +270,7 @@ export class SharingDecryptionService {
   private async decryptCollectionKeyViaGroupMember(
     userGroupMemberOfCollection: SharedCollectionUserGroup,
     currentUser: CurrentUserWithKeyPair,
-    myUserGroups: UserGroupDownload[]
+    myUserGroups: SharingUserGroup[]
   ) {
     if (!userGroupMemberOfCollection.collectionKey) {
       return null;
@@ -262,16 +279,13 @@ export class SharingDecryptionService {
       const userGroup = myUserGroups.find(
         ({ groupId }) => groupId === userGroupMemberOfCollection.uuid
       );
-      const userMemberOfUserGroup = userGroup?.users.find(
-        ({ userId }) => userId === currentUser.login
-      );
-      if (!userMemberOfUserGroup?.groupKey || !userGroup) {
+      if (!userGroup?.groupKey) {
         return null;
       }
       const clearUserGroupPrivateKey =
         await this.sharingCrypto.decryptEncapsulatedPrivateKey(
           pemToPkcs8(currentUser.privateKey),
-          userMemberOfUserGroup.groupKey,
+          userGroup.groupKey,
           userGroup.privateKey
         );
       return await this.sharingCrypto.decryptResourceKey(

@@ -1,12 +1,10 @@
 import { z } from "zod";
 import {
   PermissionSchema,
+  SharedCollectionAccessSchema,
   SharedCollectionSchema,
 } from "@dashlane/sharing-contracts";
-export enum SharedCollectionAccessLinkTypes {
-  User = "user",
-  UserGroup = "group",
-}
+import { SharedCollectionAccessLinkTypes } from "../../utils/mappers/collection-access-types";
 export const SharedCollectionAccessLinkTypesSchema = z.nativeEnum(
   SharedCollectionAccessLinkTypes
 );
@@ -25,6 +23,7 @@ export const UserGroupAccessSchema = CollectionAccessLinkBaseSchema.extend({
   accessType: z.literal(SharedCollectionAccessLinkTypes.UserGroup),
   groupEncryptedKey: z.optional(z.string()),
   groupPrivateKey: z.optional(z.string()),
+  groupPublicKey: z.optional(z.string()),
 });
 export type UserGroupAccess = z.infer<typeof UserGroupAccessSchema>;
 export const CollectionKeyDecryptionLinkSchema = z.union([
@@ -55,8 +54,12 @@ export const SharedCollectionStateSchema = z.object({
   ),
 });
 export type SharedCollectionState = z.infer<typeof SharedCollectionStateSchema>;
+export type SharedAccessCollectionState = z.infer<
+  typeof SharedCollectionAccessSchema
+>;
 export const SharedCollectionsStateSchema = z.object({
   collections: z.record(SharedCollectionStateSchema),
+  sharedCollectionsAccess: z.record(SharedCollectionAccessSchema),
 });
 export type SharedCollectionsState = z.infer<
   typeof SharedCollectionsStateSchema

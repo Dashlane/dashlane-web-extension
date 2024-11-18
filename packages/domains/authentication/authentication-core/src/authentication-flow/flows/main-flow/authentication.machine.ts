@@ -446,7 +446,7 @@ export class AuthenticationMachine {
             context.rememberMeType === "webauthn",
           isGrapheneDeviceRegistrationFlow: (
             context: AuthenticationMachineContext
-          ) => (context.login ? context.login.includes("*****") : false),
+          ) => (context.login ? context.login.includes("__REDACTED__") : false),
           isPinCodeLogin: (
             _: AuthenticationMachineContext,
             event: AnyEventObject

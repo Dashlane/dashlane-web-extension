@@ -1,21 +1,21 @@
-import { ItemGroupDownload } from "@dashlane/server-sdk/v1";
 import {
   ShareableCollectionSchema,
   SharedCollection,
+  SharedItem,
 } from "@dashlane/sharing-contracts";
 import { Collection, VaultItemType } from "@dashlane/vault-contracts";
-const toVaultItem = (itemGroup: ItemGroupDownload) => {
-  if (!itemGroup.items || itemGroup.items.length !== 1) {
+const toVaultItem = (sharedItem: SharedItem) => {
+  if (!sharedItem.itemId || !sharedItem.sharedItemId) {
     throw new Error("Corrupted item group");
   }
   return {
-    id: itemGroup.items[0].itemId,
+    id: sharedItem.itemId,
     type: VaultItemType.Credential,
   };
 };
 const toCollectionWithVaultItems = (
   collection: SharedCollection,
-  itemGroups: ItemGroupDownload[],
+  sharedItems: SharedItem[],
   teamId: string
 ): Collection & {
   isShared?: boolean;
@@ -24,18 +24,22 @@ const toCollectionWithVaultItems = (
   id: collection.uuid,
   spaceId: teamId,
   isShared: true,
-  vaultItems: itemGroups
-    .filter((x) => x.collections?.some((c) => c.uuid === collection.uuid))
+  vaultItems: sharedItems
+    .filter((sharedItem) =>
+      sharedItem.recipientIds.collectionIds?.some(
+        (collectionId) => collectionId === collection.uuid
+      )
+    )
     .map(toVaultItem),
 });
 export const toShareableCollection = (
   collection: SharedCollection,
-  itemGroups: ItemGroupDownload[],
+  sharedItems: SharedItem[],
   teamId: string
 ) => {
   const sharedCollection = toCollectionWithVaultItems(
     collection,
-    itemGroups,
+    sharedItems,
     teamId
   );
   if (ShareableCollectionSchema.safeParse(sharedCollection).success) {

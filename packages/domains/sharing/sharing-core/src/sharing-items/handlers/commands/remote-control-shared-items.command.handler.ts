@@ -1,8 +1,7 @@
-import { filter, firstValueFrom, map, tap, timeout } from "rxjs";
+import { filter, firstValueFrom, map } from "rxjs";
 import {
-  AllowedToFail,
   CommandHandler,
-  ICommandHandler,
+  type ICommandHandler,
 } from "@dashlane/framework-application";
 import {
   getSuccess,
@@ -15,13 +14,12 @@ import { SessionClient } from "@dashlane/session-contracts";
 import {
   Permission,
   RemoteControlSharedItemsCommand,
-  SharedItem,
+  type SharedItem,
   SharingInvitesClient,
 } from "@dashlane/sharing-contracts";
 import { SharedItemsRepository } from "../common/shared-items-repository";
 import { SharingCommonGateway } from "../../../sharing-common/services/sharing.gateway";
 import { SharingSyncService } from "../../../sharing-common";
-export const GET_CURRENT_SESSION_TIMEOUT = 3000;
 const batchAsyncTasks = async (
   tasks: Array<() => Promise<unknown>>,
   batchSize = 2
@@ -49,8 +47,7 @@ export class RemoteControlSharedItemsCommandHandler
     private readonly carbonClient: CarbonLegacyClient,
     private readonly sessionClient: SessionClient,
     private readonly sharingSync: SharingSyncService,
-    private readonly sharingInvitesClient: SharingInvitesClient,
-    private readonly allowedToFail: AllowedToFail
+    private readonly sharingInvitesClient: SharingInvitesClient
   ) {}
   async execute(command: RemoteControlSharedItemsCommand) {
     const {
@@ -62,7 +59,6 @@ export class RemoteControlSharedItemsCommandHandler
       }
       return success(undefined);
     }
-    const login = await this.getCurrentUserLoginAfterGrapheneSessionOpening();
     const refusePendingInvitesTasks = pendingInvitesIds.map(
       (id) => () => this.refusePendingInvite(id)
     );
@@ -70,7 +66,6 @@ export class RemoteControlSharedItemsCommandHandler
       refusePendingInvitesTasks
     );
     const revokeSharedItemsTasks = await this.getRevokeSharedItemsTasks(
-      login,
       vaultItemIds
     );
     const revokeSharedItemsTasksCompleted = await batchAsyncTasks(
@@ -96,16 +91,16 @@ export class RemoteControlSharedItemsCommandHandler
     }
     return getSuccess(result);
   }
-  private async getRevokeSharedItemsTasks(
-    userLogin: string,
-    vaultItemIds: string[]
-  ) {
+  private async getRevokeSharedItemsTasks(vaultItemIds: string[]) {
     if (!vaultItemIds.length) {
       return [];
     }
-    const sharedItems = await firstValueFrom(
-      this.sharedItemsRepository.sharedItemsForIds$(vaultItemIds)
-    );
+    const [userLogin, sharedItems] = await Promise.all([
+      this.getCurrentUserLogin(),
+      firstValueFrom(
+        this.sharedItemsRepository.sharedItemsForIds$(vaultItemIds)
+      ),
+    ]);
     return sharedItems.map(
       (item) => () => this.revokeSharedItem(item, userLogin)
     );
@@ -160,33 +155,15 @@ export class RemoteControlSharedItemsCommandHandler
     }
     return getSuccess(duplicationResult);
   }
-  private async getCurrentUserLoginAfterGrapheneSessionOpening() {
-    const loginAfterGrapheneSessionOpened = await firstValueFrom(
+  private getCurrentUserLogin() {
+    return firstValueFrom(
       this.sessionClient.queries.selectedOpenedSession().pipe(
         filter(isSuccess),
         map(getSuccess),
-        tap((maybeLogin) => {
-          if (!maybeLogin) {
-            this.allowedToFail.doOne(() => {
-              throw new Error(
-                "Unexpected user login value for remote control of shared items"
-              );
-            });
-          }
-        }),
         filter(
           (value): value is string => typeof value === "string" && value !== ""
-        ),
-        timeout({
-          first: GET_CURRENT_SESSION_TIMEOUT,
-          with: () => {
-            throw new Error(
-              "Timeout retrieving user login after Graphene Session Opening for remote control of shared items"
-            );
-          },
-        })
+        )
       )
     );
-    return loginAfterGrapheneSessionOpened;
   }
 }

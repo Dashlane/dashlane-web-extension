@@ -1,6 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import * as xs from "xstate";
-import { waitFor } from "xstate/lib/waitFor";
+import { interpret, waitFor } from "xstate";
 import { Injectable } from "@dashlane/framework-application";
 import {
   deserialize,
@@ -24,7 +23,7 @@ export class IdentityVerificationFlow {
     this.initFlag = new BehaviorSubject<boolean>(false);
     const machine = identityVerificationMachine.create();
     this.delayedEvents = [];
-    this.interpreter = xs.interpret(machine).onTransition(async (event) => {
+    this.interpreter = interpret(machine).onTransition(async (event) => {
       if (!event.changed && (event.event.type as string) !== "xstate.init") {
         console.warn(
           `[Auth Ticket] State is unchanged. Unexpected transition on ${JSON.stringify(

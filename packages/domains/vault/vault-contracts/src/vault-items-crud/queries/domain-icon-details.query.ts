@@ -9,4 +9,5 @@ export class DomainIconDetailsQuery extends defineQuery<
   DomainIconDetailsQueryParam
 >({
   scope: UseCaseScope.User,
+  useCache: true,
 }) {}

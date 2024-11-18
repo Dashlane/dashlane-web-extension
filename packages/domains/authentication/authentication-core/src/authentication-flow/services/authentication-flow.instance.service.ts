@@ -1,5 +1,4 @@
-import * as xs from "xstate";
-import { waitFor } from "xstate/lib/waitFor";
+import { interpret, waitFor } from "xstate";
 import { AllowedToFail, Injectable } from "@dashlane/framework-application";
 import { CarbonLegacyClient } from "@dashlane/communication";
 import {
@@ -12,7 +11,10 @@ import {
   serialize,
 } from "../stores/authentication-flow-machine.store";
 import { AbortDeviceLimitEventHandler } from "../carbon/abort-device-limit.event.handler";
-import { AuthenticationMachineInterpreter } from "../flows/main-flow/types";
+import {
+  AuthenticationMachineInterpreter,
+  AuthenticationMachineState,
+} from "../flows/main-flow/types";
 import { AuthenticationMachineEvents } from "../flows/main-flow/authentication.events";
 import { AuthenticationMachine } from "../flows/main-flow/authentication.machine";
 @Injectable()
@@ -29,8 +31,7 @@ export class AuthenticationFlow {
   ) {
     this.loginMachineStore = loginMachineStore;
     const machine = authenticationFlowMachine.create(withDebugLogs);
-    this.interpreter = xs
-      .interpret(machine)
+    this.interpreter = interpret(machine)
       .onTransition(
         makeOnUnexpectedTransitionListener((err: Error) =>
           this.allowedToFail.doOne(() => {
@@ -65,18 +66,24 @@ export class AuthenticationFlow {
       return;
     }
     let actor: AuthenticationMachineInterpreter | undefined;
-    await this.allowedToFail.doOne(() => {
-      if (storedState.done) {
-        throw new Error(
-          "Restarting a machine which is already in its final state. Starting from scratch instead."
-        );
-      }
-      actor = this.interpreter.start(storedState);
-    }, "Resuming state machine");
+    await this.allowedToFail.doOne(
+      () => {
+        if (storedState.done) {
+          throw new Error(
+            "Restarting a machine which is already in its final state. Starting from scratch instead."
+          );
+        }
+        actor = this.interpreter.start(storedState);
+      },
+      { methodName: "Resuming state machine" }
+    );
     if (!actor) {
       actor = this.interpreter.start();
     }
-    await waitFor(actor, (state) => state.context.ready);
+    await waitFor(
+      actor,
+      (state: AuthenticationMachineState) => state.context.ready
+    );
   }
   public continue(event: AuthenticationMachineEvents) {
     this.interpreter.send(event);

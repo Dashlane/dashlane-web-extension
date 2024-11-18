@@ -1,5 +1,5 @@
 import { SharedItemAccessLinkTypes, Status } from "@dashlane/sharing-contracts";
-import { AccessData } from "./item-group-adapter.types";
+import { AccessData } from "../../utils/mappers/item-group-adapter.types";
 import { UserGroupDownload } from "@dashlane/server-sdk/v1";
 import { ItemGroup } from "../../sharing-common";
 import { getHighestPermission } from "../../utils/get-highest-permission";
@@ -35,6 +35,7 @@ export const checkUserGroupAccess = (
           encryptedResourceKey: userGroupMember.groupKey,
           groupEncryptedKey: user.groupKey,
           groupPrivateKey: userGroup?.privateKey,
+          groupPublicKey: userGroup?.publicKey,
           accessType: SharedItemAccessLinkTypes.UserGroup,
         };
         return {

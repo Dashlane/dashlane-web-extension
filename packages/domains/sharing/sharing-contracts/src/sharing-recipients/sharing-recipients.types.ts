@@ -14,6 +14,19 @@ export interface SharingUserGroup {
   name: string;
   revision: number;
   users: SharingUser[];
+  acceptedUsers?: string[];
+  allUsers?: string[];
   publicKey: string;
   privateKey: string;
+  groupKey?: string;
+}
+export enum SortDirection {
+  Ascend = "ascend",
+  Descend = "descend",
+}
+export interface SharingGroup {
+  id: string;
+  itemCount?: number;
+  name: string;
+  users: string[];
 }

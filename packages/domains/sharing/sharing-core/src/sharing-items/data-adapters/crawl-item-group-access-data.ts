@@ -5,7 +5,7 @@ import {
 } from "@dashlane/sharing-contracts";
 import { UserGroupDownload } from "@dashlane/server-sdk/v1";
 import { ItemGroup } from "../../sharing-common/sharing.types";
-import { AccessData } from "./item-group-adapter.types";
+import { AccessData } from "../../utils/mappers/item-group-adapter.types";
 import { checkCollectionUserAccess } from "./check-collection-user-access";
 import { checkCollectionUserGroupAccess } from "./check-collection-user-group-access";
 import { checkUserGroupAccess } from "./check-user-group-access";

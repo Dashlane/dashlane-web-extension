@@ -8,6 +8,7 @@ import { SharingCryptoModule } from "../sharing-crypto";
 import { WebServicesModule } from "@dashlane/framework-dashlane-application";
 import { SharingCarbonHelpersModule } from "../sharing-carbon-helpers";
 import { SharingCommonGateway } from "./services/sharing.gateway";
+import { SharingRecipientsModule } from "..";
 @Module({
   sharedModuleName: "sharing-common",
   providers: [
@@ -27,6 +28,11 @@ import { SharingCommonGateway } from "./services/sharing.gateway";
     SharingUsersService,
     SharingCommonGateway,
   ],
-  imports: [SharingCryptoModule, WebServicesModule, SharingCarbonHelpersModule],
+  imports: [
+    SharingRecipientsModule,
+    SharingCryptoModule,
+    WebServicesModule,
+    SharingCarbonHelpersModule,
+  ],
 })
 export class SharingCommonModule {}

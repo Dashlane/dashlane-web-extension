@@ -66,6 +66,16 @@ export class UserGroupsGetterService {
       groupIds.includes(group.groupId)
     );
   }
+  public async getCarbonUserGroupForGroupId(groupId: string) {
+    return (await this.getCarbonUserGroups()).find(
+      (group) => group.groupId === groupId
+    );
+  }
+  public async getCarbonUserGroupForGroupIds(groupIds: string[]) {
+    return (await this.getCarbonUserGroups()).filter((group) =>
+      groupIds.includes(group.groupId)
+    );
+  }
   public getCarbonUserGroups$(): Observable<UserGroupDownload[]> {
     return this.getRawCarbon$().pipe(
       map((rawCarbonResult) => {

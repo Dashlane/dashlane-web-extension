@@ -3,6 +3,7 @@ import { AuthenticationFlowContracts } from "@dashlane/authentication-contracts"
 import { carbonLegacyApi, CarbonLegacyClient } from "@dashlane/communication";
 import {
   AllowedToFail,
+  createLoggerProvider,
   deviceScopedSingletonProvider,
   Module,
   useEventsOfModule,
@@ -93,6 +94,7 @@ import { PinCodeVerificationService } from "./flows/pin-code-flow/pin-code-verif
 import { CheckPinCodeStatusService } from "./flows/main-flow/check-pin-code-status.service";
 import { SwitchToMasterPasswordCommandHandler } from "./handlers/commands/switch-to-master-password.command-handler";
 import { SwitchToPinCodeCommandHandler } from "./handlers/commands/switch-to-pin-code.command-handler";
+import { AuthenticationFlowModuleLogger } from "./utils/logger";
 @Module({
   api: AuthenticationFlowContracts.authenticationFlowApi,
   handlers: {
@@ -171,7 +173,7 @@ import { SwitchToPinCodeCommandHandler } from "./handlers/commands/switch-to-pin
         if (
           isSuccess(platformInfo) &&
           (platformInfo.data.buildType === ApplicationBuildType.DEV ||
-            platformInfo.data.buildType === ApplicationBuildType.NIGHTLY)
+            platformInfo.data.buildType === ApplicationBuildType.__REDACTED__)
         ) {
           withDebugLogs = true;
         }
@@ -211,6 +213,7 @@ import { SwitchToPinCodeCommandHandler } from "./handlers/commands/switch-to-pin
     DeviceToDeviceAuthenticationService,
     PassphraseService,
     WordlistFetcher,
+    createLoggerProvider(AuthenticationFlowModuleLogger),
   ],
   stores: [
     AuthenticationFlowMachineStore,

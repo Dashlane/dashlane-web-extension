@@ -12,4 +12,5 @@ export class GetPermissionForItemQuery extends defineQuery<
   GetPermissionForItemParam
 >({
   scope: UseCaseScope.User,
+  useCache: true,
 }) {}

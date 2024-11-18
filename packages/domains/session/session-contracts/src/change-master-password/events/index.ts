@@ -1,1 +1,1 @@
-export * from './master-password-changed.event';
+export * from "./master-password-changed.event";

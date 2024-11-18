@@ -1,37 +1,63 @@
-import { firstValueFrom } from "rxjs";
+import { firstValueFrom, map } from "rxjs";
 import {
   CommandHandler,
   type ICommandHandler,
 } from "@dashlane/framework-application";
-import { isFailure, success } from "@dashlane/framework-types";
+import { isFailure, isSuccess, success } from "@dashlane/framework-types";
 import {
   RecipientTypes,
   RevokeSharedItemCommand,
   RevokeSharedItemCommandParam,
 } from "@dashlane/sharing-contracts";
-import { ItemGroupsGetterService } from "../../../sharing-carbon-helpers";
+import { ParsedURL } from "@dashlane/url-parser";
+import { VaultItemsCrudClient, VaultItemType } from "@dashlane/vault-contracts";
 import { SharingSyncService } from "../../../sharing-common";
 import {
   ITEM_GROUP_MEMBER_INVALID_REVISION,
   SharingCommonGateway,
 } from "../../../sharing-common/services/sharing.gateway";
+import { SharedItemsRepository } from "../common/shared-items-repository";
 @CommandHandler(RevokeSharedItemCommand)
 export class RevokeSharedItemCommandHandler
   implements ICommandHandler<RevokeSharedItemCommand>
 {
   constructor(
-    private readonly itemGroupsGetter: ItemGroupsGetterService,
     private readonly sharingSync: SharingSyncService,
-    private readonly commonGateway: SharingCommonGateway
+    private readonly commonGateway: SharingCommonGateway,
+    private readonly sharedItemRepository: SharedItemsRepository,
+    private readonly vaultItemsCrudClient: VaultItemsCrudClient
   ) {}
   async execute({ body }: RevokeSharedItemCommand) {
     const { revision, itemGroupId, userLogins, userGroupIds } =
       await this.getItemGroup(body);
+    const credential = await firstValueFrom(
+      this.vaultItemsCrudClient.queries
+        .query({
+          vaultItemTypes: [VaultItemType.Credential],
+          ids: [body.vaultItemId],
+        })
+        .pipe(
+          map((dataResult) => {
+            if (isSuccess(dataResult)) {
+              return dataResult.data.credentialsResult.items.find(
+                (credentialResult) => credentialResult.id === body.vaultItemId
+              );
+            }
+          })
+        )
+    );
     const result = await this.commonGateway.revokeItemGroupMembers({
       revision,
       itemGroupId,
       userLogins,
       userGroupIds,
+      auditLogDetails: credential
+        ? {
+            type: "AUTHENTIFIANT",
+            domain: new ParsedURL(credential.URL).getRootDomain(),
+            captureLog: true,
+          }
+        : undefined,
     });
     if (isFailure(result)) {
       if (result.error.tag === ITEM_GROUP_MEMBER_INVALID_REVISION) {
@@ -54,23 +80,20 @@ export class RevokeSharedItemCommandHandler
   }
   private async getItemGroup(body: RevokeSharedItemCommandParam) {
     const { vaultItemId, recipient } = body;
-    const itemGroupIdResult = await firstValueFrom(
-      this.itemGroupsGetter.getForItemId(vaultItemId)
+    const sharedItem = await firstValueFrom(
+      this.sharedItemRepository.sharedItemForId$(vaultItemId)
     );
-    if (isFailure(itemGroupIdResult)) {
-      throw new Error("Failed to execute item group getter");
-    }
-    if (!itemGroupIdResult.data) {
+    if (!sharedItem) {
       throw new Error(`Failed to retrieve item group to revoke share item`);
     }
-    const { groupId, revision } = itemGroupIdResult.data;
+    const { sharedItemId, revision } = sharedItem;
     const userLogins =
       recipient.type === RecipientTypes.User ? [recipient.alias] : undefined;
     const userGroupIds =
       recipient.type === RecipientTypes.Group ? [recipient.groupId] : undefined;
     return {
       revision,
-      itemGroupId: groupId,
+      itemGroupId: sharedItemId,
       userLogins,
       userGroupIds,
     };

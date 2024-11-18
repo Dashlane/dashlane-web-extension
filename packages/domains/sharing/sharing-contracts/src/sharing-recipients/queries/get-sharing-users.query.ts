@@ -1,4 +1,5 @@
 import { defineQuery, UseCaseScope } from "@dashlane/framework-contracts";
+import { SortDirection } from "../sharing-recipients.types";
 export interface SharingUserContacts {
   id: "string";
   itemCount: number;
@@ -6,7 +7,7 @@ export interface SharingUserContacts {
 export type GetSharingUsersResult = SharingUserContacts[];
 export type GetSharingUsersQueryParam = {
   spaceId: string | null;
-  sortDirection: "ascend" | "descend";
+  sortDirection: SortDirection;
 };
 export class GetSharingUsersQuery extends defineQuery<
   GetSharingUsersResult,

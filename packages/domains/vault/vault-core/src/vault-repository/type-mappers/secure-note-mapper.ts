@@ -7,7 +7,6 @@ export const secureNoteMapper = (
   const { Secured, Type, Category, LocaleFormat, ...rest } = carbonSecureNote;
   return {
     ...mapKeysToLowercase(rest),
-    categoryId: Category,
     isSecured: Secured,
     color: NoteColors[Type] || NoteColors.GRAY,
   };

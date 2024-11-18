@@ -1,10 +1,10 @@
-import { combineLatest, switchMap } from "rxjs";
+import { combineLatest, map, switchMap } from "rxjs";
 import {
   IQueryHandler,
   QueryHandler,
   QueryHandlerResponseOf,
 } from "@dashlane/framework-application";
-import { isFailure, mapSuccessObservable } from "@dashlane/framework-types";
+import { isFailure, success } from "@dashlane/framework-types";
 import { SharingCollectionsClient } from "@dashlane/sharing-contracts";
 import {
   Collection,
@@ -22,14 +22,18 @@ export class VaultSearchQueryHandler
   private collections: Collection[] = [];
   private searchQuery = "";
   constructor(
-    private vaultRepository: VaultRepository,
-    private vaultOrganizationClient: VaultOrganizationClient,
-    private sharingCollectionsClient: SharingCollectionsClient
+    private readonly vaultRepository: VaultRepository,
+    private readonly vaultOrganizationClient: VaultOrganizationClient,
+    private readonly sharingCollectionsClient: SharingCollectionsClient
   ) {}
   public execute({
-    body,
+    body: {
+      vaultItemTypes,
+      searchQuery,
+      needDashlaneLinkedWebsites = false,
+      ...params
+    },
   }: VaultSearchQuery): QueryHandlerResponseOf<VaultSearchQuery> {
-    const { vaultItemTypes, searchQuery, ...params } = body;
     this.searchQuery = searchQuery;
     const {
       queries: { queryCollections },
@@ -51,18 +55,18 @@ export class VaultSearchQueryHandler
         this.collections = privateCollectionsResult.data.collections.concat(
           sharedCollectionsResult.data
         );
-        if (vaultItemTypes) {
-          return this.vaultRepository.fetchVaultItems$(
-            { vaultItemTypes, ...params },
-            this.isVaultItemMatch
-          );
-        }
+        const types = vaultItemTypes ?? Object.values(VaultItemType);
         return this.vaultRepository.fetchVaultItems$(
-          { vaultItemTypes: Object.values(VaultItemType), ...params },
-          this.isVaultItemMatch
+          { vaultItemTypes: types, ...params },
+          this.isVaultItemMatch,
+          needDashlaneLinkedWebsites
         );
       }),
-      mapSuccessObservable((items) => {
+      map((itemsResultsWithFF) => {
+        if (isFailure(itemsResultsWithFF)) {
+          throw new Error("Error");
+        }
+        const itemsResults = itemsResultsWithFF.data;
         let collectionsResult;
         if (!vaultItemTypes) {
           const matchingCollections = this.collections.filter((collection) =>
@@ -78,21 +82,31 @@ export class VaultSearchQueryHandler
             matchCount: 0,
           };
         }
-        return {
-          ...items,
+        return success({
+          ...itemsResults,
           collectionsResult,
-        };
+        });
       })
     );
   }
-  private normalizeString = (str: string) =>
-    str
+  private normalizeString = (str: string) => {
+    if (typeof str !== "string") {
+      return "";
+    }
+    return str
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
+  };
   private isMatch(object: object, searchString = "") {
     searchString += Object.values(object)
-      .filter((value) => typeof value !== "object")
+      .filter((value) => typeof value !== "object" || Array.isArray(value))
+      .map((value) => {
+        if (Array.isArray(value)) {
+          return value.toString();
+        }
+        return value;
+      })
       .join(this.separator);
     return this.normalizeString(searchString).includes(
       this.normalizeString(this.searchQuery)

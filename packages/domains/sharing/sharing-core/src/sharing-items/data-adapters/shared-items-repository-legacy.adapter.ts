@@ -5,17 +5,63 @@ import {
   isFailure,
   isSuccess,
   Result,
+  safeCast,
 } from "@dashlane/framework-types";
 import { CarbonLegacyClient } from "@dashlane/communication";
-import { UserGroupDownload } from "@dashlane/server-sdk/v1";
-import { SharedCollection } from "@dashlane/sharing-contracts";
+import { ItemGroupDownload, UserGroupDownload } from "@dashlane/server-sdk/v1";
+import {
+  SharedAccess,
+  SharedCollection,
+  SharedItem,
+} from "@dashlane/sharing-contracts";
 import {
   ItemGroupsGetterService,
   UserGroupsGetterService,
 } from "../../sharing-carbon-helpers";
 import { SharedItemsRepository } from "../handlers/common/shared-items-repository";
 import { SharedCollectionsRepository } from "../../sharing-collections";
-import { toSharedItem } from "./item-group-adapter";
+import { toSharedAccess, toSharedItem } from "./item-group-adapter";
+const mapToSharedItems = (
+  itemGroups: ItemGroupDownload[],
+  allUserGroups: UserGroupDownload[],
+  allCollections: SharedCollection[],
+  userId: string
+): SharedItem[] =>
+  itemGroups.reduce((acc, value) => {
+    if (value.type === "items") {
+      try {
+        const sharedItem: SharedItem = toSharedItem(
+          value,
+          allUserGroups,
+          allCollections,
+          userId
+        );
+        acc.push(sharedItem);
+      } catch (error) {}
+    }
+    return acc;
+  }, safeCast<SharedItem[]>([]));
+const mapToSharedItem = (
+  itemGroup: ItemGroupDownload | undefined,
+  allUserGroups: UserGroupDownload[],
+  allCollections: SharedCollection[],
+  userId: string
+) => {
+  if (!itemGroup) {
+    return null;
+  }
+  try {
+    const sharedItem: SharedItem = toSharedItem(
+      itemGroup,
+      allUserGroups,
+      allCollections,
+      userId
+    );
+    return sharedItem;
+  } catch (error) {
+    return null;
+  }
+};
 @Injectable()
 export class SharedItemsLegacyRepositoryAdapter
   implements SharedItemsRepository
@@ -70,30 +116,72 @@ export class SharedItemsLegacyRepositoryAdapter
     );
   }
   public sharedItems$() {
-    return this.combineWithCollectionsAndUserGroups(
-      this.itemGroupsGetter.get(),
-      (itemGroups, allUserGroups, allCollections, userId) =>
-        itemGroups.map((itemGroup) =>
-          toSharedItem(itemGroup, allUserGroups, allCollections, userId)
-        )
-    );
+    return this.combineWithCollectionsAndUserGroups<
+      ItemGroupDownload[],
+      SharedItem[]
+    >(this.itemGroupsGetter.get(), mapToSharedItems);
   }
   public sharedItemsForIds$(itemIds: string[]) {
     return this.combineWithCollectionsAndUserGroups(
       this.itemGroupsGetter.getForItemsIds(itemIds),
-      (itemGroups, allUserGroups, allCollections, userId) =>
-        itemGroups.map((itemGroup) =>
-          toSharedItem(itemGroup, allUserGroups, allCollections, userId)
-        )
+      mapToSharedItems
     );
   }
   public sharedItemForId$(itemId: string) {
     return this.combineWithCollectionsAndUserGroups(
       this.itemGroupsGetter.getForItemId(itemId),
-      (itemGroup, allUserGroups, allCollections, userId) =>
+      mapToSharedItem
+    );
+  }
+  public sharedAccess$() {
+    return this.itemGroupsGetter.get().pipe(
+      map((itemGroups) => {
+        if (isFailure(itemGroups)) {
+          throw new Error(
+            "Error when retrieving item groups for shared access"
+          );
+        }
+        return getSuccess(itemGroups).map((itemGroup) =>
+          toSharedAccess(itemGroup)
+        );
+      })
+    );
+  }
+  public sharedAccessForId$(itemId: string) {
+    return this.combineWithCollectionsAndUserGroups(
+      this.itemGroupsGetter.getForItemId(itemId),
+      (itemGroup) =>
         itemGroup
-          ? toSharedItem(itemGroup, allUserGroups, allCollections, userId)
+          ? { sharedItemId: itemGroup.groupId, ...toSharedAccess(itemGroup) }
           : null
+    );
+  }
+  public sharedAccessForIds$(itemIds: string[]) {
+    return this.itemGroupsGetter.getForItemsIds(itemIds).pipe(
+      map((itemGroups) => {
+        if (isFailure(itemGroups)) {
+          throw new Error("Cannot get shared access for items");
+        }
+        return getSuccess(itemGroups).map((itemGroup) =>
+          toSharedAccess(itemGroup)
+        );
+      })
+    );
+  }
+  public sharedAccessesById$(itemIds: string[]) {
+    return this.itemGroupsGetter.getForItemsIds(itemIds).pipe(
+      map((itemGroups) => {
+        if (isFailure(itemGroups)) {
+          throw new Error("Cannot get shared access for items");
+        }
+        return getSuccess(itemGroups).reduce((acc, itemGroup) => {
+          const itemId = itemGroup.items?.[0].itemId;
+          if (itemId) {
+            acc[itemId] = toSharedAccess(itemGroup);
+          }
+          return acc;
+        }, safeCast<Record<string, SharedAccess>>({}));
+      })
     );
   }
   public getSharedItemsIndex() {

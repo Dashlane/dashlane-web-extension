@@ -10,7 +10,6 @@ import {
   CollectionItemPermission,
   createAttachmentInCollectionError,
   Permission,
-  SharedCollection,
   SharingItemsClient,
 } from "@dashlane/sharing-contracts";
 import { SharingItemGroupsService } from "../../../sharing-common";
@@ -18,6 +17,7 @@ import { CredentialsGetterService } from "../../../sharing-carbon-helpers";
 import { NotesGetterService } from "../../../sharing-carbon-helpers/services/notes-getter.service";
 import { SharingCollectionsGateway } from "./sharing-collections.gateway";
 import { SharingCollectionInvitesService } from "./sharing-collections-invites.service";
+import { SharedCollectionState } from "../../data-access/shared-collections.state";
 @Injectable()
 export class SharingCollectionItemsService {
   constructor(
@@ -29,7 +29,7 @@ export class SharingCollectionItemsService {
     private sharingItemsClient: SharingItemsClient
   ) {}
   async addItemsToCollections(
-    collections: SharedCollection[],
+    collections: SharedCollectionState[],
     itemIds: string[],
     collectionPermissions: CollectionItemPermission[]
   ) {
@@ -75,7 +75,7 @@ export class SharingCollectionItemsService {
             [...sharedItems, ...newItemGroups],
             collectionPermissions.find(
               (collectionPermission) =>
-                collectionPermission.collectionId === collection.uuid
+                collectionPermission.collectionId === collection.id
             )?.permission ?? Permission.Admin
           );
         await this.sharingCollectionsApi.addItemGroupsToCollection(invite);

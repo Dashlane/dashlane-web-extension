@@ -10,6 +10,7 @@ export interface VaultSearchQueryResult extends VaultItemsQueryResult {
 }
 export interface VaultSearchParam extends Partial<VaultItemsQueryParam> {
   searchQuery: string;
+  needDashlaneLinkedWebsites?: boolean;
 }
 export class VaultSearchQuery extends defineQuery<
   VaultSearchQueryResult,

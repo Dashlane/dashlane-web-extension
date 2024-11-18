@@ -3,5 +3,6 @@ export type IsSharingAllowedQueryResult = boolean;
 export class IsSharingAllowedQuery extends defineQuery<IsSharingAllowedQueryResult>(
   {
     scope: UseCaseScope.User,
+    useCache: true,
   }
 ) {}

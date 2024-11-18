@@ -16,15 +16,15 @@ import {
   success,
 } from "@dashlane/framework-types";
 import { ProvisioningMethod } from "@dashlane/server-sdk/v1";
-import { UserGroupsGetterService } from "../../../sharing-carbon-helpers";
 import { SharingSyncService } from "../../../sharing-common";
+import { SharingUserGroupsRepository } from "../../../sharing-recipients/services/user-groups.repository";
 @CommandHandler(RefuseUserGroupInviteCommand)
 export class RefuseUserGroupInviteCommandHandler
   implements ICommandHandler<RefuseUserGroupInviteCommand>
 {
   constructor(
     private serverApiClient: ServerApiClient,
-    private userGroupGetter: UserGroupsGetterService,
+    private userGroupsRepository: SharingUserGroupsRepository,
     private sharingSync: SharingSyncService
   ) {}
   async execute(
@@ -33,15 +33,10 @@ export class RefuseUserGroupInviteCommandHandler
     const {
       body: { userGroupId },
     } = command;
-    const userGroupData = await this.userGroupGetter.getForGroupIds([
-      userGroupId,
-    ]);
-    if (userGroupData.length === 0) {
-      throw new Error(
-        `Failed to retrieve user group for pending user group with id ${userGroupId}`
-      );
-    }
-    const { groupId, revision } = userGroupData[0];
+    const userGroup = await this.userGroupsRepository.getUserGroupForId(
+      userGroupId
+    );
+    const { groupId, revision } = userGroup;
     return await firstValueFrom(
       this.serverApiClient.v1.sharingUserdevice
         .refuseUserGroup({

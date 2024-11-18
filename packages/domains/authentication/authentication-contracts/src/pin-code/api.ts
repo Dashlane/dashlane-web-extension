@@ -4,7 +4,11 @@ import {
   DeactivateCommand,
   LoginWithPinCodeCommand,
 } from "./commands";
-import { GetCurrentUserStatusQuery, GetStatusQuery } from "./queries";
+import {
+  GetCurrentUserStatusQuery,
+  GetStatusQuery,
+  IsPinCodeCorrectQuery,
+} from "./queries";
 export const pinCodeApi = defineModuleApi({
   name: "pinCode" as const,
   commands: {
@@ -14,6 +18,7 @@ export const pinCodeApi = defineModuleApi({
   },
   events: {},
   queries: {
+    isPinCodeCorrect: IsPinCodeCorrectQuery,
     getStatus: GetStatusQuery,
     getCurrentUserStatus: GetCurrentUserStatusQuery,
   },

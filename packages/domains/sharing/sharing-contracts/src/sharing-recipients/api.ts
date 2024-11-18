@@ -1,11 +1,18 @@
 import { defineModuleApi } from "@dashlane/framework-contracts";
-import { GetSharingGroupsQuery, GetSharingUsersQuery } from "./queries";
+import {
+  GetAllAcceptedGroupsQuery,
+  GetSharingGroupByIdQuery,
+  GetSharingGroupsWithItemCountQuery,
+  GetSharingUsersQuery,
+} from "./queries";
 export const sharingRecipientsApi = defineModuleApi({
   name: "sharingRecipients" as const,
   commands: {},
   events: {},
   queries: {
+    getAllAcceptedGroupsQuery: GetAllAcceptedGroupsQuery,
     getSharingUsersQuery: GetSharingUsersQuery,
-    getSharingGroupsQuery: GetSharingGroupsQuery,
+    getSharingGroupsWithItemCountQuery: GetSharingGroupsWithItemCountQuery,
+    getSharingGroupByIdQuery: GetSharingGroupByIdQuery,
   },
 });

@@ -1,1 +1,1 @@
-export * from './temporary-send-master-password-changed-event.command';
+export * from "./temporary-send-master-password-changed-event.command";

@@ -7,7 +7,14 @@ import {
   convertToUserInvitesPayload,
   makeItemForEmailing,
 } from "./sharing-items-adapters";
-import { getSuccess, isFailure, success } from "@dashlane/framework-types";
+import {
+  getSuccess,
+  isFailure,
+  safeCast,
+  success,
+} from "@dashlane/framework-types";
+import { ItemGroupDownload, ItemGroupError } from "@dashlane/server-sdk/v1";
+import { batchServerRequest } from "../../sharing-common/helpers/batch-server-request";
 import { makeAuditLogDetails } from "../../sharing-common/helpers/make-audit-log-details";
 import {
   ShareItemErrorCode,
@@ -19,35 +26,54 @@ export class SharingItemsServerGateway implements SharingItemsGateway {
   public async inviteMultipleItemGroupsMembers(
     sharedItems: ShareItemInvitesModel[]
   ) {
-    const params = sharedItems.map(({ sharedItem, users, userGroups }) => {
-      const { sharedItemId, revision, auditLogData, itemType, title } =
-        sharedItem;
-      return {
-        groupId: sharedItemId,
-        revision,
-        users: users?.length ? convertToUserInvitesPayload(users) : undefined,
-        groups: userGroups?.length
-          ? convertToUserGroupInvitesPayload(userGroups)
-          : undefined,
-        auditLogDetails: auditLogData
-          ? makeAuditLogDetails(auditLogData)
-          : undefined,
-        itemsForEmailing: [makeItemForEmailing(title, itemType)],
-      };
-    });
-    const inviteMembersResponse = await firstValueFrom(
-      this.serverApiClient.v1.sharingUserdevice.inviteMultipleItemGroupMembers({
-        itemgroups: params,
-      })
+    const batchedResults = await batchServerRequest(
+      sharedItems,
+      async (params) => {
+        const itemgroups = params.map(({ sharedItem, users, userGroups }) => {
+          const { sharedItemId, revision, auditLogData, itemType, title } =
+            sharedItem;
+          return {
+            groupId: sharedItemId,
+            revision,
+            users: users?.length
+              ? convertToUserInvitesPayload(users)
+              : undefined,
+            groups: userGroups?.length
+              ? convertToUserGroupInvitesPayload(userGroups)
+              : undefined,
+            auditLogDetails: auditLogData
+              ? makeAuditLogDetails(auditLogData)
+              : undefined,
+            itemsForEmailing: [makeItemForEmailing(title, itemType)],
+          };
+        });
+        const result = await firstValueFrom(
+          this.serverApiClient.v1.sharingUserdevice.inviteMultipleItemGroupMembers(
+            { itemgroups }
+          )
+        );
+        if (isFailure(result)) {
+          throw new Error("Failed to add members to item group");
+        }
+        return getSuccess(result);
+      }
     );
-    if (isFailure(inviteMembersResponse)) {
-      throw new Error("Failed to add members to item group");
-    }
-    const result = getSuccess(inviteMembersResponse).data;
-    const errors = result.itemGroupErrors?.map(({ groupId, message }) => ({
+    const result = batchedResults.reduce(
+      (acc, batch) => ({
+        itemGroups: acc.itemGroups.concat(batch.data.itemGroups ?? []),
+        itemGroupErrors: acc.itemGroupErrors.concat(
+          batch.data.itemGroupErrors ?? []
+        ),
+      }),
+      safeCast<{
+        itemGroups: ItemGroupDownload[];
+        itemGroupErrors: ItemGroupError[];
+      }>({ itemGroups: [], itemGroupErrors: [] })
+    );
+    const errors = result.itemGroupErrors.map(({ groupId, message }) => ({
       sharedItemId: groupId,
       error: this.mapServerError(message),
-      revision: result.itemGroups?.find(
+      revision: result.itemGroups.find(
         (itemGroup) => itemGroup.groupId === groupId
       )?.revision,
     }));

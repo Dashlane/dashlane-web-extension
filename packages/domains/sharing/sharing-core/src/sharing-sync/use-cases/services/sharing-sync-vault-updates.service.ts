@@ -1,6 +1,6 @@
 import { firstValueFrom } from "rxjs";
 import { Injectable } from "@dashlane/framework-application";
-import { RevisionSummary, SharedItem } from "@dashlane/sharing-contracts";
+import { SharedItem } from "@dashlane/sharing-contracts";
 import { VaultItemsCrudClient, VaultItemType } from "@dashlane/vault-contracts";
 import {
   CarbonLegacyClient,
@@ -11,6 +11,7 @@ import {
 import { getSuccess, isFailure, safeCast } from "@dashlane/framework-types";
 import { ItemContent } from "@dashlane/server-sdk/v1";
 import { SharingDecryptionService } from "../../..";
+import { SharedVaultItemEntry } from "../../../sharing-items/store/shared-items.store";
 @Injectable()
 export class SharingSyncVaultUpdatesService {
   constructor(
@@ -32,7 +33,12 @@ export class SharingSyncVaultUpdatesService {
           sharedItem,
           item.content
         );
-        return { id: item.itemId, revision: item.timestamp, itemToSave };
+        return {
+          vaultItemId: item.itemId,
+          id: sharedItem.sharedItemId,
+          revision: item.timestamp,
+          itemToSave,
+        };
       })
     );
     const { itemRevisions, itemsToSave } = decryptedItemsWithRevisions.reduce(
@@ -41,13 +47,18 @@ export class SharingSyncVaultUpdatesService {
           if (entry.itemToSave) {
             acc.itemsToSave.push(entry.itemToSave);
           }
-          const { id, revision } = entry;
-          acc.itemRevisions.push({ id, revision });
+          const { id, vaultItemId, revision } = entry;
+          acc.itemRevisions.push({
+            sharedItemId: id,
+            vaultItemId,
+            revision,
+            savedToVault: true,
+          });
         }
         return acc;
       },
       {
-        itemRevisions: safeCast<RevisionSummary[]>([]),
+        itemRevisions: safeCast<SharedVaultItemEntry[]>([]),
         itemsToSave: safeCast<Array<Credential | Note | Secret>>([]),
       }
     );
@@ -66,7 +77,7 @@ export class SharingSyncVaultUpdatesService {
       itemContent
     );
   }
-  private async getVaultItemsPerType(itemIds: string[]) {
+  public async getVaultItemsPerType(itemIds: string[]) {
     const vaultItemsResult = await firstValueFrom(
       this.vaultItemsCrudClient.queries.query({
         vaultItemTypes: [

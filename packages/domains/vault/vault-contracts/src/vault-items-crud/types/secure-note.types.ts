@@ -11,12 +11,6 @@ export enum NoteColors {
   RED = "RED",
   YELLOW = "YELLOW",
 }
-export interface SecureNoteCategory {
-  CategoryName: string;
-  Id: string;
-  LastBackupTime: number;
-  kwType: string;
-}
 export interface SecureNote extends BaseItem {
   categoryId: string;
   color: NoteColors;

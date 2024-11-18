@@ -27,6 +27,11 @@ import { PendingSharedItemInvitesStore } from "./store/pending-shared-item-invit
 import { PendingUserGroupInvitesStore } from "./store/pending-user-group-invites.store";
 import { PendingInvitesService } from "./services/pending-invites.service";
 import { SharedItemContentGetterService } from "./handlers/common/shared-item-content-getter.service";
+import {
+  SharingCollectionsModule,
+  SharingItemsModule,
+  SharingRecipientsModule,
+} from "..";
 @Module({
   api: sharingInvitesApi,
   stores: [
@@ -58,13 +63,12 @@ import { SharedItemContentGetterService } from "./handlers/common/shared-item-co
     SharingCryptoModule,
     SharingCommonModule,
     SharingCarbonHelpersModule,
-  ],
-  requiredFeatureFlips: [
-    "audit_logs_sharing",
-    "send_activity_log",
-    "sharingVault_web_Share_Collections_with_limited_Rights_Items_dev",
+    SharingRecipientsModule,
+    SharingItemsModule,
+    SharingCollectionsModule,
   ],
   providers: [PendingInvitesService, SharedItemContentGetterService],
   exports: [PendingInvitesService],
+  requiredFeatureFlips: ["audit_logs_sharing", "send_activity_log"],
 })
 export class SharingInvitesModule {}

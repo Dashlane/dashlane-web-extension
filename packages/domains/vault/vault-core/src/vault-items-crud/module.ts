@@ -6,14 +6,15 @@ import {
 } from "@dashlane/vault-contracts";
 import {
   CreateVaultItemCommandHandler,
+  DeleteVaultItemCommandHandler,
   DeleteVaultItemsCommandHandler,
   EmitTemporaryVaultItemsEventCommandHandler,
   UpdateVaultItemCommandHandler,
 } from "./handlers/commands";
 import {
+  CredentialsGloballyProtectedQueryHandler,
   DomainIconDetailsQueryHandler,
   RichIconsEnabledQueryHandler,
-  SecureNoteCategoryQueryHandler,
   VaultItemsQueryHandler,
 } from "./handlers/queries";
 import { VaultItemsCommandEventsEmitter } from "./handlers/events/events-emitter";
@@ -24,6 +25,7 @@ import { VaultRepository } from "../vault-repository";
     commands: {
       createVaultItem: CreateVaultItemCommandHandler,
       deleteVaultItems: DeleteVaultItemsCommandHandler,
+      deleteVaultItem: DeleteVaultItemCommandHandler,
       updateVaultItem: UpdateVaultItemCommandHandler,
       emitTemporaryVaultItemEvent: EmitTemporaryVaultItemsEventCommandHandler,
     },
@@ -31,12 +33,13 @@ import { VaultRepository } from "../vault-repository";
     queries: {
       domainIconDetails: DomainIconDetailsQueryHandler,
       query: VaultItemsQueryHandler,
-      secureNoteCategory: SecureNoteCategoryQueryHandler,
+      credentialsGloballyProtected: CredentialsGloballyProtectedQueryHandler,
       richIconsEnabled: RichIconsEnabledQueryHandler,
     },
   },
   imports: [CryptographyModule],
   providers: [VaultItemsCommandEventsEmitter, VaultRepository],
   requiredFeatureFlips: Object.values(VaultItemsCrudFeatureFlips),
+  domainName: "vault",
 })
 export class VaultItemsCrudModule {}

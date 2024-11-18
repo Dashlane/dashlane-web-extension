@@ -3,6 +3,7 @@ import {
   PermissionSchema,
   SharedItemAccessLinkTypes,
   SharedItemAccessLinkTypesSchema,
+  StatusSchema,
 } from "../common-types";
 const SharedItemAccessLinkBaseSchema = z.object({
   permission: PermissionSchema,
@@ -22,6 +23,7 @@ export const UserGroupAccessSchema = SharedItemAccessLinkBaseSchema.extend({
   accessType: z.literal(SharedItemAccessLinkTypes.UserGroup),
   groupEncryptedKey: z.optional(z.string()),
   groupPrivateKey: z.optional(z.string()),
+  groupPublicKey: z.optional(z.string()),
 });
 export type UserGroupAccess = z.infer<typeof UserGroupAccessSchema>;
 export const CollectionUserAccessSchema = SharedItemAccessLinkBaseSchema.extend(
@@ -29,6 +31,7 @@ export const CollectionUserAccessSchema = SharedItemAccessLinkBaseSchema.extend(
     accessType: z.literal(SharedItemAccessLinkTypes.CollectionUser),
     collectionEncryptedKey: z.optional(z.string()),
     collectionPrivateKey: z.optional(z.string()),
+    collectionPublicKey: z.optional(z.string()),
   }
 );
 export type CollectionUserAccess = z.infer<typeof CollectionUserAccessSchema>;
@@ -39,6 +42,8 @@ export const CollectionUserGroupAccessSchema =
     collectionPrivateKey: z.optional(z.string()),
     groupEncryptedKey: z.optional(z.string()),
     groupPrivateKey: z.optional(z.string()),
+    groupPublicKey: z.optional(z.string()),
+    collectionPublicKey: z.optional(z.string()),
   });
 export type CollectionUserGroupAccess = z.infer<
   typeof CollectionUserGroupAccessSchema
@@ -60,6 +65,19 @@ export const SharedItemRecipientIdsSchema = z.object({
 export type SharedItemRecipientIds = z.infer<
   typeof SharedItemRecipientIdsSchema
 >;
+export const SharedAccessEntrySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  permission: PermissionSchema,
+  status: z.optional(StatusSchema),
+});
+export const SharedAccessSchema = z.object({
+  users: z.array(SharedAccessEntrySchema),
+  userGroups: z.array(SharedAccessEntrySchema),
+  collections: z.array(SharedAccessEntrySchema),
+});
+export type SharedAccess = z.infer<typeof SharedAccessSchema>;
+export type SharedAccessEntry = z.infer<typeof SharedAccessEntrySchema>;
 export const SharedItemSchema = z.object({
   accessLink: z.optional(SharedItemDecryptionLinkSchema),
   sharedItemId: z.string(),
@@ -71,3 +89,15 @@ export const SharedItemSchema = z.object({
   isLastAdmin: z.boolean(),
 });
 export type SharedItem = z.infer<typeof SharedItemSchema>;
+export enum SharedVaultItemType {
+  Credential = "KWAuthentifiant",
+  Secret = "KWSecret",
+  SecureNote = "KWSecureNote",
+}
+export const isSharedVaultItemType = (
+  itemType: string
+): itemType is SharedVaultItemType => {
+  return Object.values(SharedVaultItemType).includes(
+    itemType as SharedVaultItemType
+  );
+};

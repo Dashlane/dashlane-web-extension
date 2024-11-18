@@ -1,1 +1,1 @@
-export { LocalDataKeyEncryptionCodec } from './local-data-key-encryption-codec';
+export { LocalDataKeyEncryptionCodec } from "./local-data-key-encryption-codec";

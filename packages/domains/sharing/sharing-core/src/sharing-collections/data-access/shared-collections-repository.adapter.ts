@@ -1,11 +1,16 @@
-import { Injectable } from "@dashlane/framework-application";
 import { map, Observable } from "rxjs";
-import { SharedCollection } from "@dashlane/sharing-contracts";
+import { Injectable } from "@dashlane/framework-application";
+import { safeCast, success } from "@dashlane/framework-types";
+import {
+  Permission,
+  SharedCollection,
+  SharedCollectionRole,
+  Status,
+} from "@dashlane/sharing-contracts";
 import { SharedCollectionsRepository } from "../handlers/common/shared-collections.repository";
-import { SharedCollectionsStore } from "./shared-collections.store";
+import { SharedCollectionsStore } from "../store/shared-collections.store";
 import { SharedCollectionState } from "./shared-collections.state";
-import { safeCast } from "@dashlane/framework-types";
-const mapToLegacyCollection = ({
+export const mapToLegacyCollection = ({
   id,
   name,
   revision,
@@ -22,7 +27,7 @@ const mapToLegacyCollection = ({
 export class SharedCollectionsRepositoryAdapter
   implements SharedCollectionsRepository
 {
-  public constructor(private store: SharedCollectionsStore) {}
+  public constructor(private readonly store: SharedCollectionsStore) {}
   public async getCollectionsByIds(ids: string[]): Promise<SharedCollection[]> {
     const state = await this.store.getState();
     return ids.reduce((collections, collectionId) => {
@@ -42,9 +47,12 @@ export class SharedCollectionsRepositoryAdapter
   public collections$(): Observable<SharedCollection[]> {
     return this.store.state$.pipe(
       map((state) =>
-        Object.values(state.collections).map((coll) =>
-          mapToLegacyCollection(coll)
-        )
+        Object.values(state.collections).reduce((acc, coll) => {
+          if (coll.isAccepted) {
+            acc.push(mapToLegacyCollection(coll));
+          }
+          return acc;
+        }, safeCast<SharedCollection[]>([]))
       )
     );
   }
@@ -63,7 +71,58 @@ export class SharedCollectionsRepositoryAdapter
     }
     return mapToLegacyCollection(collection);
   }
-  public async updateCollections() {
-    throw new Error("not supported");
+  public async updateCollections() {}
+  public getGroupRoleInCollection$(collectionId: string, groupId?: string) {
+    return this.store.state$.pipe(
+      map((collectionState) => {
+        const { sharedCollectionsAccess } = collectionState;
+        const sharedCollectionAccess = sharedCollectionsAccess[collectionId];
+        if (!sharedCollectionAccess) {
+          throw new Error("Shared collection not found");
+        }
+        const targetedUserGroup = sharedCollectionAccess.userGroups.find(
+          (group) => group.id === groupId
+        );
+        const isTargetGroupAdmin =
+          targetedUserGroup?.permission === Permission.Admin;
+        return isTargetGroupAdmin
+          ? SharedCollectionRole.Manager
+          : SharedCollectionRole.Editor;
+      })
+    );
+  }
+  public usersAndGroupsInCollection(collectionIds: string[]) {
+    return this.store.state$.pipe(
+      map((collectionState) => {
+        const { sharedCollectionsAccess } = collectionState;
+        const users = collectionIds.flatMap((collectionId) => {
+          const targetedCollection = sharedCollectionsAccess[collectionId];
+          if (!targetedCollection) {
+            return [];
+          }
+          return sharedCollectionsAccess[collectionId].users.map((user) => ({
+            id: user.name,
+            label: user.name,
+            status: user.status ?? Status.Pending,
+            permission: user.permission,
+          }));
+        });
+        const userGroups = collectionIds.flatMap((collectionId) => {
+          const targetedCollection = sharedCollectionsAccess[collectionId];
+          if (!targetedCollection) {
+            return [];
+          }
+          return sharedCollectionsAccess[collectionId].userGroups.map(
+            (group) => ({
+              id: group.id,
+              label: group.name,
+              status: group.status ?? Status.Pending,
+              permission: group.permission,
+            })
+          );
+        });
+        return success({ userGroups, users });
+      })
+    );
   }
 }

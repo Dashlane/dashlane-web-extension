@@ -2,9 +2,11 @@ import {
   defineFunctionalError,
   Failure,
   FunctionalErrorOf,
+  Result,
   Success,
 } from "@dashlane/framework-types";
 import {
+  DeleteItemGroupModel,
   ItemGroup,
   ItemGroupCreateModel,
   RevokeItemGroupMembersModel,
@@ -40,4 +42,7 @@ export abstract class SharingCommonGateway {
   abstract refuseItemGroup: (
     models: RevokeItemGroupMembersModel
   ) => Promise<ItemGroup[]>;
+  abstract deleteItemGroup: (
+    models: DeleteItemGroupModel
+  ) => Promise<Result<undefined>>;
 }

@@ -1,6 +1,8 @@
 import {
   CommandHandler,
+  FrameworkRequestContextValues,
   ICommandHandler,
+  RequestContext,
 } from "@dashlane/framework-application";
 import { failure, isFailure, success } from "@dashlane/framework-types";
 import {
@@ -17,6 +19,7 @@ import { SharingCollectionItemsService } from "../common/sharing-collection-item
 import { SharingSyncService } from "../../../sharing-common";
 import { SharingCollectionsGateway } from "../common/sharing-collections.gateway";
 import { userGroupRecipientMapper, userRecipientMapper } from "../common/utils";
+import { toSharedCollection } from "../../../utils/mappers/collection-download-mapper";
 const userRecipientToIdMapper = (recipient: SharedCollectionUserRecipient) =>
   recipient.login;
 const userGroupRecipientToIdMapper = (
@@ -41,7 +44,8 @@ export class CreateSharedCollectionCommandHandler
     private sharingCollectionsGateway: SharingCollectionsGateway,
     private sharingCollectionItems: SharingCollectionItemsService,
     private vaultClient: VaultOrganizationClient,
-    private sharingSync: SharingSyncService
+    private sharingSync: SharingSyncService,
+    private readonly context: RequestContext
   ) {}
   async execute({ body }: CreateSharedCollectionCommand) {
     const {
@@ -58,7 +62,6 @@ export class CreateSharedCollectionCommandHandler
       newCollectionUuid,
       teamId,
       collectionName,
-      defaultItemPermissions,
       users.map(userRecipientMapper),
       groups.map(userGroupRecipientMapper)
     );
@@ -68,9 +71,15 @@ export class CreateSharedCollectionCommandHandler
     };
     if (itemIds.length > 0) {
       try {
+        const login = this.getCurrentUserLogin();
+        if (!login) {
+          throw new Error(
+            "No loged in user available when adding items to collections"
+          );
+        }
         const itemsAddedResult =
           await this.sharingCollectionItems.addItemsToCollections(
-            [createdCollection],
+            [toSharedCollection(createdCollection, [], login)],
             itemIds,
             [collectionPermission]
           );
@@ -107,5 +116,8 @@ export class CreateSharedCollectionCommandHandler
       await this.sharingSync.scheduleSync();
     }
     return success(undefined);
+  }
+  getCurrentUserLogin(): string | undefined {
+    return this.context.get<string>(FrameworkRequestContextValues.UserName);
   }
 }

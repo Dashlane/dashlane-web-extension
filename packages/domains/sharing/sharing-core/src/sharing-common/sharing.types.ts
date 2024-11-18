@@ -1,3 +1,4 @@
+import { AuditLogDetails } from "@dashlane/sharing";
 import {
   Permission,
   ShareableItemType,
@@ -17,7 +18,9 @@ export interface SharingUserGroupRecipient {
 }
 export interface SharingUserItemGroupRecipient {
   userId: string;
-  permission: Permission;
+  permission?: Permission;
+  groupKey?: string;
+  proposeSignature?: string;
 }
 export interface SharingCollectionRecipient {
   collectionUUID: string;
@@ -71,10 +74,15 @@ export interface RevokeItemGroupMembersModel {
   userLogins?: string[];
   userGroupIds?: string[];
   collectionIds?: string[];
+  auditLogDetails?: AuditLogDetails;
 }
 export interface RefuseItemGroupModel {
   revision: number;
   itemGroupId: string;
+}
+export interface DeleteItemGroupModel {
+  groupId: string;
+  revision: number;
 }
 export interface ItemGroupCreateModel {
   groupId: string;

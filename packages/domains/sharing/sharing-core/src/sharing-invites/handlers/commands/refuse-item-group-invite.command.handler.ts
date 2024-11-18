@@ -23,15 +23,24 @@ import {
 } from "@dashlane/framework-types";
 import {
   getRefuseItemGroupInviteFunctionalError,
+  PendingSharedItemInvite,
   RefuseItemGroupInviteCommand,
   RefuseItemGroupInviteNotFoundError,
+  SharingSyncFeatureFlips,
 } from "@dashlane/sharing-contracts";
-import { createAuditLogDetails } from "../../carbon-helpers/sharing-data";
+import {
+  createAuditLogDetails,
+  createPendingItemAuditLogDetails,
+} from "../../carbon-helpers/sharing-data";
 import { getActiveSpaces } from "../../../sharing-items/helpers/get-active-spaces";
-import { getEmailInfoForSharedItem } from "../../utils";
+import {
+  getEmailInfoForPendingInvite,
+  getEmailInfoForSharedItem,
+} from "../../utils";
 import { ItemGroupsGetterService } from "../../../sharing-carbon-helpers";
 import { SharingSyncService } from "../../../sharing-common";
 import { SharedItemContentGetterService } from "../common/shared-item-content-getter.service";
+import { SharedItemsRepository } from "../../../sharing-items/handlers/common/shared-items-repository";
 @CommandHandler(RefuseItemGroupInviteCommand)
 export class RefuseItemGroupInviteCommandHandler
   implements ICommandHandler<RefuseItemGroupInviteCommand>
@@ -40,11 +49,53 @@ export class RefuseItemGroupInviteCommandHandler
     private carbonLegacyClient: CarbonLegacyClient,
     private serverApiClient: ServerApiClient,
     private sharedItemContent: SharedItemContentGetterService,
+    private readonly sharedItemsRepository: SharedItemsRepository,
     private itemGroupsGetter: ItemGroupsGetterService,
     private featureFlips: FeatureFlipsClient,
     private sharingSync: SharingSyncService
   ) {}
   async execute(
+    command: RefuseItemGroupInviteCommand
+  ): CommandHandlerResponseOf<RefuseItemGroupInviteCommand> {
+    const { userFeatureFlip } = this.featureFlips.queries;
+    const isNewSharingSyncEnabledResult = await firstValueFrom(
+      userFeatureFlip({
+        featureFlip: SharingSyncFeatureFlips.SharingSyncGrapheneMigrationDev,
+      })
+    );
+    const isNewSharingSyncEnabled = isSuccess(isNewSharingSyncEnabledResult)
+      ? !!getSuccess(isNewSharingSyncEnabledResult)
+      : false;
+    return isNewSharingSyncEnabled
+      ? this.executeWithGrapheneState(command)
+      : this.executeWithCarbonState(command);
+  }
+  async executeWithGrapheneState(
+    command: RefuseItemGroupInviteCommand
+  ): CommandHandlerResponseOf<RefuseItemGroupInviteCommand> {
+    const {
+      body: { itemGroupId },
+    } = command;
+    const index = await this.sharedItemsRepository.getSharedItemsIndex();
+    const sharedItem = index[itemGroupId];
+    if (!sharedItem) {
+      throw new Error("Shared item not found while refusing invite");
+    }
+    const itemContent: PendingSharedItemInvite =
+      await this.sharedItemContent.getSharedItemContent(itemGroupId);
+    const auditLogDetails = await this.prepareAuditLogDetails(itemContent);
+    await firstValueFrom(
+      this.serverApiClient.v1.sharingUserdevice.refuseItemGroup({
+        groupId: itemGroupId,
+        revision: sharedItem.revision,
+        itemsForEmailing: [getEmailInfoForPendingInvite(itemContent)],
+        auditLogDetails,
+      })
+    );
+    await this.sharingSync.scheduleSync();
+    return success(undefined);
+  }
+  async executeWithCarbonState(
     command: RefuseItemGroupInviteCommand
   ): CommandHandlerResponseOf<RefuseItemGroupInviteCommand> {
     const {
@@ -62,10 +113,12 @@ export class RefuseItemGroupInviteCommandHandler
     if (itemGroup === undefined) {
       return failure(new RefuseItemGroupInviteNotFoundError());
     }
-    const itemContent = await this.sharedItemContent.getSharedItemContent(
+    const itemContent = await this.sharedItemContent.getSharedItemContentLegacy(
       itemGroupId
     );
-    const auditLogDetails = await this.prepareAuditLogDetails(itemContent);
+    const auditLogDetails = await this.prepareAuditLogDetailsLegacy(
+      itemContent
+    );
     return firstValueFrom(
       this.serverApiClient.v1.sharingUserdevice
         .refuseItemGroup({
@@ -101,7 +154,30 @@ export class RefuseItemGroupInviteCommandHandler
         )
     );
   }
-  private async prepareAuditLogDetails(itemContent: SharedItemContent) {
+  private async prepareAuditLogDetails(itemContent: PendingSharedItemInvite) {
+    const {
+      queries: { carbonState },
+    } = this.carbonLegacyClient;
+    const activeSpace$ = carbonState({
+      path: "userSession.localSettings.premiumStatus",
+    }).pipe(
+      mapSuccessObservable((state) => {
+        const premiumStatus = state as Partial<PremiumStatus>;
+        const activeSpaces = getActiveSpaces(premiumStatus);
+        return activeSpaces.length ? activeSpaces[0] : undefined;
+      })
+    );
+    const activeSpaceResult = await firstValueFrom(activeSpace$);
+    if (isFailure(activeSpaceResult)) {
+      return undefined;
+    }
+    const auditLogsEnabledForSpace =
+      getSuccess(activeSpaceResult)?.info.collectSensitiveDataAuditLogsEnabled;
+    return auditLogsEnabledForSpace
+      ? createPendingItemAuditLogDetails(auditLogsEnabledForSpace, itemContent)
+      : undefined;
+  }
+  private async prepareAuditLogDetailsLegacy(itemContent: SharedItemContent) {
     const {
       queries: { carbonState },
     } = this.carbonLegacyClient;

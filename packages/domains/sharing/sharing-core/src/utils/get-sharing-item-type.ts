@@ -1,4 +1,5 @@
 import { Credential, Note, Secret } from "@dashlane/communication";
+import { ShareableItemType } from "@dashlane/sharing-contracts";
 export function getSharingItemTypeFromKW(
   item?: Credential | Note | Secret
 ): "AUTHENTIFIANT" | "SECURENOTE" | "SECRET" {
@@ -6,6 +7,18 @@ export function getSharingItemTypeFromKW(
     case "KWAuthentifiant":
       return "AUTHENTIFIANT";
     case "KWSecureNote":
+      return "SECURENOTE";
+    default:
+      return "SECRET";
+  }
+}
+export function getSharingItemTypeShareableItemType(
+  type?: ShareableItemType
+): "AUTHENTIFIANT" | "SECURENOTE" | "SECRET" {
+  switch (type) {
+    case ShareableItemType.Credential:
+      return "AUTHENTIFIANT";
+    case ShareableItemType.SecureNote:
       return "SECURENOTE";
     default:
       return "SECRET";

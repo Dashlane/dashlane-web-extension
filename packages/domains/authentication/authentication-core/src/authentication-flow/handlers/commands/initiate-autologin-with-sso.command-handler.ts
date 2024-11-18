@@ -120,20 +120,23 @@ export class InitiateAutologinWithSSOCommandHandler
     const { login } = request.body;
     const { loginUserWithEnclaveSSO } =
       this.client.getClient(confidentialSSOApi).commands;
-    await this.allowToFail.doOne(async () => {
-      const ssoInfo = await this.checkSSOInfo(login);
-      if (ssoInfo.isNitroProvider) {
-        await loginUserWithEnclaveSSO({
-          userEmailAddress: login,
-          tabFocus: false,
-        });
-      } else {
-        this.authenticationFlowInfraContext.redirectUserToExternalUrl({
-          externalUrl: ssoInfo.serviceProviderUrl,
-          tabFocus: false,
-        });
-      }
-    }, "InitiateAutologinWithSSOCommandHandler.execute");
+    await this.allowToFail.doOne(
+      async () => {
+        const ssoInfo = await this.checkSSOInfo(login);
+        if (ssoInfo.isNitroProvider) {
+          await loginUserWithEnclaveSSO({
+            userEmailAddress: login,
+            tabFocus: false,
+          });
+        } else {
+          this.authenticationFlowInfraContext.redirectUserToExternalUrl({
+            externalUrl: ssoInfo.serviceProviderUrl,
+            tabFocus: false,
+          });
+        }
+      },
+      { methodName: "InitiateAutologinWithSSOCommandHandler.execute" }
+    );
     return Promise.resolve(success(undefined));
   }
 }

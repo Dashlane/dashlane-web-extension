@@ -4,7 +4,7 @@ import {
   Status,
 } from "@dashlane/sharing-contracts";
 import { ItemGroup } from "../../sharing-common";
-import { AccessData } from "./item-group-adapter.types";
+import { AccessData } from "../../utils/mappers/item-group-adapter.types";
 import { getHighestPermission } from "../../utils/get-highest-permission";
 export const checkDirectUserAccess = (
   itemGroup: ItemGroup,

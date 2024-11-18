@@ -23,7 +23,7 @@ import {
   SharedCollectionsWithItemsQueryHandler,
   UsersAndGroupsInCollectionQueryHandler,
 } from "./handlers/queries";
-import { SharedCollectionsLegacyStore } from "./data-access/shared-collections-legacy.store";
+import { SharedCollectionsLegacyStore } from "./store/shared-collections-legacy.store";
 import { SharingCollectionsService } from "./handlers/common/sharing-collections.service";
 import { SharingCollectionItemsService } from "./handlers/common/sharing-collection-items.service";
 import { AddItemsToCollectionsCommandHandler } from "./handlers/commands/add-item-to-collections.command.handler";
@@ -39,11 +39,12 @@ import { GetSharedCollectionsCountQueryHandler } from "./handlers/queries/shared
 import { UpdateItemPermissionsInCollectionsCommandHandler } from "./handlers/commands/update-item-permissions-in-collections.command.handler";
 import { SharingCollectionInvitesService } from "./handlers/common/sharing-collections-invites.service";
 import { SharedCollectionsRepository } from "./handlers/common/shared-collections.repository";
-import { SharedCollectionsStore } from "./data-access/shared-collections.store";
+import { SharedCollectionsStore } from "./store/shared-collections.store";
 import { SharedCollectionsRepositoryAdapter } from "./data-access/shared-collections-repository.adapter";
 import { SharedCollectionsRepositoryWrapper } from "./data-access/shared-collections-repository-wrapper";
 import { SharedCollectionsNewRepository } from "./handlers/common/shared-collections-new.repository";
 import { SharedCollectionsNewRepositoryAdapter } from "./data-access/shared-collections-new-repository.adapter";
+import { SharingRecipientsModule } from "..";
 @Module({
   api: sharingCollectionsApi,
   stores: [SharedCollectionsStore, SharedCollectionsLegacyStore],
@@ -103,12 +104,11 @@ import { SharedCollectionsNewRepositoryAdapter } from "./data-access/shared-coll
     SharingCryptoModule,
     SharingCommonModule,
     SharingCarbonHelpersModule,
+    SharingRecipientsModule,
   ],
   requiredFeatureFlips: [
     "sharing_web_invalidSignatureAutoRevoke_prod",
     "monetization_extension_starterRepackagingCollection",
-    "sharingVault_web_shareItemsGrapheneMigration_dev",
-    "sharingVault_web_sharingSyncGrapheneMigration_dev",
   ],
 })
 export class SharingCollectionsModule {}

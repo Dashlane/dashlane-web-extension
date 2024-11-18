@@ -5,6 +5,7 @@ import {
   RsaStatusSchema,
   StatusSchema,
 } from "../common-types";
+import { SharedAccessEntrySchema } from "../sharing-items";
 export const SharedCollectionUserSchema = z.object({
   acceptSignature: z.optional(z.nullable(z.string())),
   collectionKey: z.optional(z.nullable(z.string())),
@@ -61,6 +62,13 @@ export type UsersAndGroupsInCollection = z.infer<
 export type RsaStatus = z.infer<typeof RsaStatusSchema>;
 export type GetItemIdsInSharedCollections = z.infer<
   typeof GetItemIdsInSharedCollectionsSchema
+>;
+export const SharedCollectionAccessSchema = z.object({
+  users: z.array(SharedAccessEntrySchema),
+  userGroups: z.array(SharedAccessEntrySchema),
+});
+export type SharedCollectionAccess = z.infer<
+  typeof SharedCollectionAccessSchema
 >;
 export enum SharedCollectionRole {
   Editor = "editor",

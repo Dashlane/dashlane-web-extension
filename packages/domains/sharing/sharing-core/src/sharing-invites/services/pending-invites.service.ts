@@ -10,19 +10,25 @@ import { PendingUserGroupInvitesStore } from "../store/pending-user-group-invite
 export class PendingInvitesService {
   public constructor(
     private readonly collectionsStore: PendingCollectionInvitesStore,
-    private readonly userGroupssStore: PendingUserGroupInvitesStore,
+    private readonly userGroupsStore: PendingUserGroupInvitesStore,
     private readonly itemsStore: PendingSharedItemInvitesStore
   ) {}
   public setCollectionInvites(invites: PendingInvite[]) {
     this.collectionsStore.set(invites);
   }
   public setUserGroupInvites(invites: PendingInvite[]) {
-    this.userGroupssStore.set(invites);
+    this.userGroupsStore.set(invites);
   }
   public setSharedItemInvites(invites: PendingSharedItemInvite[]) {
     this.itemsStore.set(invites);
   }
+  public getUserGroupInvites() {
+    return this.userGroupsStore.getState();
+  }
   public getSharedItemsInvites() {
     return this.itemsStore.getState();
+  }
+  public getCollectionsInvites() {
+    return this.collectionsStore.getState();
   }
 }

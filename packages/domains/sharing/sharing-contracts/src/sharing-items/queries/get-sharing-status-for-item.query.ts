@@ -17,4 +17,5 @@ export class GetSharingStatusForItemQuery extends defineQuery<
   GetSharingStatusForItemParam
 >({
   scope: UseCaseScope.User,
+  useCache: true,
 }) {}

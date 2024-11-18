@@ -1,10 +1,7 @@
 import { safeCast } from "@dashlane/framework-types";
 import { Injectable } from "@dashlane/framework-application";
 import { Permission } from "@dashlane/sharing-contracts";
-import {
-  CurrentUserWithKeysGetterService,
-  UserGroupsGetterService,
-} from "../../sharing-carbon-helpers";
+import { CurrentUserWithKeysGetterService } from "../../sharing-carbon-helpers";
 import {
   ShareableResource,
   SharingUserGroupRecipient,
@@ -14,6 +11,7 @@ import {
   SharingCryptographyService,
   SharingInvitesCryptoService,
 } from "../../sharing-crypto";
+import { SharingUserGroupsRepository } from "../../sharing-recipients/services/user-groups.repository";
 interface UserGroupWithKeys {
   groupId: string;
   publicKey: string;
@@ -23,7 +21,7 @@ interface UserGroupWithKeys {
 @Injectable()
 export class SharingUserGroupsService {
   public constructor(
-    private userGroupsGetter: UserGroupsGetterService,
+    private userGroupsRepository: SharingUserGroupsRepository,
     private sharingCrypto: SharingCryptographyService,
     private sharingInvitesCrypto: SharingInvitesCryptoService,
     private currentUserGetter: CurrentUserWithKeysGetterService
@@ -68,7 +66,7 @@ export class SharingUserGroupsService {
     groupsRecipients: SharingUserGroupRecipient[]
   ) {
     const currentUser = await this.currentUserGetter.getCurrentUserWithKeys();
-    const userGroups = await this.userGroupsGetter.getForGroupIds(
+    const userGroups = await this.userGroupsRepository.getUserGroupsForIds(
       groupsRecipients.map((recipient) => recipient.groupId)
     );
     return Promise.all(
@@ -77,12 +75,9 @@ export class SharingUserGroupsService {
           groupsRecipients.find(
             (recipient) => recipient.groupId === userGroup.groupId
           )?.permission ?? Permission.Limited;
-        const currentUserFromGroup = userGroup.users.find(
-          (user) => user.userId === currentUser.login
-        );
-        const encryptedUserGroupKey = currentUserFromGroup?.groupKey;
+        const encryptedUserGroupKey = userGroup.groupKey;
         if (!encryptedUserGroupKey) {
-          throw new Error("Unable to get user group key.");
+          throw new Error("Unable to get encrypted user group key.");
         }
         const clearUserGroupPrivateKey =
           await this.sharingCrypto.decryptResourceKeyToClearText(

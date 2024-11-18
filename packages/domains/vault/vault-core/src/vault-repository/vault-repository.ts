@@ -1,23 +1,41 @@
-import { combineLatest, distinctUntilChanged, map } from "rxjs";
+import {
+  combineLatest,
+  distinctUntilChanged,
+  firstValueFrom,
+  map,
+  Observable,
+  of,
+  switchMap,
+} from "rxjs";
 import { Injectable } from "@dashlane/framework-application";
 import {
+  failure,
+  getFailure,
+  getSuccess,
   isFailure,
+  isSuccess,
   mapSuccessObservable,
+  Result,
   success,
 } from "@dashlane/framework-types";
 import {
   CarbonLegacyClient,
   DataModelObject,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
   PremiumStatusSpace,
   Space,
 } from "@dashlane/communication";
 import {
+  createForbiddenGroupItemError,
+  createForbiddenLastAdminError,
+  Credential,
+  ForbiddenGroupItemError,
+  ForbiddenLastAdminError,
   Passkey,
   VaultItem,
   VaultItemPropertyFilter,
   VaultItemPropertySorting,
   VaultItemsQueryParam,
-  VaultItemsQueryResult,
   VaultItemType,
   VaultItemTypeToResultDictionary,
 } from "@dashlane/vault-contracts";
@@ -65,125 +83,100 @@ import {
 import { mapKeysToLowercase } from "./utility";
 import { isSecretArray } from "./carbon-guards/is-secret-array";
 import { secretMapper } from "./type-mappers/secret-mapper";
-const IDENTITY_TYPE_PATH = VaultItemTypeToResultDictionary[
-  VaultItemType.Identity
-].replace("Result", "");
+import { LinkedWebsitesClient } from "@dashlane/autofill-contracts";
+import { SharingItemsClient } from "@dashlane/sharing-contracts";
 @Injectable()
 export class VaultRepository {
   private getVaultItems$TypeDictionary = {
     [VaultItemType.Address]: () =>
-      this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Address],
-        isAddressArray,
-        addressMapper
-      ),
+      this.getVaultItems$(VaultItemType.Address, isAddressArray, addressMapper),
     [VaultItemType.BankAccount]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.BankAccount],
+        VaultItemType.BankAccount,
         isBankAccountArray,
         bankAccountMapper
       ),
     [VaultItemType.Company]: () =>
-      this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Company],
-        isCompanyArray,
-        companyMapper
-      ),
+      this.getVaultItems$(VaultItemType.Company, isCompanyArray, companyMapper),
     [VaultItemType.Credential]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Credential],
+        VaultItemType.Credential,
         isCredentialArray,
         credentialMapper
       ),
     [VaultItemType.DriversLicense]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.DriversLicense],
+        VaultItemType.DriversLicense,
         isDriversLicenseArray,
-        driversLicenseMapper,
-        "driverLicenses"
+        driversLicenseMapper
       ),
     [VaultItemType.Email]: () =>
-      this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Email],
-        isEmailArray,
-        emailMapper
-      ),
+      this.getVaultItems$(VaultItemType.Email, isEmailArray, emailMapper),
     [VaultItemType.FiscalId]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.FiscalId],
+        VaultItemType.FiscalId,
         isFiscalIdArray,
         fiscalIdMapper
       ),
     [VaultItemType.IdCard]: () =>
-      this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.IdCard],
-        isIdCardArray,
-        idCardMapper
-      ),
+      this.getVaultItems$(VaultItemType.IdCard, isIdCardArray, idCardMapper),
     [VaultItemType.Identity]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Identity],
+        VaultItemType.Identity,
         isIdentityArray,
         identityMapper
       ),
     [VaultItemType.Passkey]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Passkey],
+        VaultItemType.Passkey,
         isPasskeyArray,
         mapKeysToLowercase<Passkey>
       ),
     [VaultItemType.Passport]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Passport],
+        VaultItemType.Passport,
         isPassportArray,
         passportMapper
       ),
     [VaultItemType.PaymentCard]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.PaymentCard],
+        VaultItemType.PaymentCard,
         isPaymentCardArray,
         paymentCardMapper
       ),
     [VaultItemType.Phone]: () =>
-      this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Phone],
-        isPhoneArray,
-        phoneMapper
-      ),
+      this.getVaultItems$(VaultItemType.Phone, isPhoneArray, phoneMapper),
     [VaultItemType.Secret]: () =>
-      this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Secret],
-        isSecretArray,
-        secretMapper
-      ),
+      this.getVaultItems$(VaultItemType.Secret, isSecretArray, secretMapper),
     [VaultItemType.SecureNote]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.SecureNote],
+        VaultItemType.SecureNote,
         isSecureNoteArray,
-        secureNoteMapper,
-        "notes"
+        secureNoteMapper
       ),
     [VaultItemType.SocialSecurityId]: () =>
       this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.SocialSecurityId],
+        VaultItemType.SocialSecurityId,
         isSocialSecurityIdArray,
         socialSecurityIdMapper
       ),
     [VaultItemType.Website]: () =>
-      this.getVaultItems$(
-        VaultItemTypeToResultDictionary[VaultItemType.Website],
-        isWebsiteArray,
-        websiteMapper,
-        "personalWebsites"
-      ),
+      this.getVaultItems$(VaultItemType.Website, isWebsiteArray, websiteMapper),
   };
+  private mapTypeToCarbonPath(VaultItemTypeToMap: VaultItemType) {
+    return DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[VaultItemTypeToMap];
+  }
   private ids?: string[];
   private propertyFilters?: VaultItemPropertyFilter[];
   private propertySorting?: VaultItemPropertySorting;
   private pageSize?: number;
   private pageNumber?: number;
   private additionalFilterFunc?: (item: VaultItem) => boolean;
-  constructor(private carbonLegacyClient: CarbonLegacyClient) {}
+  private needDashlaneLinkedWebsites?: boolean;
+  constructor(
+    private carbonLegacyClient: CarbonLegacyClient,
+    private readonly linkedWebsitesClient: LinkedWebsitesClient
+  ) {}
   private initializeVaultItemsQueryParams(
     params: Omit<VaultItemsQueryParam, "vaultItemTypes">
   ) {
@@ -197,11 +190,13 @@ export class VaultRepository {
   }
   public fetchVaultItems$(
     params: VaultItemsQueryParam,
-    additionalFilterFunc?: (item: VaultItem) => boolean
+    additionalFilterFunc?: (item: VaultItem) => boolean,
+    needDashlaneLinkedWebsites?: boolean
   ) {
     const { vaultItemTypes, ...rest } = params;
     this.initializeVaultItemsQueryParams(rest);
     this.additionalFilterFunc = additionalFilterFunc;
+    this.needDashlaneLinkedWebsites = needDashlaneLinkedWebsites;
     const combinedItems$ = combineLatest(
       vaultItemTypes.map((vaultItemType) =>
         this.getVaultItems$TypeDictionary[vaultItemType]()
@@ -220,25 +215,45 @@ export class VaultRepository {
       })
     );
   }
+  private getDashlaneDefinedLinkedWebsites$<T extends VaultItem>(
+    mappedItems: Result<T[]>
+  ): Observable<Result<T[]>> {
+    if (
+      isSuccess(mappedItems) &&
+      isCredentialArray(mappedItems.data) &&
+      this.needDashlaneLinkedWebsites
+    ) {
+      const credentialItems = mappedItems.data as Credential[];
+      const urls = credentialItems.map(({ URL }) => URL);
+      return this.linkedWebsitesClient.queries
+        .getMultipleDashlaneDefinedLinkedWebsites({ urls })
+        .pipe(
+          mapSuccessObservable((dashlaneLinkedWebsites) => {
+            return credentialItems.map((item, index) => ({
+              ...item,
+              linkedURLs: [
+                ...item.linkedURLs,
+                ...dashlaneLinkedWebsites[index],
+              ],
+            })) as T[];
+          })
+        );
+    }
+    return of(mappedItems);
+  }
   private getVaultItems$<
     CT extends DataModelObject,
-    K extends keyof VaultItemsQueryResult,
+    K extends VaultItemType,
     T extends VaultItem
   >(
-    typeName: K,
+    itemType: K,
     typeGuard: (uut: unknown) => uut is CT[],
-    itemMapper: (item: CT) => T,
-    typePath?: string
+    itemMapper: (item: CT) => T
   ) {
-    typePath = typePath ?? typeName.replace("Result", "");
     return combineLatest(
       [
-        this.getCarbonVaultItems$(typeName, typeGuard, typePath),
-        this.getCarbonVaultItems$(
-          VaultItemTypeToResultDictionary[VaultItemType.Identity],
-          isIdentityArray,
-          IDENTITY_TYPE_PATH
-        ),
+        this.getCarbonVaultItems$(itemType, typeGuard),
+        this.getCarbonVaultItems$(VaultItemType.Identity, isIdentityArray),
         this.getQuarantinedSpacesTeamIds$(),
       ],
       (carbonVaultItems, carbonIdentites, quarantinedSpaces) =>
@@ -252,6 +267,7 @@ export class VaultRepository {
           )
         )
     ).pipe(
+      switchMap(this.getDashlaneDefinedLinkedWebsites$.bind(this)),
       mapSuccessObservable((mappedItems) => {
         const sortedAndFilteredItems = sortVaultItems(
           filterVaultItems(
@@ -261,6 +277,7 @@ export class VaultRepository {
           ),
           this.propertySorting
         );
+        const typeName = VaultItemTypeToResultDictionary[itemType];
         return {
           [typeName]: {
             items: this.getPage(sortedAndFilteredItems),
@@ -285,19 +302,21 @@ export class VaultRepository {
     );
   }
   private getCarbonVaultItems$<CT extends DataModelObject>(
-    typeName: keyof VaultItemsQueryResult,
-    typeGuard: (uut: unknown) => uut is CT[],
-    typePath: string
+    itemType: VaultItemType,
+    typeGuard: (uut: unknown) => uut is CT[]
   ) {
     const {
       queries: { carbonState },
     } = this.carbonLegacyClient;
+    const typePath = this.mapTypeToCarbonPath(itemType);
     return carbonState({
       path: `userSession.personalData.${typePath}`,
     }).pipe(
       map((itemsResult) => {
         if (isFailure(itemsResult) || !typeGuard(itemsResult.data)) {
-          throw new Error(`Bad ${typeName} format`);
+          throw new Error(
+            `Bad ${VaultItemTypeToResultDictionary[itemType]} format`
+          );
         }
         return itemsResult.data;
       })
@@ -353,4 +372,109 @@ export class VaultRepository {
     items: [],
     matchCount: 0,
   });
+  public vaultItemsOfTypeExist = async (
+    ids: string[],
+    vaultItemType: VaultItemType
+  ) => {
+    const typePath = this.mapTypeToCarbonPath(vaultItemType);
+    const {
+      queries: { carbonState },
+    } = this.carbonLegacyClient;
+    return firstValueFrom(
+      carbonState({
+        path: `userSession.personalData.${typePath}`,
+      }).pipe(
+        map((itemsResult) => {
+          if (isFailure(itemsResult) || !Array.isArray(itemsResult.data)) {
+            throw new Error(
+              `Unexpected error fetching vault item for ${vaultItemType}`
+            );
+          }
+          const found: string[] = [];
+          const notFound: string[] = [];
+          for (const id of ids) {
+            if (itemsResult.data.some((item) => item.Id === id)) {
+              found.push(id);
+            } else {
+              notFound.push(id);
+            }
+          }
+          return {
+            found,
+            notFound,
+          };
+        })
+      )
+    );
+  };
+  async shouldRefuseSharedItemBeforeVaultItemDeletion(
+    sharingItemsClient: SharingItemsClient,
+    vaultItemId: string
+  ): Promise<
+    Result<boolean, ForbiddenGroupItemError | ForbiddenLastAdminError>
+  > {
+    const itemId = vaultItemId;
+    const itemSharingStatusResult = await firstValueFrom(
+      sharingItemsClient.queries.getSharingStatusForItem({
+        itemId,
+      })
+    );
+    if (isFailure(itemSharingStatusResult)) {
+      throw new Error(
+        "Unexpected failure while attempting to retrieve sharing status of item to be deleted",
+        {
+          cause: { failure: getFailure(itemSharingStatusResult) },
+        }
+      );
+    }
+    const { isSharedViaUserGroup, isShared } = getSuccess(
+      itemSharingStatusResult
+    );
+    if (!isShared) {
+      return success(false);
+    }
+    if (isSharedViaUserGroup) {
+      return failure(createForbiddenGroupItemError());
+    }
+    const isLastAdminForItemResult = await firstValueFrom(
+      sharingItemsClient.queries.getIsLastAdminForItem({
+        itemId,
+      })
+    );
+    if (isFailure(isLastAdminForItemResult)) {
+      throw new Error(
+        "Unexpected failure while attempting to determine if we're the last admin of shared item to be deleted",
+        {
+          cause: { failure: getFailure(isLastAdminForItemResult) },
+        }
+      );
+    }
+    const { isLastAdmin } = getSuccess(isLastAdminForItemResult);
+    if (isLastAdmin) {
+      return failure(createForbiddenLastAdminError());
+    }
+    return success(true);
+  }
+  public getCredential = async (id: string) => {
+    const typePath = this.mapTypeToCarbonPath(VaultItemType.Credential);
+    const {
+      queries: { carbonState },
+    } = this.carbonLegacyClient;
+    return firstValueFrom(
+      carbonState({
+        path: `userSession.personalData.${typePath}`,
+      }).pipe(
+        map((itemsResult) => {
+          if (isFailure(itemsResult) || !isCredentialArray(itemsResult.data)) {
+            throw new Error(`Unexpected error fetching credential`);
+          }
+          const credential = itemsResult.data.find((item) => item.Id === id);
+          if (!credential) {
+            throw new Error("Credential not found in vault");
+          }
+          return credential;
+        })
+      )
+    );
+  };
 }

@@ -2,7 +2,6 @@ import { z } from "zod";
 import { defineStore, StoreCapacity } from "@dashlane/framework-application";
 import { UseCaseScope } from "@dashlane/framework-contracts";
 import { PassthroughCodec } from "@dashlane/framework-services";
-import { SharingUserSchema } from "@dashlane/sharing-contracts";
 export const SharingUserGroupStateSchema = z.object({
   groupId: z.string(),
   name: z.string(),
@@ -11,10 +10,10 @@ export const SharingUserGroupStateSchema = z.object({
   privateKey: z.string(),
   acceptedUsers: z.array(z.string()),
   allUsers: z.array(z.string()),
+  groupKey: z.string().optional(),
 });
 export const SharingUserGroupsStateSchema = z.object({
   userGroups: z.record(SharingUserGroupStateSchema),
-  users: z.record(SharingUserSchema),
 });
 export type SharingUserGroupsState = z.infer<
   typeof SharingUserGroupsStateSchema
@@ -29,7 +28,7 @@ export class SharingUserGroupsStore extends defineStore<
 >({
   persist: true,
   storage: {
-    initialValue: { userGroups: {}, users: {} },
+    initialValue: { userGroups: {} },
     typeGuard: isSharingUserGroupsState,
     schemaVersion: 1,
   },

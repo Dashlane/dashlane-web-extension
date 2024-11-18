@@ -1,42 +1,17 @@
-import { firstValueFrom } from "rxjs";
 import {
   CommandHandler,
-  ICommandHandler,
+  type ICommandHandler,
 } from "@dashlane/framework-application";
-import { ServerApiClient } from "@dashlane/framework-dashlane-application";
-import { getSuccess, isFailure, success } from "@dashlane/framework-types";
+import { success } from "@dashlane/framework-types";
 import { RefuseSharedItemCommand } from "@dashlane/sharing-contracts";
-import { ItemGroupsGetterService } from "../../../sharing-carbon-helpers";
+import { SharedItemsService } from "../common/shared-items.service";
 @CommandHandler(RefuseSharedItemCommand)
 export class RefuseSharedItemCommandHandler
   implements ICommandHandler<RefuseSharedItemCommand>
 {
-  constructor(
-    private serverApiClient: ServerApiClient,
-    private itemGroupsGetter: ItemGroupsGetterService
-  ) {}
+  constructor(private readonly sharedItemsService: SharedItemsService) {}
   async execute({ body }: RefuseSharedItemCommand) {
-    const { vaultItemId } = body;
-    const itemGroupResult = await firstValueFrom(
-      this.itemGroupsGetter.getForItemId(vaultItemId)
-    );
-    if (isFailure(itemGroupResult)) {
-      throw new Error(
-        `Failed to retrieve item group for pending item group with`
-      );
-    }
-    const itemGroup = getSuccess(itemGroupResult);
-    if (itemGroup === undefined) {
-      throw new Error(
-        `Failed to retrieve item group for pending item group with`
-      );
-    }
-    await firstValueFrom(
-      this.serverApiClient.v1.sharingUserdevice.refuseItemGroup({
-        groupId: itemGroup.groupId,
-        revision: itemGroup.revision,
-      })
-    );
+    await this.sharedItemsService.refuseSharedItem(body.vaultItemId);
     return success(undefined);
   }
 }

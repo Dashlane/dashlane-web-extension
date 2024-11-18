@@ -6,29 +6,43 @@ import {
 } from "@dashlane/framework-application";
 import { ServerApiClient } from "@dashlane/framework-dashlane-application";
 import {
+  failure,
+  getSuccess,
+  isFailure,
+  isSuccess,
+  success,
+} from "@dashlane/framework-types";
+import { FeatureFlipsClient } from "@dashlane/framework-contracts";
+import {
   AcceptCollectionInviteCommand,
   AcceptCollectionInviteFailedError,
+  SharingSyncFeatureFlips,
 } from "@dashlane/sharing-contracts";
-import { Status } from "@dashlane/server-sdk/v1";
-import { failure, isFailure, success } from "@dashlane/framework-types";
 import {
   SharingCryptographyService,
   SharingDecryptionService,
 } from "../../../sharing-crypto";
 import { PendingCollectionsStore } from "../../store/pending-collections.store";
 import { SharingSyncService } from "../../../sharing-common";
-import { CurrentUserWithKeysGetterService } from "../../../sharing-carbon-helpers";
+import {
+  CurrentUserWithKeyPair,
+  CurrentUserWithKeysGetterService,
+} from "../../../sharing-carbon-helpers";
+import { SharedCollectionsNewRepository } from "../../../sharing-collections/handlers/common/shared-collections-new.repository";
+import { Status } from "@dashlane/server-sdk/v1";
 @CommandHandler(AcceptCollectionInviteCommand)
 export class AcceptCollectionInviteCommandHandler
   implements ICommandHandler<AcceptCollectionInviteCommand>
 {
   constructor(
-    private serverApiClient: ServerApiClient,
-    private sharingCrypto: SharingCryptographyService,
-    private sharingDecryption: SharingDecryptionService,
-    private pendingCollectionsStore: PendingCollectionsStore,
-    private sharingSync: SharingSyncService,
-    private currentUserGetter: CurrentUserWithKeysGetterService
+    private readonly serverApiClient: ServerApiClient,
+    private readonly sharingCrypto: SharingCryptographyService,
+    private readonly sharingDecryption: SharingDecryptionService,
+    private readonly oldStore: PendingCollectionsStore,
+    private readonly collectionsRepository: SharedCollectionsNewRepository,
+    private readonly sharingSync: SharingSyncService,
+    private readonly currentUserGetter: CurrentUserWithKeysGetterService,
+    private readonly featureFlips: FeatureFlipsClient
   ) {}
   async execute(
     command: AcceptCollectionInviteCommand
@@ -36,24 +50,19 @@ export class AcceptCollectionInviteCommandHandler
     const {
       body: { collectionId },
     } = command;
-    const pendingCollectionsState =
-      await this.pendingCollectionsStore.getState();
-    const pendingCollection = pendingCollectionsState.pendingCollections.find(
-      ({ uuid }) => uuid === collectionId
+    const { userFeatureFlip } = this.featureFlips.queries;
+    const isNewSharingSyncEnabledResult = await firstValueFrom(
+      userFeatureFlip({
+        featureFlip: SharingSyncFeatureFlips.SharingSyncGrapheneMigrationDev,
+      })
     );
-    if (!pendingCollection) {
-      throw new Error("Pending Collection not found");
-    }
-    const collectionKey = await this.sharingDecryption.decryptCollectionKey(
-      pendingCollection,
-      Status.Pending
-    );
-    if (!collectionKey) {
-      throw new Error(
-        "Unable to decrypt Collection Key for pending collection"
-      );
-    }
+    const isNewSharingSyncEnabled = isSuccess(isNewSharingSyncEnabledResult)
+      ? !!getSuccess(isNewSharingSyncEnabledResult)
+      : false;
     const currentUser = await this.currentUserGetter.getCurrentUserWithKeys();
+    const { collectionKey, revision } = isNewSharingSyncEnabled
+      ? await this.getCollectionKeyAndRevisionNew(collectionId, currentUser)
+      : await this.getCollectionKeyAndRevisionLegacy(collectionId);
     const acceptSignatureBuffer =
       await this.sharingCrypto.createAcceptSignature(
         currentUser.privateKey,
@@ -63,7 +72,7 @@ export class AcceptCollectionInviteCommandHandler
     const response = await firstValueFrom(
       this.serverApiClient.v1.sharingUserdevice.acceptCollection({
         collectionUUID: collectionId,
-        revision: pendingCollection.revision,
+        revision,
         acceptSignature: acceptSignatureBuffer,
       })
     );
@@ -72,5 +81,45 @@ export class AcceptCollectionInviteCommandHandler
     }
     await this.sharingSync.scheduleSync();
     return success(undefined);
+  }
+  private async getCollectionKeyAndRevisionNew(
+    collectionId: string,
+    currentUser: CurrentUserWithKeyPair
+  ) {
+    const pendingCollections =
+      await this.collectionsRepository.getCollectionsById([collectionId]);
+    if (!pendingCollections.length) {
+      throw new Error("Pending Collection not found new path");
+    }
+    const collectionKey =
+      await this.sharingDecryption.decryptSharedCollectionKey(
+        pendingCollections[0],
+        currentUser
+      );
+    if (!collectionKey) {
+      throw new Error(
+        "Unable to decrypt Collection Key for pending collection new path"
+      );
+    }
+    return { collectionKey, revision: pendingCollections[0].revision };
+  }
+  private async getCollectionKeyAndRevisionLegacy(collectionId: string) {
+    const pendingCollectionsState = await this.oldStore.getState();
+    const pendingCollection = pendingCollectionsState.pendingCollections.find(
+      ({ uuid }) => uuid === collectionId
+    );
+    if (!pendingCollection) {
+      throw new Error("Pending Collection not found legacy path");
+    }
+    const collectionKey = await this.sharingDecryption.decryptCollectionKey(
+      pendingCollection,
+      Status.Pending
+    );
+    if (!collectionKey) {
+      throw new Error(
+        "Unable to decrypt Collection Key for pending collection legacy path"
+      );
+    }
+    return { collectionKey, revision: pendingCollection.revision };
   }
 }

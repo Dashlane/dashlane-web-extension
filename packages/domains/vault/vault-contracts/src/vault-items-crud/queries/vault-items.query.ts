@@ -16,14 +16,12 @@ import {
   Secret,
   SecureNote,
   SocialSecurityId,
-  VaultItem,
   VaultItemType,
   Website,
 } from "../types";
 import { VaultItemPropertyFilter } from "./filtering.types";
 import { VaultItemPropertySorting } from "./sorting.types";
-import { Collection } from "../../vault-organization";
-export type ItemsQueryResult<T extends VaultItem | Collection> = {
+export type ItemsQueryResult<T> = {
   items: T[];
   matchCount: number;
 };

@@ -1,7 +1,13 @@
+import { safeCast } from "@dashlane/framework-types";
 import {
   Permission,
+  RecipientType,
+  SharedAccess,
+  SharedAccessEntry,
+  SharedAccessMember,
   SharedCollection,
   SharedItem,
+  Status,
 } from "@dashlane/sharing-contracts";
 import { UserGroupDownload } from "@dashlane/server-sdk/v1";
 import { ItemGroup } from "../../sharing-common/sharing.types";
@@ -50,3 +56,55 @@ export const toSharedItem = (
     },
   };
 };
+const checkStatus = ({ status }: { status?: Status }) =>
+  status && ![Status.Refused, Status.Revoked].includes(status);
+export const toSharedAccess = (itemGroup: ItemGroup): SharedAccess => {
+  return {
+    users:
+      itemGroup.users?.reduce((acc, user) => {
+        if (checkStatus(user)) {
+          acc.push({
+            id: user.userId,
+            name: user.alias,
+            permission: user.permission,
+            status: user.status,
+          });
+        }
+        return acc;
+      }, safeCast<SharedAccessEntry[]>([])) ?? [],
+    userGroups:
+      itemGroup.groups?.reduce((acc, group) => {
+        if (checkStatus(group)) {
+          acc.push({
+            id: group.groupId,
+            name: group.name,
+            permission: group.permission,
+            status: group.status,
+          });
+        }
+        return acc;
+      }, safeCast<SharedAccessEntry[]>([])) ?? [],
+    collections:
+      itemGroup.collections?.reduce((acc, collection) => {
+        if (checkStatus(collection)) {
+          acc.push({
+            id: collection.uuid,
+            name: collection.name,
+            permission: collection.permission,
+            status: collection.status,
+          });
+        }
+        return acc;
+      }, safeCast<SharedAccessEntry[]>([])) ?? [],
+  };
+};
+export const toSharedAccessMember = (
+  member: SharedAccessEntry,
+  type: RecipientType
+): SharedAccessMember => ({
+  permission: member.permission,
+  status: member.status,
+  recipientId: member.id,
+  recipientName: member.name,
+  recipientType: type,
+});

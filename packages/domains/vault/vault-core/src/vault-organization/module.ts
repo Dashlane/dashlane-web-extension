@@ -6,10 +6,8 @@ import {
   UpdateCollectionCommandHandler,
 } from "./handlers/commands";
 import { CollectionsQueryHandler } from "./handlers/queries";
-import { CollectionsStore } from "./store/collections-store";
 @Module({
   api: vaultOrganizationApi,
-  stores: [CollectionsStore],
   handlers: {
     commands: {
       deleteCollection: DeleteCollectionCommandHandler,

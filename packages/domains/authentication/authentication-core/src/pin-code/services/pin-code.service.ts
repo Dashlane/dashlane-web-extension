@@ -1,4 +1,5 @@
 import {
+  ComputePinKeyError,
   createNoActivePinCodeError,
   createWrongPinCodeError,
   GetStatusQueryResult,
@@ -19,6 +20,7 @@ import {
 import {
   assertUnreachable,
   failure,
+  getSuccessOrThrow,
   isSuccess,
   match,
   panic,
@@ -230,13 +232,13 @@ export class PinCodeService {
         await firstValueFrom(
           this.serverApi.v1.authentication.pincodeDisable({})
         ),
-      "Deactivate pin code"
+      { methodName: "Deactivate pin code" }
     );
   }
   public async computePinKey(
     pinCode: string,
     email: string
-  ): Promise<Result<ArrayBuffer, LoginWithPinError>> {
+  ): Promise<Result<ArrayBuffer, ComputePinKeyError>> {
     const state = await this.pinCodeStore.getState();
     if (!(email in state.localAccounts)) {
       return failure(createNoActivePinCodeError());
@@ -327,7 +329,7 @@ export class PinCodeService {
             completeLoginRequest: finishLoginRequest,
           })
         ),
-      "Complete login with pin code"
+      { methodName: "Complete login with pin code" }
     );
     return success(base64UrlToArrayBuffer(pinKey));
   }
@@ -362,6 +364,34 @@ export class PinCodeService {
       throw new Error("Failed to open the session");
     }
     return success(undefined);
+  }
+  public async validatePinCode(
+    pinCode: string,
+    email: string
+  ): Promise<
+    Result<{
+      isPinCodeCorrect: boolean;
+    }>
+  > {
+    return match(await this.computePinKey(pinCode, email), {
+      success: () => success({ isPinCodeCorrect: true }),
+      failure: (f) =>
+        match(f.error, {
+          NO_ACTIVE_PIN_CODE: panic,
+          WRONG_PIN_CODE: async () => {
+            const pinCodeStatusResult = await firstValueFrom(
+              this.getCurrentUserPinCodeStatus()
+            );
+            const pinCodeStatus = getSuccessOrThrow(pinCodeStatusResult);
+            if (!pinCodeStatus.isPinCodeEnabled) {
+              await this.session.commands.closeUserSession({
+                email,
+              });
+            }
+            return success({ isPinCodeCorrect: false });
+          },
+        }),
+    });
   }
   private async getCurrentUserEmail() {
     const currentSession = await firstValueFrom(

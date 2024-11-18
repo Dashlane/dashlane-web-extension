@@ -46,6 +46,7 @@ export const convertLegacyPendingItemGroup = (
     referrer: group.referrer,
     sharedItemId: group.itemGroupId,
     permission: convertPermission(group),
+    revision: 0,
   };
   const item = group.items[0];
   if (isCredential(item)) {

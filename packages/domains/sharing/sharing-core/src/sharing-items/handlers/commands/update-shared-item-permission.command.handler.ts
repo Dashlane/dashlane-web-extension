@@ -9,25 +9,27 @@ import {
   UpdateSharedItemPermissionCommand,
   UpdateSharedItemPermissionCommandParam,
 } from "@dashlane/sharing-contracts";
-import { ItemGroupsGetterService } from "../../../sharing-carbon-helpers";
 import { SharingSyncService } from "../../../sharing-common";
 import {
   ITEM_GROUP_MEMBER_INVALID_REVISION,
   SharingCommonGateway,
 } from "../../../sharing-common/services/sharing.gateway";
+import { SharedItemsRepository } from "../common/shared-items-repository";
 @CommandHandler(UpdateSharedItemPermissionCommand)
 export class UpdateSharedItemPermissionCommandHandler
   implements ICommandHandler<UpdateSharedItemPermissionCommand>
 {
   constructor(
-    private readonly itemGroupsGetter: ItemGroupsGetterService,
     private readonly sharingSync: SharingSyncService,
-    private readonly commonGateway: SharingCommonGateway
+    private readonly commonGateway: SharingCommonGateway,
+    private readonly sharedItemRepository: SharedItemsRepository
   ) {}
   async execute({ body }: UpdateSharedItemPermissionCommand) {
-    const { groupId, revision, users, groups } = await this.getItemGroup(body);
+    const { sharedItemId, revision, users, groups } = await this.getItemGroup(
+      body
+    );
     const result = await this.commonGateway.updateItemGroupMembers({
-      groupId,
+      groupId: sharedItemId,
       revision,
       users,
       groups,
@@ -35,10 +37,10 @@ export class UpdateSharedItemPermissionCommandHandler
     if (isFailure(result)) {
       if (result.error.tag === ITEM_GROUP_MEMBER_INVALID_REVISION) {
         await this.sharingSync.scheduleSync();
-        const { groupId: groupIdRetry, revision: revisionRetry } =
+        const { sharedItemId: sharedItemIdRetry, revision: revisionRetry } =
           await this.getItemGroup(body);
         await this.commonGateway.updateItemGroupMembers({
-          groupId: groupIdRetry,
+          groupId: sharedItemIdRetry,
           revision: revisionRetry,
           users,
           groups,
@@ -53,16 +55,13 @@ export class UpdateSharedItemPermissionCommandHandler
   }
   private async getItemGroup(body: UpdateSharedItemPermissionCommandParam) {
     const { vaultItemId, recipient, permission } = body;
-    const itemGroupIdResult = await firstValueFrom(
-      this.itemGroupsGetter.getForItemId(vaultItemId)
+    const sharedItem = await firstValueFrom(
+      this.sharedItemRepository.sharedItemForId$(vaultItemId)
     );
-    if (isFailure(itemGroupIdResult)) {
-      throw new Error();
-    }
-    if (!itemGroupIdResult.data) {
+    if (!sharedItem) {
       throw new Error(`Failed to retrieve item group to revoke share item`);
     }
-    const { groupId, revision } = itemGroupIdResult.data;
+    const { sharedItemId, revision } = sharedItem;
     const users =
       recipient.type === RecipientTypes.User
         ? [
@@ -81,6 +80,6 @@ export class UpdateSharedItemPermissionCommandHandler
             },
           ]
         : undefined;
-    return { groupId, revision, users, groups };
+    return { sharedItemId, revision, users, groups };
   }
 }

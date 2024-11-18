@@ -5,7 +5,7 @@ import {
   SharedItemAccessLinkTypes,
   Status,
 } from "@dashlane/sharing-contracts";
-import { AccessData } from "./item-group-adapter.types";
+import { AccessData } from "../../utils/mappers/item-group-adapter.types";
 import { getHighestPermission } from "../../utils/get-highest-permission";
 import { filterCollectionMembers } from "./filter-collection-members";
 export const checkCollectionUserGroupAccess = (
@@ -61,7 +61,9 @@ export const checkCollectionUserGroupAccess = (
           encryptedResourceKey: collectionUserGroupMember.itemGroupKey,
           collectionEncryptedKey: userGroupInCollection.collectionKey,
           collectionPrivateKey: collection.privateKey,
+          collectionPublicKey: collection.publicKey,
           groupPrivateKey: userGroup?.privateKey,
+          groupPublicKey: userGroup?.publicKey,
           groupEncryptedKey: userMemberOfUserGroup.groupKey,
           accessType: SharedItemAccessLinkTypes.CollectionUserGroup,
         };

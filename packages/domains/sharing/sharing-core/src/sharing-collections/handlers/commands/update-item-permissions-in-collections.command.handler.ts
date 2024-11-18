@@ -3,37 +3,42 @@ import {
   CommandHandler,
   ICommandHandler,
 } from "@dashlane/framework-application";
-import { UpdatePermissionForCollectionItemCommand } from "@dashlane/sharing-contracts";
+import {
+  SharingItemsClient,
+  UpdatePermissionForCollectionItemCommand,
+} from "@dashlane/sharing-contracts";
 import { isFailure, success } from "@dashlane/framework-types";
 import { SharingSyncService } from "../../../sharing-common";
-import { ItemGroupsGetterService } from "../../../sharing-carbon-helpers";
 import { SharingCommonGateway } from "../../../sharing-common/services/sharing.gateway";
 @CommandHandler(UpdatePermissionForCollectionItemCommand)
 export class UpdateItemPermissionsInCollectionsCommandHandler
   implements ICommandHandler<UpdatePermissionForCollectionItemCommand>
 {
   constructor(
-    private readonly itemGroupsGetter: ItemGroupsGetterService,
     private readonly sharingCommon: SharingCommonGateway,
-    private readonly sharingSync: SharingSyncService
+    private readonly sharingSync: SharingSyncService,
+    private readonly sharingItemsClient: SharingItemsClient
   ) {}
   async execute({ body }: UpdatePermissionForCollectionItemCommand) {
-    const { collection, groupId } = body;
-    const itemGroup = await firstValueFrom(
-      this.itemGroupsGetter.getForItemGroupId(groupId)
+    const { collection, itemId } = body;
+    const sharedItemResult = await firstValueFrom(
+      this.sharingItemsClient.queries.getSharedItemForId({ itemId })
     );
-    if (isFailure(itemGroup) || !itemGroup.data) {
-      throw new Error("Item group to remove cannot be found");
+    if (isFailure(sharedItemResult) || !sharedItemResult.data.sharedItem) {
+      throw new Error(
+        "Item group to be removed from collection cannot be found"
+      );
     }
+    const { sharedItemId, revision } = sharedItemResult.data.sharedItem;
     await this.sharingCommon.updateItemGroupMembers({
-      groupId: groupId,
+      groupId: sharedItemId,
       collections: [
         {
           collectionUUID: collection.collectionId,
           permission: collection.permission,
         },
       ],
-      revision: itemGroup.data.revision,
+      revision: revision,
     });
     await this.sharingSync.scheduleSync();
     return success(undefined);

@@ -9,7 +9,6 @@ import { ActivityLogsClient } from "@dashlane/risk-monitoring-contracts";
 import {
   Permission,
   ShareableItemType,
-  SharedCollection,
   SharedItem,
 } from "@dashlane/sharing-contracts";
 import { VaultItemsCrudClient, VaultItemType } from "@dashlane/vault-contracts";
@@ -20,6 +19,7 @@ import {
   SharingInvitesCryptoService,
 } from "../../../sharing-crypto";
 import { AddItemGroupsToCollectionModel } from "./types";
+import { SharedCollectionState } from "../../data-access/shared-collections.state";
 @Injectable()
 export class SharingCollectionInvitesService {
   public constructor(
@@ -43,7 +43,7 @@ export class SharingCollectionInvitesService {
     return new ParsedURL(selectedVaultItem.URL).getRootDomain();
   }
   public async createCollectionInvites(
-    collection: SharedCollection,
+    collection: SharedCollectionState,
     sharedItems: SharedItem[],
     defaultItemPermissions: Permission
   ): Promise<AddItemGroupsToCollectionModel> {
@@ -55,8 +55,10 @@ export class SharingCollectionInvitesService {
           throw new Error("Unable to decrypt item group key");
         }
         const clearCollectionKey =
-          await this.sharingDecryption.decryptCollectionKey(collection);
-        if (clearCollectionKey === null) {
+          await this.sharingDecryption.decryptSharedCollectionKeyForCurrentUser(
+            collection
+          );
+        if (!clearCollectionKey) {
           throw new Error("Unable to decrypt collection key");
         }
         const clearCollectionPrivateKeyPemBuffer =
@@ -66,7 +68,7 @@ export class SharingCollectionInvitesService {
           );
         const { proposeSignature, acceptSignature, resourceKey } =
           await this.sharingInvitesCrypto.createSignedInvite(
-            collection.uuid,
+            collection.id,
             { resourceKey: clearItemGroupKey, uuid: sharedItem.sharedItemId },
             collection.publicKey,
             arrayBufferToText(clearCollectionPrivateKeyPemBuffer)
@@ -115,7 +117,7 @@ export class SharingCollectionInvitesService {
       })
     );
     return {
-      collectionId: collection.uuid,
+      collectionId: collection.id,
       revision: collection.revision,
       itemGroups: itemGroupParamObjects,
     };

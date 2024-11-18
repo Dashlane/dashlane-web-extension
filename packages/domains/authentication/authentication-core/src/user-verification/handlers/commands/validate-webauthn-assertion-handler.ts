@@ -13,15 +13,15 @@ import {
 } from "@dashlane/framework-types";
 import { SessionClient } from "@dashlane/session-contracts";
 import { firstValueFrom } from "rxjs";
-import { AuthenticationWebServicesRepository } from "../../../authentication";
+import { RememberMeSessionKeysRepository } from "../../../remember-me/remember-me-session-keys.repository";
 @CommandHandler(ValidateWebauthnAssertionCommand)
 export class ValidateWebauthnAssertionCommandHandler
   implements ICommandHandler<ValidateWebauthnAssertionCommand>
 {
   constructor(
-    private contextLessServerApiClient: ContextlessServerApiClient,
-    private authWSRepository: AuthenticationWebServicesRepository,
-    private sessionClient: SessionClient
+    private readonly contextLessServerApiClient: ContextlessServerApiClient,
+    private readonly rememberMeSessionKeysRepository: RememberMeSessionKeysRepository,
+    private readonly sessionClient: SessionClient
   ) {}
   public async execute(
     request: ValidateWebauthnAssertionCommand
@@ -38,7 +38,9 @@ export class ValidateWebauthnAssertionCommandHandler
     const { id, type, rawId, response } = request.body.assertion;
     const result = await firstValueFrom(
       this.contextLessServerApiClient.v1.authentication.completeRememberMeOpenSession(
-        await this.authWSRepository.getSessionCredentialsForUser(login),
+        await this.rememberMeSessionKeysRepository.getSessionCredentialsForUser(
+          login
+        ),
         {
           authenticator: {
             authenticationType: "webauthn.get",

@@ -37,6 +37,7 @@ export type PendingInvite = z.infer<typeof PendingInviteSchema>;
 const BasePendingSharedItemInviteSchema = BasePendingInviteSchema.extend({
   vaultItemId: z.string(),
   sharedItemId: z.string(),
+  revision: z.number(),
   title: z.string(),
   spaceId: z.optional(z.string()),
 });

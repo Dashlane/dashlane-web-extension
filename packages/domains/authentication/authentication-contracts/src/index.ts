@@ -4,5 +4,4 @@ export * as DeviceTransferContracts from "./device-transfer";
 export * from "./user-verification";
 export * from "./device-registration";
 export * from "./pin-code";
-export * from "./helpers/feature-flips";
 export * from "./authentication";

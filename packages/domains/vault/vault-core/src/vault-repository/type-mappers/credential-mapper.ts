@@ -22,6 +22,7 @@ export const credentialMapper = (
     Url,
     UserModificationDatetime,
     UserSelectedUrl,
+    kwType,
   } = carbonCredential;
   return {
     ...mapKeysToLowercase({
@@ -41,6 +42,7 @@ export const credentialMapper = (
       LinkedServices?.associated_domains.map(
         (linkedWebsite) => linkedWebsite.domain
       ) ?? [],
+    kwType,
     otpURL: OtpUrl,
     otpSecret: OtpSecret,
     URL: Url || UserSelectedUrl || "",

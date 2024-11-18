@@ -1,9 +1,6 @@
 import { Injectable } from "@dashlane/framework-application";
-import { Permission, SharedCollection } from "@dashlane/sharing-contracts";
-import {
-  SharingCryptographyService,
-  SharingDecryptionService,
-} from "../../../sharing-crypto/";
+import { SharedCollection } from "@dashlane/sharing-contracts";
+import { SharingCryptographyService } from "../../../sharing-crypto/";
 import {
   SharingUserGroupRecipient,
   SharingUserGroupsService,
@@ -16,7 +13,6 @@ export class SharingCollectionsService {
   public constructor(
     private sharingCollectionsGateway: SharingCollectionsGateway,
     private sharingCrypto: SharingCryptographyService,
-    private sharingDecryption: SharingDecryptionService,
     private sharingUserGroups: SharingUserGroupsService,
     private sharingUsers: SharingUsersService
   ) {}
@@ -24,7 +20,6 @@ export class SharingCollectionsService {
     collectionId: string,
     teamId: string,
     collectionName: string,
-    defaultItemPermissions: Permission,
     userRecipients: SharingUserRecipient[],
     userGroupRecipients: SharingUserGroupRecipient[]
   ) {
@@ -65,27 +60,23 @@ export class SharingCollectionsService {
     });
   }
   public async inviteCollectionMembers(
-    collection: SharedCollection,
+    collectionId: string,
+    collectionRevision: number,
+    collectionKeyClear: ArrayBuffer,
     userRecipients: SharingUserRecipient[],
     userGroupRecipients: SharingUserGroupRecipient[]
   ) {
-    const { revision, uuid: collectionId } = collection;
-    const collectionKeyClear =
-      await this.sharingDecryption.decryptCollectionKey(collection);
-    if (!collectionKeyClear) {
-      throw new Error("Cannot decrypt collection key.");
-    }
     const usersPromise = userRecipients.length
       ? this.sharingUsers.createSignedUserInvites(
           userRecipients,
-          { resourceKey: collectionKeyClear, uuid: collection.uuid },
+          { resourceKey: collectionKeyClear, uuid: collectionId },
           false
         )
       : undefined;
     const userGroupsPromise = userGroupRecipients.length
       ? this.sharingUserGroups.createSignedUserGroupInvites(
           userGroupRecipients,
-          { resourceKey: collectionKeyClear, uuid: collection.uuid }
+          { resourceKey: collectionKeyClear, uuid: collectionId }
         )
       : undefined;
     const [users, userGroups] = await Promise.all([
@@ -93,7 +84,7 @@ export class SharingCollectionsService {
       userGroupsPromise,
     ]);
     return await this.sharingCollectionsGateway.inviteCollectionMembers({
-      revision,
+      revision: collectionRevision,
       collectionId,
       users,
       userGroups,

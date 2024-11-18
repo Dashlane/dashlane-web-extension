@@ -72,12 +72,12 @@ export class SharingItemGroupsService {
         encryptedResourceKey: user.groupKey,
         permission: Permission.Admin,
       },
-      permission: Permission.Admin,
       recipientIds: {
         userIds: [user.userId],
         collectionIds: null,
         userGroupIds: null,
       },
+      permission: Permission.Admin,
       revision: itemGroup.revision,
     };
   }

@@ -1,24 +1,24 @@
 import { Result, success } from "@dashlane/framework-types";
 import { Client } from "@dashlane/framework-contracts";
 import {
-  AppLogger,
   CommandHandler,
   ICommandHandler,
 } from "@dashlane/framework-application";
 import { CarbonLegacyClient, CarbonModuleApi } from "@dashlane/communication";
 import { AuthenticationFlowContracts } from "@dashlane/authentication-contracts";
+import { AuthenticationFlowModuleLogger } from "../../utils/logger";
 @CommandHandler(AuthenticationFlowContracts.LogoutCommand)
 export class LogoutCommandHandler
   implements ICommandHandler<AuthenticationFlowContracts.LogoutCommand>
 {
-  private logger: AppLogger;
+  private logger: AuthenticationFlowModuleLogger;
   private carbonLegacy: Client<
     CarbonModuleApi["commands"],
     CarbonModuleApi["queries"]
   >;
   public constructor(
     carbonLegacyClient: CarbonLegacyClient,
-    logger: AppLogger
+    logger: AuthenticationFlowModuleLogger
   ) {
     this.carbonLegacy = carbonLegacyClient;
     this.logger = logger;

@@ -52,9 +52,10 @@ export class CreateCollectionCommandHandler
       throw new Error(`Failed to find created collection id`);
     }
     if (spaceId) {
-      const logPayload = { collection_name: name };
       const activityLogs = [
-        createActivityLog(ActivityLogType.UserCreatedCollection, logPayload),
+        createActivityLog(ActivityLogType.UserCreatedCollection, {
+          collection_name: name,
+        }),
       ];
       this.activityLogs.commands.storeActivityLogs({ activityLogs });
     }

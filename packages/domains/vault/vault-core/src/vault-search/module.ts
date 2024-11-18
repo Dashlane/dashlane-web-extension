@@ -1,6 +1,9 @@
 import { Module } from "@dashlane/framework-application";
 import { vaultSearchApi } from "@dashlane/vault-contracts";
-import { VaultSearchQueryHandler } from "./handlers/queries";
+import {
+  VaultSearchQueryHandler,
+  VaultSearchRankedQueryHandler,
+} from "./handlers/queries";
 import { VaultRepository } from "../vault-repository";
 @Module({
   api: vaultSearchApi,
@@ -9,6 +12,7 @@ import { VaultRepository } from "../vault-repository";
     events: {},
     queries: {
       search: VaultSearchQueryHandler,
+      vaultSearchRanked: VaultSearchRankedQueryHandler,
     },
   },
   providers: [VaultRepository],

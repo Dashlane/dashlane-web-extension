@@ -1,36 +1,27 @@
-import { v4 as uuidv4 } from "uuid";
 import {
-  ActivityLogCategory,
+  ActivityLog,
   ActivityLogType,
   PropertiesForCollectionLogs,
-  UserAddedCredentialToCollection,
-  UserCreatedCollection,
-  UserDeletedCollection,
-  UserRemovedCredentialFromCollection,
-  UserRenamedCollection,
+  PropertiesWithDomain,
 } from "@dashlane/risk-monitoring-contracts";
-export const createActivityLog = (
-  type:
+export const createActivityLog = <
+  TType extends
     | ActivityLogType.UserAddedCredentialToCollection
     | ActivityLogType.UserRemovedCredentialFromCollection
     | ActivityLogType.UserDeletedCollection
     | ActivityLogType.UserRenamedCollection
-    | ActivityLogType.UserCreatedCollection,
-  payload: PropertiesForCollectionLogs
+    | ActivityLogType.UserCreatedCollection
+    | ActivityLogType.UserDeletedCredential,
+  TProperties extends PropertiesForCollectionLogs | PropertiesWithDomain
+>(
+  type: TType,
+  properties: TProperties
 ) => {
-  const activityLog:
-    | UserAddedCredentialToCollection
-    | UserCreatedCollection
-    | UserDeletedCollection
-    | UserRemovedCredentialFromCollection
-    | UserRenamedCollection = {
-    log_type: type,
-    category: ActivityLogCategory.VaultCollections,
+  return {
     date_time: new Date().getTime(),
+    log_type: type,
+    properties,
     schema_version: "1.0.0",
-    is_sensitive: true,
-    uuid: uuidv4().toUpperCase(),
-    properties: payload,
-  };
-  return activityLog;
+    uuid: crypto.randomUUID().toUpperCase(),
+  } satisfies ActivityLog<TType, TProperties>;
 };

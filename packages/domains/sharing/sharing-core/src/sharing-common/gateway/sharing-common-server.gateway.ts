@@ -7,8 +7,10 @@ import {
   isFailure,
   mapFailureObservable,
   mapSuccessResultObservable,
+  safeCast,
   success,
 } from "@dashlane/framework-types";
+import { ItemGroupDownload, ItemGroupError } from "@dashlane/server-sdk/v1";
 import { sanitizeEmail } from "../../utils/sanitize-email";
 import {
   convertToUserInvitesPayload,
@@ -20,11 +22,13 @@ import {
   SharingCommonGateway,
 } from "../services/sharing.gateway";
 import {
+  DeleteItemGroupModel,
   ItemGroupCreateModel,
   RefuseItemGroupModel,
   RevokeItemGroupMembersModel,
   UpdateItemGroupMembersModel,
 } from "../sharing.types";
+import { batchServerRequest } from "../helpers/batch-server-request";
 @Injectable()
 export class SharingCommonServerGateway implements SharingCommonGateway {
   public constructor(private serverApiClient: ServerApiClient) {}
@@ -80,28 +84,49 @@ export class SharingCommonServerGateway implements SharingCommonGateway {
   public async createMultipleItemGroups(
     itemGroupModels: ItemGroupCreateModel[]
   ) {
-    const itemGroups = itemGroupModels.map(
-      ({ users, item, itemTitle, groupId }) => ({
-        groupId,
-        items: [item],
-        users: convertToUserInvitesPayload(users),
-        itemsForEmailing: [makeItemForEmailing(item.itemType, itemTitle)],
-      })
+    const batchedResults = await batchServerRequest(
+      itemGroupModels,
+      async (params) => {
+        const itemgroups = params.map(
+          ({ users, item, itemTitle, groupId }) => ({
+            groupId,
+            items: [item],
+            users: convertToUserInvitesPayload(users),
+            itemsForEmailing: [makeItemForEmailing(item.itemType, itemTitle)],
+          })
+        );
+        const result = await firstValueFrom(
+          this.serverApiClient.v1.sharingUserdevice.createMultipleItemGroups({
+            itemgroups,
+          })
+        );
+        if (isFailure(result)) {
+          throw new Error("Failed to create item groups.");
+        }
+        return getSuccess(result);
+      }
     );
-    const response = await firstValueFrom(
-      this.serverApiClient.v1.sharingUserdevice.createMultipleItemGroups({
-        itemgroups: itemGroups,
-      })
+    const responseData = batchedResults.reduce(
+      (acc, batch) => ({
+        itemGroups: acc.itemGroups.concat(batch.data.itemGroups ?? []),
+        itemGroupErrors: acc.itemGroupErrors.concat(
+          batch.data.itemGroupErrors ?? []
+        ),
+      }),
+      safeCast<{
+        itemGroups: ItemGroupDownload[];
+        itemGroupErrors: ItemGroupError[];
+      }>({ itemGroups: [], itemGroupErrors: [] })
     );
-    if (isFailure(response)) {
-      throw new Error("Failed to create multiple item groups");
+    if (responseData.itemGroupErrors.length) {
+      throw new Error("Failed to create some of multiple item groups", {
+        cause: { itemGroupErrors: responseData.itemGroupErrors },
+      });
     }
-    const responseData = getSuccess(response).data;
-    if (responseData.itemGroupErrors?.length) {
-      throw new Error("Failed to create some of multiple item groups");
-    }
-    if (!responseData.itemGroups?.length) {
-      throw new Error("No item groups have been created");
+    if (!responseData.itemGroups.length) {
+      throw new Error("No item groups have been created", {
+        cause: { itemGroupErrors: responseData.itemGroupErrors },
+      });
     }
     return responseData.itemGroups;
   }
@@ -133,8 +158,14 @@ export class SharingCommonServerGateway implements SharingCommonGateway {
   public async revokeItemGroupMembers(
     revokeModel: RevokeItemGroupMembersModel
   ) {
-    const { itemGroupId, revision, userLogins, collectionIds, userGroupIds } =
-      revokeModel;
+    const {
+      itemGroupId,
+      revision,
+      userLogins,
+      collectionIds,
+      userGroupIds,
+      auditLogDetails,
+    } = revokeModel;
     const response = await firstValueFrom(
       this.serverApiClient.v1.sharingUserdevice.revokeItemGroupMembers({
         groupId: itemGroupId,
@@ -142,6 +173,7 @@ export class SharingCommonServerGateway implements SharingCommonGateway {
         collections: collectionIds,
         users: userLogins,
         groups: userGroupIds,
+        auditLogDetails: auditLogDetails ? auditLogDetails : undefined,
       })
     );
     if (isFailure(response)) {
@@ -175,5 +207,18 @@ export class SharingCommonServerGateway implements SharingCommonGateway {
       throw new Error("Revoking of some members of item groups failed");
     }
     return responseData.itemGroups;
+  }
+  public async deleteItemGroup(deleteModel: DeleteItemGroupModel) {
+    const { groupId, revision } = deleteModel;
+    const response = await firstValueFrom(
+      this.serverApiClient.v1.sharingUserdevice.deleteItemGroup({
+        groupId,
+        revision,
+      })
+    );
+    if (isFailure(response)) {
+      throw new Error("Failed to delete item group");
+    }
+    return success(undefined);
   }
 }

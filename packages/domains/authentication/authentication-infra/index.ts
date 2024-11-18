@@ -1,1 +1,1 @@
-export * from "./web-extension";
+export * from "./src/web-extension";

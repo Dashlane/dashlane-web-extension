@@ -4,6 +4,7 @@ import {
   ICommandHandler,
 } from "@dashlane/framework-application";
 import { UpdateCollectionMembersCommand } from "@dashlane/sharing-contracts";
+import { SharingSyncService } from "../../../sharing-common";
 import { SharingCollectionsService } from "../common/sharing-collections.service";
 import { userGroupRecipientMapper, userRecipientMapper } from "../common/utils";
 import { SharedCollectionsRepository } from "../common/shared-collections.repository";
@@ -12,8 +13,9 @@ export class UpdateCollectionMembersCommandHandler
   implements ICommandHandler<UpdateCollectionMembersCommand>
 {
   constructor(
-    private sharingCollectionsService: SharingCollectionsService,
-    private collectionsRepository: SharedCollectionsRepository
+    private readonly sharingCollectionsService: SharingCollectionsService,
+    private readonly collectionsRepository: SharedCollectionsRepository,
+    private readonly sharingSync: SharingSyncService
   ) {}
   async execute({ body }: UpdateCollectionMembersCommand) {
     const { collectionId, userRecipients, userGroupRecipients } = body;
@@ -23,21 +25,12 @@ export class UpdateCollectionMembersCommandHandler
     if (!collection) {
       throw new Error("Collection not found");
     }
-    const inviteCollectionMembersResult =
-      await this.sharingCollectionsService.updateCollectionMembers(
-        collection,
-        userRecipients?.map(userRecipientMapper),
-        userGroupRecipients?.map(userGroupRecipientMapper)
-      );
-    const originalCollections =
-      await this.collectionsRepository.getCollections();
-    const newCollectionsList = originalCollections.filter(
-      (coll) => coll.uuid !== inviteCollectionMembersResult.uuid
+    await this.sharingCollectionsService.updateCollectionMembers(
+      collection,
+      userRecipients?.map(userRecipientMapper),
+      userGroupRecipients?.map(userGroupRecipientMapper)
     );
-    await this.collectionsRepository.updateCollections([
-      ...newCollectionsList,
-      inviteCollectionMembersResult,
-    ]);
+    await this.sharingSync.scheduleSync();
     return success(undefined);
   }
 }

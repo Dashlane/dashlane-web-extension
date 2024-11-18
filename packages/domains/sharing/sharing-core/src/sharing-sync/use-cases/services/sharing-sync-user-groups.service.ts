@@ -6,17 +6,18 @@ import {
 } from "@dashlane/sharing-contracts";
 import { UserGroupDownload } from "@dashlane/server-sdk/v1";
 import { safeCast } from "@dashlane/framework-types";
-import { SharingCryptographyService, SharingDecryptionService } from "../../..";
+import { Injectable } from "@dashlane/framework-application";
 import { CurrentUserWithKeyPair } from "../../../sharing-carbon-helpers";
 import { SharingUserGroupsRepository } from "../../../sharing-recipients/services/user-groups.repository";
 import { determineUpdatesFromSummary } from "./determine-updates-from-summary";
 import { PendingInvitesService } from "../../../sharing-invites/services/pending-invites.service";
+import { SharingSyncValidationService } from "./sharing-sync-validation.service";
+@Injectable()
 export class SharingSyncUserGroupsService {
   public constructor(
-    private userGroupsRepo: SharingUserGroupsRepository,
-    private sharingCrypto: SharingCryptographyService,
-    private sharingDecryption: SharingDecryptionService,
-    private pendingInvitesService: PendingInvitesService
+    private readonly userGroupsRepo: SharingUserGroupsRepository,
+    private readonly validationService: SharingSyncValidationService,
+    private readonly pendingInvitesService: PendingInvitesService
   ) {}
   public async getUserGroupChangesFromSummary(
     userGroupsSummary: RevisionSummary[]
@@ -27,7 +28,14 @@ export class SharingSyncUserGroupsService {
       updatedIds: updateUserGroupIds,
       unchanged: unchangedUserGroups,
     } = determineUpdatesFromSummary(userGroupsSummary, currentUserGroups);
-    return { newUserGroupIds, updateUserGroupIds, unchangedUserGroups };
+    return {
+      newUserGroupIds,
+      updateUserGroupIds,
+      unchangedUserGroups,
+      isUserGroupsSyncNeeded:
+        updateUserGroupIds.length ||
+        Object.keys(currentUserGroups).length !== userGroupsSummary.length,
+    };
   }
   public async syncUserGroups(
     updatedUserGroups: UserGroupDownload[],
@@ -37,10 +45,11 @@ export class SharingSyncUserGroupsService {
     const { validatedUserGroups, pendingInvites } =
       await updatedUserGroups.reduce(
         async (result, group) => {
-          const validationResult = await this.isUserGroupValid(
-            group,
-            currentUser
-          );
+          if (group.type !== "users") {
+            return result;
+          }
+          const validationResult =
+            await this.validationService.isUserGroupValid(group, currentUser);
           const currentResult = await result;
           if (validationResult) {
             currentResult.validatedUserGroups.push(group);
@@ -61,48 +70,50 @@ export class SharingSyncUserGroupsService {
           pendingInvites: safeCast<PendingInvite[]>([]),
         })
       );
-    if (validatedUserGroups.length) {
-      this.userGroupsRepo.setUserGroups(
-        unchangedUserGroups.concat(validatedUserGroups)
-      );
-    }
-    if (pendingInvites.length) {
-      this.pendingInvitesService.setUserGroupInvites(pendingInvites);
-    }
+    this.userGroupsRepo.setUserGroups(
+      unchangedUserGroups.concat(
+        validatedUserGroups.map((group) =>
+          this.mapToUserGroupStateModel(group, currentUser.login)
+        )
+      )
+    );
+    const unchangedUserGroupIds = unchangedUserGroups.map(
+      (group) => group.groupId
+    );
+    const existingPendingInvites =
+      await this.pendingInvitesService.getUserGroupInvites();
+    const newPendingList = existingPendingInvites
+      .filter((invite) => unchangedUserGroupIds.includes(invite.id))
+      .concat(pendingInvites);
+    this.pendingInvitesService.setUserGroupInvites(newPendingList);
   }
-  private async isUserGroupValid(
-    userGroup: UserGroupDownload,
-    currentUser: CurrentUserWithKeyPair
-  ) {
-    const { publicKey, login } = currentUser;
-    const meAsGroupMember = userGroup.users.find(
-      (user) => user.userId === login
-    );
-    if (!meAsGroupMember?.groupKey?.length) {
-      return false;
-    }
-    if (meAsGroupMember.status === Status.Pending) {
-      return meAsGroupMember;
-    }
-    if (meAsGroupMember.status !== Status.Accepted) {
-      return false;
-    }
-    if (!meAsGroupMember.acceptSignature) {
-      return false;
-    }
-    const userGroupKey =
-      await this.sharingDecryption.decryptResourceKeyViaUserMember(
-        { encryptedResourceKey: meAsGroupMember.groupKey },
-        currentUser
-      );
-    if (!userGroupKey) {
-      return false;
-    }
-    return this.sharingCrypto.verifyAcceptSignature(
+  private mapToUserGroupStateModel(
+    userGroup: SharingUserGroup,
+    currentUserId: string
+  ): SharingUserGroup {
+    const { groupId, name, revision, users, privateKey, publicKey } = userGroup;
+    const acceptedUsers: string[] = [];
+    const allUsers: string[] = [];
+    let groupKey = "";
+    users.forEach((user) => {
+      if (user.status === Status.Accepted) {
+        acceptedUsers.push(user.userId);
+      }
+      if (user.userId === currentUserId) {
+        groupKey = user.groupKey ?? "";
+      }
+      allUsers.push(user.userId);
+    });
+    return {
+      groupId,
+      name,
+      revision,
+      acceptedUsers,
       publicKey,
-      meAsGroupMember.acceptSignature,
-      userGroup.groupId,
-      userGroupKey
-    );
+      privateKey,
+      groupKey,
+      allUsers,
+      users: [],
+    };
   }
 }

@@ -14,26 +14,24 @@ import {
 import {
   RemoveItemFromCollectionsCommand,
   ShareableItemType,
+  SharingItemsClient,
 } from "@dashlane/sharing-contracts";
 import { ParsedURL } from "@dashlane/url-parser";
 import { VaultItemsCrudClient, VaultItemType } from "@dashlane/vault-contracts";
 import { AuditLogData, SharingSyncService } from "../../../sharing-common";
-import {
-  CurrentSpaceGetterService,
-  ItemGroupsGetterService,
-} from "../../../sharing-carbon-helpers";
+import { CurrentSpaceGetterService } from "../../../sharing-carbon-helpers";
 import { SharingCollectionsGateway } from "../common/sharing-collections.gateway";
 @CommandHandler(RemoveItemFromCollectionsCommand)
 export class RemoveItemFromCollectionsCommandHandler
   implements ICommandHandler<RemoveItemFromCollectionsCommand>
 {
   constructor(
-    private sharingCollectionsGateway: SharingCollectionsGateway,
-    private itemGroupsGetter: ItemGroupsGetterService,
-    private sharingSync: SharingSyncService,
-    private currentSpaceGetter: CurrentSpaceGetterService,
-    private featureFlips: FeatureFlipsClient,
-    private vaultItemsCrudClient: VaultItemsCrudClient
+    private readonly sharingCollectionsGateway: SharingCollectionsGateway,
+    private readonly sharingSync: SharingSyncService,
+    private readonly currentSpaceGetter: CurrentSpaceGetterService,
+    private readonly featureFlips: FeatureFlipsClient,
+    private readonly vaultItemsCrudClient: VaultItemsCrudClient,
+    private readonly sharingItemsClient: SharingItemsClient
   ) {}
   async prepareAuditLogDetails(
     itemId: string
@@ -84,19 +82,20 @@ export class RemoveItemFromCollectionsCommandHandler
     };
   }
   async removeItemToCollection(itemId: string, collectionId: string) {
-    const itemGroup = await firstValueFrom(
-      this.itemGroupsGetter.getForItemId(itemId)
+    const sharedItemResult = await firstValueFrom(
+      this.sharingItemsClient.queries.getSharedItemForId({ itemId })
     );
-    if (isFailure(itemGroup) || !itemGroup.data) {
+    if (isFailure(sharedItemResult) || !sharedItemResult.data.sharedItem) {
       throw new Error(
         "Item group to be removed from collection cannot be found"
       );
     }
+    const { sharedItemId, revision } = sharedItemResult.data.sharedItem;
     const auditLogData = await this.prepareAuditLogDetails(itemId);
     await this.sharingCollectionsGateway.removeItemGroupCollectionAccess({
       collectionId,
-      itemGroupId: itemGroup.data.groupId,
-      itemGroupRevision: itemGroup.data.revision,
+      itemGroupId: sharedItemId,
+      itemGroupRevision: revision,
       auditLogData,
     });
   }

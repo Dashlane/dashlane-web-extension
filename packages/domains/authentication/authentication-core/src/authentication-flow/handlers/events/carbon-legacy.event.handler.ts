@@ -6,19 +6,23 @@ import {
   OpenSessionSsoRedirectionToIdpRequired,
 } from "@dashlane/communication";
 import { AuthenticationFlow } from "../../services/authentication-flow.instance.service";
-import { SsoUserSettingsStore } from "../../stores";
+import { SsoProviderInfoStore, SsoUserSettingsStore } from "../../stores";
 import { filter, firstValueFrom, map } from "rxjs";
 import { isFailure, isSuccess, Result } from "@dashlane/framework-types";
 export const EXT_NG_AUTHENTICATION_FLOW_KEY =
   "extng.loginFlow.forceLegacyFallback";
+function hasLocalStorage(): boolean {
+  return typeof self !== "undefined" && !!self.localStorage;
+}
 @EventHandler(CarbonLegacyEvent)
 export class CarbonLegacyEventHandler
   implements IEventHandler<CarbonLegacyEvent>
 {
   constructor(
-    private authenticationFlow: AuthenticationFlow,
-    private ssoUserSettingsStore: SsoUserSettingsStore,
-    private carbon: CarbonLegacyClient
+    private readonly authenticationFlow: AuthenticationFlow,
+    private readonly ssoUserSettingsStore: SsoUserSettingsStore,
+    private readonly carbon: CarbonLegacyClient,
+    private readonly ssoInfos: SsoProviderInfoStore
   ) {}
   getLoginFlowMigrationKillswitch() {
     return firstValueFrom(
@@ -35,7 +39,7 @@ export class CarbonLegacyEventHandler
   async handle(event: CarbonLegacyEvent) {
     const isKillSwitchEnabled = await this.getLoginFlowMigrationKillswitch();
     let isForceLoginFlowFallbackOptionEnabled = false;
-    if (typeof self !== "undefined" && self.localStorage) {
+    if (hasLocalStorage()) {
       const extngLoginFlowOption = self.localStorage.getItem(
         EXT_NG_AUTHENTICATION_FLOW_KEY
       );
@@ -130,7 +134,7 @@ export class CarbonLegacyEventHandler
           error: eventData.errorCode,
         });
       }
-      case "loginStatusChanged":
+      case "carbonLoginStatusChanged":
         {
           const eventData = event.body.eventData as LoginStatusChanged;
           if (!eventData.loggedIn) {
@@ -138,6 +142,16 @@ export class CarbonLegacyEventHandler
               type: "CARBON_LEGACY_LOGGED_OUT",
             });
           }
+          const migrationInfos = await firstValueFrom(
+            this.carbon.queries.getSSOMigrationInfo().pipe(
+              filter(isSuccess),
+              map((d) => d.data)
+            )
+          );
+          await this.ssoInfos.update((v) => ({
+            ...v,
+            migrationType: migrationInfos.migration,
+          }));
         }
         break;
       default:

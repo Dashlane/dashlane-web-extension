@@ -1,29 +1,46 @@
-import { combineLatestWith, map, of, switchMap } from "rxjs";
-import { IQueryHandler, QueryHandler } from "@dashlane/framework-application";
+import {
+  combineLatestWith,
+  distinctUntilChanged,
+  map,
+  of,
+  switchMap,
+} from "rxjs";
+import { shallowEqualObjects } from "shallow-equal";
+import {
+  FrameworkRequestContextValues,
+  IQueryHandler,
+  QueryHandler,
+  RequestContext,
+} from "@dashlane/framework-application";
 import { FeatureFlipsClient } from "@dashlane/framework-contracts";
 import {
+  getSuccess,
+  isFailure,
+  isSuccess,
+  success,
+} from "@dashlane/framework-types";
+import {
   GetCollectionPermissionsForUserQuery,
+  ShareableCollection,
   SharedCollectionRole,
   SharingDisabledReason,
 } from "@dashlane/sharing-contracts";
 import { VaultOrganizationClient } from "@dashlane/vault-contracts";
-import { getSuccess, isFailure, success } from "@dashlane/framework-types";
 import { SharingCollectionAccessService } from "../common/shared-collection-access.service";
 import {
   CurrentSpaceGetterService,
   CurrentSpaceSharingInfo,
-  ItemGroupsGetterService,
 } from "../../../sharing-carbon-helpers";
 @QueryHandler(GetCollectionPermissionsForUserQuery)
 export class GetCollectionPermissionsForUserQueryHandler
   implements IQueryHandler<GetCollectionPermissionsForUserQuery>
 {
   constructor(
-    private sharingAccess: SharingCollectionAccessService,
-    private itemGroupsGetter: ItemGroupsGetterService,
-    private vaultOrganization: VaultOrganizationClient,
-    private currentSpace: CurrentSpaceGetterService,
-    private featureFlips: FeatureFlipsClient
+    private readonly sharingAccess: SharingCollectionAccessService,
+    private readonly vaultOrganization: VaultOrganizationClient,
+    private readonly currentSpace: CurrentSpaceGetterService,
+    private readonly context: RequestContext,
+    private readonly featureFlips: FeatureFlipsClient
   ) {}
   private isCollectionsSharingEnabled(
     currentSpaceInfo: CurrentSpaceSharingInfo
@@ -38,84 +55,63 @@ export class GetCollectionPermissionsForUserQueryHandler
     const {
       queries: { queryCollections },
     } = this.vaultOrganization;
-    const { userFeatureFlip } = this.featureFlips.queries;
-    const sharingWithLimitedRightsFF$ = userFeatureFlip({
-      featureFlip:
-        "sharingVault_web_Share_Collections_with_limited_Rights_Items_dev",
-    });
     return queryCollections({
       ids: [collectionId],
     }).pipe(
-      combineLatestWith(this.currentSpace.get()),
-      switchMap(([queryCollectionsResult, currentSpaceInfoResult]) => {
-        if (isFailure(queryCollectionsResult)) {
-          throw new Error("Error accessing private collections");
-        }
-        if (isFailure(currentSpaceInfoResult)) {
-          throw new Error("Error accessing current space info");
-        }
-        const isCollectionsSharingEnabled = this.isCollectionsSharingEnabled(
-          getSuccess(currentSpaceInfoResult)
-        );
-        const collectionsResult = getSuccess(queryCollectionsResult);
-        const collection = collectionsResult.collections.find(
-          ({ id }) => id === collectionId
-        );
-        if (collection) {
-          const itemIds = collection.vaultItems.map(({ id }) => id);
-          return of({
-            isCollectionsSharingEnabled,
-            itemIds,
-            role: SharedCollectionRole.Manager,
-            isPrivateCollection: true,
-          });
-        }
-        return this.sharingAccess
-          .getUserRoleInCollection$(collectionId, userId)
-          .pipe(
-            combineLatestWith(
-              this.itemGroupsGetter.getForCollectionId(collectionId)
-            ),
-            map(([role, itemGroupsResult]) => {
-              if (isFailure(itemGroupsResult)) {
-                throw new Error(
-                  "Failed to retrieve item groups for shared collection permissions query"
-                );
-              }
-              const itemGroups = getSuccess(itemGroupsResult);
-              return {
-                itemIds: itemGroups.map(
-                  (group) => group.items?.[0]?.itemId
-                ) as string[],
-                role,
-                isCollectionsSharingEnabled,
-                isPrivateCollection: false,
-              };
-            })
-          );
-      }),
+      combineLatestWith(
+        this.currentSpace.get(),
+        this.featureFlips.queries.userFeatureFlip({
+          featureFlip: "sharingVault_web_sharingSyncGrapheneMigration_dev",
+        })
+      ),
       switchMap(
-        ({
-          itemIds,
-          role,
-          isCollectionsSharingEnabled,
-          isPrivateCollection,
-        }) => {
-          const isManager = role === SharedCollectionRole.Manager;
-          return sharingWithLimitedRightsFF$.pipe(
-            switchMap((sharingWithLimitedRightsFF) => {
-              let isSharingWithLimitedRightsFFEnabled: boolean;
-              if (isFailure(sharingWithLimitedRightsFF)) {
-                isSharingWithLimitedRightsFFEnabled = false;
-              } else {
-                isSharingWithLimitedRightsFFEnabled = Boolean(
-                  getSuccess(sharingWithLimitedRightsFF)
-                );
-              }
-              if (!isCollectionsSharingEnabled || !isManager) {
-                return of(
-                  success({
-                    canShare: false,
+        ([
+          queryCollectionsResult,
+          currentSpaceInfoResult,
+          newSharingSyncEnabledResult,
+        ]) => {
+          if (isFailure(queryCollectionsResult)) {
+            throw new Error("Error accessing private collections");
+          }
+          if (isFailure(currentSpaceInfoResult)) {
+            throw new Error("Error accessing current space info");
+          }
+          if (isFailure(newSharingSyncEnabledResult)) {
+            throw new Error(
+              "Cannot retrieve FF for invite collection member command"
+            );
+          }
+          const isCollectionsSharingEnabled = this.isCollectionsSharingEnabled(
+            getSuccess(currentSpaceInfoResult)
+          );
+          const isNewSharingSyncEnabled = isSuccess(newSharingSyncEnabledResult)
+            ? !!getSuccess(newSharingSyncEnabledResult)
+            : false;
+          const collectionsResult = getSuccess(queryCollectionsResult);
+          const collection = collectionsResult.collections.find(
+            ({ id }) => id === collectionId
+          );
+          if (collection) {
+            return this.getPermissionsForPrivateCollection(
+              collection,
+              isCollectionsSharingEnabled
+            );
+          }
+          const currentUserLogin = this.context.get<string>(
+            FrameworkRequestContextValues.UserName
+          );
+          if (!isNewSharingSyncEnabled) {
+            return this.sharingAccess
+              .getUserRoleInCollectionCarbon$(
+                collectionId,
+                userId,
+                currentUserLogin
+              )
+              .pipe(
+                map((role) => {
+                  const isManager = role === SharedCollectionRole.Manager;
+                  return {
+                    canShare: isCollectionsSharingEnabled && isManager,
                     canEditRoles: isManager,
                     canEdit: isManager,
                     canDelete: isManager,
@@ -123,45 +119,75 @@ export class GetCollectionPermissionsForUserQueryHandler
                     sharingDisabledReason: !isCollectionsSharingEnabled
                       ? SharingDisabledReason.DisabledInTAC
                       : SharingDisabledReason.EditorRole,
-                  })
-                );
-              }
-              return this.sharingAccess.canShareItems(itemIds).pipe(
-                map((canSharePrivateCollection) => {
-                  if (isFailure(canSharePrivateCollection)) {
-                    throw new Error(
-                      "Error checking if user can share a collection"
-                    );
-                  }
-                  if (!getSuccess(canSharePrivateCollection)) {
-                    return success({
-                      canShare:
-                        !isPrivateCollection &&
-                        isSharingWithLimitedRightsFFEnabled,
-                      canEditRoles: isManager,
-                      canEdit: isManager,
-                      canDelete: isManager,
-                      role,
-                      sharingDisabledReason:
-                        SharingDisabledReason.LimitedRightItems,
-                    });
-                  }
-                  return success({
-                    canShare: isManager,
-                    canEditRoles: isManager,
-                    canEdit: isManager,
-                    canDelete: isManager,
-                    role,
-                    sharingDisabledReason: isPrivateCollection
-                      ? SharingDisabledReason.LimitedRightItems
-                      : undefined,
-                  });
-                })
+                  } as const;
+                }),
+                distinctUntilChanged(shallowEqualObjects),
+                map(success)
               );
-            })
-          );
+          }
+          return this.sharingAccess
+            .getUserRoleInCollectionGraphene$(
+              collectionId,
+              userId,
+              currentUserLogin
+            )
+            .pipe(
+              map((role) => {
+                const isManager = role === SharedCollectionRole.Manager;
+                return {
+                  canShare: isCollectionsSharingEnabled && isManager,
+                  canEditRoles: isManager,
+                  canEdit: isManager,
+                  canDelete: isManager,
+                  role,
+                  sharingDisabledReason: !isCollectionsSharingEnabled
+                    ? SharingDisabledReason.DisabledInTAC
+                    : SharingDisabledReason.EditorRole,
+                } as const;
+              }),
+              distinctUntilChanged(shallowEqualObjects),
+              map(success)
+            );
         }
       )
+    );
+  }
+  private getPermissionsForPrivateCollection(
+    collection: ShareableCollection,
+    isCollectionsSharingEnabled: boolean
+  ) {
+    if (!isCollectionsSharingEnabled) {
+      return of(
+        success({
+          canShare: false,
+          canEditRoles: true,
+          canEdit: true,
+          canDelete: true,
+          role: SharedCollectionRole.Manager,
+          sharingDisabledReason: SharingDisabledReason.DisabledInTAC,
+        })
+      );
+    }
+    const itemIds = collection.vaultItems.map(({ id }) => id);
+    return this.sharingAccess.canShareItems(itemIds).pipe(
+      map((canSharePrivateCollection) => {
+        if (isFailure(canSharePrivateCollection)) {
+          throw new Error("Error checking if user can share a collection");
+        }
+        const canShare = getSuccess(canSharePrivateCollection);
+        return {
+          canShare,
+          canEditRoles: true,
+          canEdit: true,
+          canDelete: true,
+          role: SharedCollectionRole.Manager,
+          sharingDisabledReason: canShare
+            ? undefined
+            : SharingDisabledReason.LimitedRightItems,
+        };
+      }),
+      distinctUntilChanged(shallowEqualObjects),
+      map(success)
     );
   }
 }

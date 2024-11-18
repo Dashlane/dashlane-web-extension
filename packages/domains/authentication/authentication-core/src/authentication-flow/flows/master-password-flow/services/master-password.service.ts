@@ -24,7 +24,7 @@ export class MasterPasswordService {
   }: Params) {
     try {
       const sessionsQuery = await firstValueFrom(
-        this.session.queries.createdSessionsState()
+        this.session.queries.localSessions()
       );
       if (!isSuccess(sessionsQuery)) {
         throw new Error(

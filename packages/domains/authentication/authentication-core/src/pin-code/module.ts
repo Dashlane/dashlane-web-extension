@@ -1,8 +1,5 @@
 import { Module } from "@dashlane/framework-application";
-import {
-  AuthenticationFeatureFlips,
-  pinCodeApi,
-} from "@dashlane/authentication-contracts";
+import { pinCodeApi } from "@dashlane/authentication-contracts";
 import {
   CryptographyModule,
   WebServicesModule,
@@ -16,7 +13,10 @@ import { GetStatusQueryHandler } from "./handlers/queries/get-status.query-handl
 import { PinCodeService } from "./services/pin-code.service";
 import { PinCodeStore } from "./stores/pin-code.store";
 import { SessionKeyCrypto } from "./services/session-key-crypto.service";
-import { GetCurrentUserStatusQueryHandler } from "./handlers/queries";
+import {
+  GetCurrentUserStatusQueryHandler,
+  IsPinCodeCorrectQueryHandler,
+} from "./handlers/queries";
 import { PinCodeServerConfigResourceLoader } from "./services/pin-code-server-configs.resource-loader";
 @Module({
   api: pinCodeApi,
@@ -30,6 +30,7 @@ import { PinCodeServerConfigResourceLoader } from "./services/pin-code-server-co
     },
     events: {},
     queries: {
+      isPinCodeCorrect: IsPinCodeCorrectQueryHandler,
       getStatus: GetStatusQueryHandler,
       getCurrentUserStatus: GetCurrentUserStatusQueryHandler,
     },
@@ -39,6 +40,5 @@ import { PinCodeServerConfigResourceLoader } from "./services/pin-code-server-co
     SessionKeyCrypto,
     PinCodeServerConfigResourceLoader,
   ],
-  requiredFeatureFlips: Object.values(AuthenticationFeatureFlips),
 })
 export class PinCodeModule {}

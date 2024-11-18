@@ -1,7 +1,10 @@
 import { firstValueFrom, from, Observable, switchMap } from "rxjs";
 import { Injectable } from "@dashlane/framework-application";
 import { FeatureFlipsClient } from "@dashlane/framework-contracts";
-import { SharedCollection } from "@dashlane/sharing-contracts";
+import {
+  SharedCollection,
+  SharingSyncFeatureFlips,
+} from "@dashlane/sharing-contracts";
 import { getSuccess, isFailure } from "@dashlane/framework-types";
 import { SharedCollectionsRepository } from "../handlers/common/shared-collections.repository";
 import { SharedCollectionsRepositoryLegacyAdapter } from "./shared-collections-repository-legacy.adapter";
@@ -33,11 +36,21 @@ export class SharedCollectionsRepositoryWrapper
   public async updateCollections(collections: SharedCollection[]) {
     return (await this.getRepo()).updateCollections(collections);
   }
+  public getGroupRoleInCollection$(collectionId: string, groupId?: string) {
+    return from(this.getRepo()).pipe(
+      switchMap((repo) => repo.getGroupRoleInCollection$(collectionId, groupId))
+    );
+  }
+  public usersAndGroupsInCollection(collectionIds: string[]) {
+    return from(this.getRepo()).pipe(
+      switchMap((repo) => repo.usersAndGroupsInCollection(collectionIds))
+    );
+  }
   private async getRepo() {
     const { userFeatureFlip } = this.featureFlips.queries;
     const result = await firstValueFrom(
       userFeatureFlip({
-        featureFlip: "sharingVault_web_sharingSyncGrapheneMigration_dev",
+        featureFlip: SharingSyncFeatureFlips.SharingSyncGrapheneMigrationDev,
       })
     );
     if (isFailure(result)) {

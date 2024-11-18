@@ -13,6 +13,7 @@ import {
   AddItemGroupsToCollectionModel,
   CreateCollectionModel,
   InviteCollectionMembersModel,
+  ItemGroupModel,
   RemoveItemGroupCollectionAccessModel,
   RenameCollectionModel,
   RevokeCollectionMembersModel,
@@ -59,38 +60,47 @@ export class SharingCollectionsServerGateway
   public async addItemGroupsToCollection(
     params: AddItemGroupsToCollectionModel
   ) {
-    const response = await firstValueFrom(
-      this.serverApiClient.v1.sharingUserdevice.addItemGroupsToCollection({
-        collectionUUID: params.collectionId,
-        itemGroups: params.itemGroups.map(
-          ({
-            id,
-            proposeSignature,
-            acceptSignature,
-            permission,
-            resourceKey,
-            auditLogData,
-          }) => ({
-            uuid: id,
-            proposeSignature,
-            acceptSignature,
-            permission,
-            itemGroupKey: resourceKey,
-            auditLogDetails: auditLogData
-              ? makeAuditLogDetails(auditLogData)
-              : undefined,
-          })
-        ),
-        revision: params.revision,
-      })
-    );
-    if (isFailure(response)) {
-      throw new Error("Failed to add items to collection");
+    const itemGroupBatches: Array<ItemGroupModel[]> = [];
+    for (let i = 0; i < params.itemGroups.length; i += 100) {
+      itemGroupBatches.push(params.itemGroups.slice(i, i + 100));
     }
-    const responseData = getSuccess(response);
-    const updatedCollections = responseData.data.collections || [];
-    if (updatedCollections.length === 0) {
-      throw new Error("Failed to add items to collection");
+    let currentRevision = params.revision;
+    for (const itemGroupBatch of itemGroupBatches) {
+      const response = await firstValueFrom(
+        this.serverApiClient.v1.sharingUserdevice.addItemGroupsToCollection({
+          collectionUUID: params.collectionId,
+          itemGroups: itemGroupBatch.map(
+            ({
+              id,
+              proposeSignature,
+              acceptSignature,
+              permission,
+              resourceKey,
+              auditLogData,
+            }) => ({
+              uuid: id,
+              proposeSignature,
+              acceptSignature,
+              permission,
+              itemGroupKey: resourceKey,
+              auditLogDetails: auditLogData
+                ? makeAuditLogDetails(auditLogData)
+                : undefined,
+            })
+          ),
+          revision: currentRevision,
+        })
+      );
+      if (isFailure(response)) {
+        throw new Error("Failed to add items to collection", {
+          cause: response.error,
+        });
+      }
+      const responseData = getSuccess(response).data;
+      if (!responseData.collections?.length) {
+        throw new Error("Failed to add items to collection");
+      }
+      currentRevision = responseData.collections[0].revision;
     }
   }
   public async deleteCollection(collectionUUID: string, revision: number) {
@@ -201,7 +211,12 @@ export class SharingCollectionsServerGateway
       })
     );
     if (isFailure(result)) {
-      throw new Error("Failure to remove collection member from an item group");
+      throw new Error(
+        "Failure to remove collection member from an item group",
+        {
+          cause: result.error,
+        }
+      );
     }
   }
 }

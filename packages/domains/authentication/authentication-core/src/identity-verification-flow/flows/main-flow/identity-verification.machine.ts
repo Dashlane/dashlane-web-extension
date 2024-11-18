@@ -121,7 +121,7 @@ export class IdentityVerificationMachine {
           ...this.twoFactorAuthenticationMachine.desc().options.guards,
           isGrapheneDeviceRegistrationFlow: (
             context: IdentityVerificationMachineContext
-          ) => (context.login ? context.login.includes("*****") : false),
+          ) => (context.login ? context.login.includes("__REDACTED__") : false),
         },
       },
     };

@@ -1,5 +1,10 @@
-import { map, of, switchMap } from "rxjs";
-import { getSuccess, isFailure, success } from "@dashlane/framework-types";
+import { map, of, switchMap, take } from "rxjs";
+import {
+  getSuccess,
+  isFailure,
+  isSuccess,
+  success,
+} from "@dashlane/framework-types";
 import { IQueryHandler, QueryHandler } from "@dashlane/framework-application";
 import {
   RecipientTypes,
@@ -10,6 +15,9 @@ import {
   UserGroupsGetterService,
 } from "../../../sharing-carbon-helpers";
 import { SharedCollectionsRepository } from "../../../sharing-collections";
+import { FeatureFlipsClient } from "@dashlane/framework-contracts";
+import { SharedItemsRepository } from "../common/shared-items-repository";
+import { toSharedAccessMember } from "../../data-adapters/item-group-adapter";
 @QueryHandler(SharedAccessForItemQuery)
 export class SharedAccessForItemQueryHandler
   implements IQueryHandler<SharedAccessForItemQuery>
@@ -17,10 +25,55 @@ export class SharedAccessForItemQueryHandler
   constructor(
     private itemGroupsGetter: ItemGroupsGetterService,
     private userGroupsGetter: UserGroupsGetterService,
-    private collectionsRepository: SharedCollectionsRepository
+    private collectionsRepository: SharedCollectionsRepository,
+    private readonly sharedItemsRepository: SharedItemsRepository,
+    private readonly featureFlips: FeatureFlipsClient
   ) {}
   execute({ body }: SharedAccessForItemQuery) {
     const { itemId } = body;
+    const { userFeatureFlip } = this.featureFlips.queries;
+    return userFeatureFlip({
+      featureFlip: "sharingVault_web_sharingSyncGrapheneMigration_dev",
+    }).pipe(
+      take(1),
+      switchMap((isNewSharingSyncEnabledResult) => {
+        const isNewSharingSyncEnabled = isSuccess(isNewSharingSyncEnabledResult)
+          ? !!getSuccess(isNewSharingSyncEnabledResult)
+          : false;
+        return isNewSharingSyncEnabled
+          ? this.executeWithNewState$(itemId)
+          : this.executeWithCarbonState$(itemId);
+      })
+    );
+  }
+  private executeWithNewState$(itemId: string) {
+    return this.sharedItemsRepository.sharedAccessForId$(itemId).pipe(
+      map((sharedAccessResult) => {
+        if (!sharedAccessResult) {
+          return success(undefined);
+        }
+        const sharedItemId = sharedAccessResult.sharedItemId;
+        const users = sharedAccessResult.users.map((user) =>
+          toSharedAccessMember(user, RecipientTypes.User)
+        );
+        const groups = sharedAccessResult.userGroups.map((group) =>
+          toSharedAccessMember(group, RecipientTypes.Group)
+        );
+        const collections = sharedAccessResult.collections.map((collection) =>
+          toSharedAccessMember(collection, RecipientTypes.Collection)
+        );
+        const result = {
+          itemGroupId: sharedItemId,
+          count: users.length + groups.length + collections.length,
+          users,
+          groups,
+          collections,
+        };
+        return success(result);
+      })
+    );
+  }
+  private executeWithCarbonState$(itemId: string) {
     return this.itemGroupsGetter.getForItemId(itemId).pipe(
       map((itemGroupResult) => {
         if (isFailure(itemGroupResult)) {
