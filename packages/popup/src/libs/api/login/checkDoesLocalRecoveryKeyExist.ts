@@ -1,4 +1,4 @@
-import { carbonConnector } from 'src/carbonConnector';
+import { carbonConnector } from "../../../carbonConnector";
 export const checkDoesLocalRecoveryKeyExist = async () => {
-    return await carbonConnector.checkDoesLocalRecoveryKeyExist();
+  return await carbonConnector.checkDoesLocalRecoveryKeyExist();
 };

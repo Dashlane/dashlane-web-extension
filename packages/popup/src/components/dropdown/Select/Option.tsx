@@ -1,17 +1,30 @@
-import * as React from 'react';
-import styles from 'components/dropdown/styles.css';
+import * as React from "react";
+import styles from "../styles.css";
 interface Props<T extends string> {
-    label: string;
-    value: T;
-    active: boolean;
-    onSelect: (value: T) => void;
+  label: string;
+  value: T;
+  active: boolean;
+  onSelect: (value: T) => void;
 }
-const Option = <T extends string>({ label, value, active, onSelect, }: Props<T>) => {
-    const onClick = () => onSelect(value);
-    return (<li>
-      <button role="option" type="button" aria-selected={active} onClick={onClick} className={styles.dropdownItem}>
+const Option = <T extends string>({
+  label,
+  value,
+  active,
+  onSelect,
+}: Props<T>) => {
+  const onClick = () => onSelect(value);
+  return (
+    <li>
+      <button
+        role="option"
+        type="button"
+        aria-selected={active}
+        onClick={onClick}
+        className={styles.dropdownItem}
+      >
         {label}
       </button>
-    </li>);
+    </li>
+  );
 };
 export default Option;

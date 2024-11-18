@@ -1,9 +1,12 @@
-import { useCarbonEndpoint } from '@dashlane/carbon-api-consumers';
-import { carbonConnector } from 'src/carbonConnector';
+import { useCarbonEndpoint } from "@dashlane/carbon-api-consumers";
+import { carbonConnector } from "../../../carbonConnector";
 export const useSpaces = () => {
-    return useCarbonEndpoint({
-        queryConfig: {
-            query: carbonConnector.getSpaces,
-        },
-    }, []);
+  return useCarbonEndpoint(
+    {
+      queryConfig: {
+        query: carbonConnector.getSpaces,
+      },
+    },
+    []
+  );
 };

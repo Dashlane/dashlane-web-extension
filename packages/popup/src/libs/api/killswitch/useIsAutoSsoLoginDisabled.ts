@@ -1,10 +1,14 @@
-import { useCarbonEndpoint } from '@dashlane/carbon-api-consumers';
-import { carbonConnector } from 'src/carbonConnector';
-export const useIsAutoSsoLoginDisabled = () => useCarbonEndpoint({
-    queryConfig: {
+import { useCarbonEndpoint } from "@dashlane/carbon-api-consumers";
+import { carbonConnector } from "../../../carbonConnector";
+export const useIsAutoSsoLoginDisabled = () =>
+  useCarbonEndpoint(
+    {
+      queryConfig: {
         query: carbonConnector.getIsAutoSSOLoginDisabled,
-    },
-    liveConfig: {
+      },
+      liveConfig: {
         live: carbonConnector.liveIsAutoSSOLoginDisabled,
+      },
     },
-}, []);
+    []
+  );

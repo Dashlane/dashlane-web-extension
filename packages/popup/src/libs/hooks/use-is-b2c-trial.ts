@@ -1,9 +1,11 @@
-import { useNodePremiumStatus } from 'libs/api';
+import { useNodePremiumStatus } from "../api";
 export function useIsB2CTrial(): boolean | null {
-    const premiumStatus = useNodePremiumStatus();
-    if (!premiumStatus) {
-        return null;
-    }
-    return ((premiumStatus.isTrial ?? false) &&
-        Object.keys(premiumStatus.b2bStatus?.currentTeam ?? {}).length === 0);
+  const premiumStatus = useNodePremiumStatus();
+  if (!premiumStatus) {
+    return null;
+  }
+  return (
+    (premiumStatus.isTrial ?? false) &&
+    Object.keys(premiumStatus.b2bStatus?.currentTeam ?? {}).length === 0
+  );
 }

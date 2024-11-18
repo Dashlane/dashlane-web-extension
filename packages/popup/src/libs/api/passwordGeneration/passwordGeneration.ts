@@ -1,25 +1,27 @@
-import { PasswordGenerationSettings } from '@dashlane/communication';
-import { carbonConnector } from 'src/carbonConnector';
-export const generatePassword = async (settings: PasswordGenerationSettings) => {
-    return await carbonConnector.generatePassword({ settings });
+import { PasswordGenerationSettings } from "@dashlane/communication";
+import { carbonConnector } from "../../../carbonConnector";
+export const generatePassword = async (
+  settings: PasswordGenerationSettings
+) => {
+  return await carbonConnector.generatePassword({ settings });
 };
 export const saveGeneratedPassword = async (password: string) => {
-    return await carbonConnector.saveGeneratedPassword({ password });
+  return await carbonConnector.saveGeneratedPassword({ password });
 };
 export const getGeneratedPasswordsList = async () => {
-    return await carbonConnector.getGeneratedPasswords({
-        sortToken: {
-            sortCriteria: [
-                {
-                    field: 'generatedDate',
-                    direction: 'descend',
-                },
-            ],
-            uniqField: 'id',
+  return await carbonConnector.getGeneratedPasswords({
+    sortToken: {
+      sortCriteria: [
+        {
+          field: "generatedDate",
+          direction: "descend",
         },
-        filterToken: {
-            filterCriteria: [],
-        },
-        limit: 20,
-    });
+      ],
+      uniqField: "id",
+    },
+    filterToken: {
+      filterCriteria: [],
+    },
+    limit: 20,
+  });
 };

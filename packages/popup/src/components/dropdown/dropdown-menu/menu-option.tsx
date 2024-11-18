@@ -1,20 +1,31 @@
-import * as React from 'react';
-import styles from 'components/dropdown/styles.css';
-import classNames from 'classnames';
+import * as React from "react";
+import classNames from "classnames";
+import styles from "../styles.css";
 interface Props extends React.Props<{}> {
-    label: string;
-    onClick: () => void;
-    isSecondaryOption: boolean;
-    isSelectedOption: boolean;
+  label: string;
+  onClick: () => void;
+  isSecondaryOption: boolean;
+  isSelectedOption: boolean;
 }
-const Option = ({ label, onClick, isSelectedOption, isSecondaryOption, }: Props) => {
-    return (<li>
-      <button type="button" onClick={onClick} className={classNames(styles.dropdownItem, {
-            [styles.selectedItem]: isSelectedOption,
-            [styles.secondaryItem]: isSecondaryOption,
-        })}>
+const Option = ({
+  label,
+  onClick,
+  isSelectedOption,
+  isSecondaryOption,
+}: Props) => {
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onClick}
+        className={classNames(styles.dropdownItem, {
+          [styles.selectedItem]: isSelectedOption,
+          [styles.secondaryItem]: isSecondaryOption,
+        })}
+      >
         {label}
       </button>
-    </li>);
+    </li>
+  );
 };
 export default React.memo(Option);

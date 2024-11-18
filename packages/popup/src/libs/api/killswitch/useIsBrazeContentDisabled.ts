@@ -1,10 +1,8 @@
-import { useCarbonEndpoint } from '@dashlane/carbon-api-consumers';
-import { carbonConnector } from 'src/carbonConnector';
-export const useIsBrazeContentDisabled = () => useCarbonEndpoint({
-    queryConfig: {
-        query: carbonConnector.getIsBrazeContentDisabled,
-    },
-    liveConfig: {
-        live: carbonConnector.liveIsBrazeContentDisabled,
-    },
-}, []);
+import { useModuleQuery } from "@dashlane/framework-react";
+import { killSwitchApi, KillSwitches } from "@dashlane/framework-contracts";
+export const useIsBrazeContentDisabled = () => {
+  const killSwitchData = useModuleQuery(killSwitchApi, "getKillSwitch", {
+    killSwitch: KillSwitches.BrazeContentCardsDisabled,
+  });
+  return killSwitchData;
+};

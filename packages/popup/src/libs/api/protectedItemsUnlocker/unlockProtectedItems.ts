@@ -1,4 +1,4 @@
-import { carbonConnector } from 'src/carbonConnector';
+import { carbonConnector } from "../../../carbonConnector";
 export function unlockProtectedItems(masterPassword: string) {
-    return carbonConnector.unlockProtectedItems(masterPassword);
+  return carbonConnector.unlockProtectedItems(masterPassword);
 }

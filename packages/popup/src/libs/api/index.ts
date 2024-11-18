@@ -1,28 +1,43 @@
-export * from 'libs/api/breaches';
-export * from 'libs/api/credential';
-export { dismissNotification } from 'libs/api/notification/dismissNotification';
-export { useAreProtectedItemsUnlocked } from 'libs/api/protectedItemsUnlocker/useAreProtectedItemsUnlocked';
-export { disableCredentialProtection } from 'libs/api/protectedItemsUnlocker/disableCredentialProtection';
-export { updateProtectPasswordsSetting } from 'libs/api/protectedItemsUnlocker/updateProtectPasswordsSetting';
-export { unlockProtectedItems } from 'libs/api/protectedItemsUnlocker/unlockProtectedItems';
-export { useProtectPasswordsSetting } from 'libs/api/protectedItemsUnlocker/useProtectPasswordsSetting';
-export { useABTestData } from 'libs/api/ABTests/useAbTestData';
-export { useLiveChangeMasterPasswordStatus } from 'libs/api/changeMasterPassword/useLiveChangeMasterPasswordStatus';
-export { checkDoesLocalRecoveryKeyExist } from 'libs/api/login/checkDoesLocalRecoveryKeyExist';
-export { useIsBrazeContentDisabled } from 'src/libs/api/killswitch/useIsBrazeContentDisabled';
-export { useIsMasterPasswordLeaked } from 'src/libs/api/masterPasswordSecurity/use-is-master-password-leaked';
-export { useIsMasterPasswordWeak } from 'src/libs/api/masterPasswordSecurity/use-is-master-password-weak';
-export { useDismissMasterPasswordNotification } from 'src/libs/api/masterPasswordSecurity/use-dismiss-master-password-leaked-notification';
-export { usePaymentFailureNotificationData } from 'libs/api/notification/usePaymentFailureNotificationData';
-export { useDiscontinuedStatus, useNodePremiumStatus, usePremiumStatusData, usePremiumStatus, } from 'libs/api/premiumStatus/usePremiumStatusData';
-export { useNotificationsStatusData } from 'libs/api/notification/useNotificationsStatusData';
-export { usePaymentFailureChurningData } from 'libs/api/paymentChurning/usePaymentFailureChurning';
-export { useSpaces } from 'libs/api/space/useSpaces';
-export { refreshTwoFactorAuthenticationInfo, useTwoFactorAuthenticationInfo, } from 'libs/api/twoFactorAuthentication/useTwoFactorAuthenticationInfo';
-export { generatePassword, getGeneratedPasswordsList, saveGeneratedPassword, } from 'src/libs/api/passwordGeneration/passwordGeneration';
-export { getSavedPasswordGenerationSettings, savePasswordGenerationSettings, } from 'src/libs/api/passwordGeneration/passwordGeneratorSettings';
-export { useSubscriptionCode } from 'libs/api/account/useSubscriptionCode';
-export { useIsMPlessUser } from 'libs/api/account/useIsMPLessAccount';
-export { useVisibleUserMessages } from 'libs/api/userMessages/useVisibleUserMessages';
-export { useUserMessages } from 'libs/api/userMessages/useUserMessages';
-export { isPremiumTrialExpired } from 'libs/api/userMessages/helpers';
+export * from "./breaches";
+export * from "./credential";
+export { dismissNotification } from "./notification/dismissNotification";
+export { useAreProtectedItemsUnlocked } from "./protectedItemsUnlocker/useAreProtectedItemsUnlocked";
+export { disableCredentialProtection } from "./protectedItemsUnlocker/disableCredentialProtection";
+export { updateProtectPasswordsSetting } from "./protectedItemsUnlocker/updateProtectPasswordsSetting";
+export { unlockProtectedItems } from "./protectedItemsUnlocker/unlockProtectedItems";
+export { useProtectPasswordsSetting } from "./protectedItemsUnlocker/useProtectPasswordsSetting";
+export { useABTestData } from "./ABTests/useAbTestData";
+export { useLiveChangeMasterPasswordStatus } from "./changeMasterPassword/useLiveChangeMasterPasswordStatus";
+export { checkDoesLocalRecoveryKeyExist } from "./login/checkDoesLocalRecoveryKeyExist";
+export { useIsBrazeContentDisabled } from "./killswitch/useIsBrazeContentDisabled";
+export { useIsMasterPasswordLeaked } from "./masterPasswordSecurity/use-is-master-password-leaked";
+export { useIsMasterPasswordWeak } from "./masterPasswordSecurity/use-is-master-password-weak";
+export { useDismissMasterPasswordNotification } from "./masterPasswordSecurity/use-dismiss-master-password-leaked-notification";
+export { usePaymentFailureNotificationData } from "./notification/usePaymentFailureNotificationData";
+export {
+  useDiscontinuedStatus,
+  useNodePremiumStatus,
+  usePremiumStatusData,
+  usePremiumStatus,
+} from "./premiumStatus/usePremiumStatusData";
+export { useNotificationsStatusData } from "./notification/useNotificationsStatusData";
+export { usePaymentFailureChurningData } from "./paymentChurning/usePaymentFailureChurning";
+export { useSpaces } from "./space/useSpaces";
+export {
+  refreshTwoFactorAuthenticationInfo,
+  useTwoFactorAuthenticationInfo,
+} from "./twoFactorAuthentication/useTwoFactorAuthenticationInfo";
+export {
+  generatePassword,
+  getGeneratedPasswordsList,
+  saveGeneratedPassword,
+} from "./passwordGeneration/passwordGeneration";
+export {
+  getSavedPasswordGenerationSettings,
+  savePasswordGenerationSettings,
+} from "./passwordGeneration/passwordGeneratorSettings";
+export { useSubscriptionCode } from "./account/use-subscription-code";
+export { useIsMPlessUser } from "./account/useIsMPLessAccount";
+export { useVisibleUserMessages } from "./userMessages/useVisibleUserMessages";
+export { useUserMessages } from "./userMessages/useUserMessages";
+export { isPremiumTrialExpired } from "./userMessages/helpers";

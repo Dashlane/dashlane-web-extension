@@ -1,1 +1,1 @@
-export { carbonConnector } from 'carbonConnector/connector';
+export { carbonConnector } from "./connector";

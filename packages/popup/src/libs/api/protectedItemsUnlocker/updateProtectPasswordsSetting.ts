@@ -1,4 +1,6 @@
-import { carbonConnector } from 'src/carbonConnector';
-export function updateProtectPasswordsSetting(protectPasswordsSetting: boolean) {
-    return carbonConnector.updateProtectPasswordsSetting(protectPasswordsSetting);
+import { carbonConnector } from "../../../carbonConnector";
+export function updateProtectPasswordsSetting(
+  protectPasswordsSetting: boolean
+) {
+  return carbonConnector.updateProtectPasswordsSetting(protectPasswordsSetting);
 }
