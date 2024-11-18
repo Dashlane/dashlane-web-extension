@@ -3,16 +3,14 @@ import {
   BaseDataModelObject,
   BreachesUpdaterStatus,
   Credential,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
   DataModelType,
   GeneratedPassword,
-  NoteCategory,
   PaymentCard,
   PremiumStatusSpace,
   VersionedBreaches,
 } from "@dashlane/communication";
-import DATAMODELOBJECT_TYPE_TO_STORE_KEY, {
-  PERSONAL_DATA_COLLECTIONS_KEYS,
-} from "Session/Store/personalData/dataTypes";
+import { PERSONAL_DATA_COLLECTIONS_KEYS } from "Session/Store/personalData/dataTypes";
 import {
   fixPersistedPersonalData,
   fixPersonalDataItemFromExternalSource,
@@ -26,7 +24,6 @@ import {
   DELETE_VAULT_MODULE_ITEMS_BULK,
   LOAD_STORED_PERSONAL_DATA,
   SAVE_GENERATED_PASSWORD,
-  SAVE_NOTE_CATEGORY,
   SAVE_PAYMENT_CARD,
   SAVE_PERSONAL_ITEM,
   SAVE_PERSONAL_ITEMS,
@@ -79,8 +76,6 @@ export const reducer = (
       return savePersonalDataItems(state, action, spaces);
     case SAVE_GENERATED_PASSWORD:
       return saveGeneratedPassword(state, action, spaces);
-    case SAVE_NOTE_CATEGORY:
-      return saveNoteCategory(state, action);
     case CLEAR_UPLOADED_CHANGES:
       return clearUploadedChanges(state, action);
     case SCHEDULE_CHANGES_FOR_SYNC:
@@ -122,7 +117,6 @@ export function getEmptyPersonalDataState(): PersonalData {
     generatedPasswords: [],
     idCards: [],
     identities: [],
-    noteCategories: [],
     notes: [],
     passkeys: [],
     passports: [],
@@ -144,7 +138,7 @@ const isUnsupportedTransaction = (
 ) =>
   !itemId ||
   !content ||
-  !DATAMODELOBJECT_TYPE_TO_STORE_KEY.hasOwnProperty(content.kwType);
+  !DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY.hasOwnProperty(content.kwType);
 export function addPersonalItemFromTransaction(
   state: PersonalData,
   action: {
@@ -155,7 +149,8 @@ export function addPersonalItemFromTransaction(
   if (isUnsupportedTransaction(action.itemId, action.content)) {
     return state;
   }
-  const keyInState = DATAMODELOBJECT_TYPE_TO_STORE_KEY[action.content.kwType];
+  const keyInState =
+    DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[action.content.kwType];
   const itemToAdd = fixPersonalDataItemFromExternalSource(
     action.content,
     action.itemId
@@ -228,7 +223,7 @@ export function teamSpaceContentControlApplied(
   const { updates, deletions, changeHistories } = action;
   const stateAfterUpdates = updates.reduce((acc, dataModelObject) => {
     const { kwType } = dataModelObject;
-    const dataType = DATAMODELOBJECT_TYPE_TO_STORE_KEY[kwType];
+    const dataType = DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType];
     if (!dataType) {
       return acc;
     }
@@ -473,33 +468,13 @@ export function saveGeneratedPassword(
     ),
   };
 }
-export function saveNoteCategory(
-  state: PersonalData,
-  {
-    noteCategory,
-  }: {
-    noteCategory: NoteCategory;
-  }
-): PersonalData {
-  return {
-    ...state,
-    changesToUpload: getUpdatedChangesToUpload(
-      state.changesToUpload,
-      createUploadChangeForItem(noteCategory)
-    ),
-    noteCategories: getUpdatedDataList<NoteCategory>(
-      state.noteCategories,
-      noteCategory
-    ),
-  };
-}
 export function saveObjects(
   state: PersonalData,
   objects: BaseDataModelObject[]
 ): PersonalData {
   return reduce(
     (personalData: PersonalData, object: BaseDataModelObject) => {
-      const type = DATAMODELOBJECT_TYPE_TO_STORE_KEY[object.kwType];
+      const type = DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[object.kwType];
       if (type) {
         personalData[type] = personalData[type].concat(object);
       }
@@ -658,8 +633,8 @@ function getStateWithoutItems(
   itemIds: string[],
   kwType?: DataModelType
 ): PersonalData {
-  if (kwType && DATAMODELOBJECT_TYPE_TO_STORE_KEY[kwType]) {
-    const collectionStateKey = DATAMODELOBJECT_TYPE_TO_STORE_KEY[kwType];
+  if (kwType && DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType]) {
+    const collectionStateKey = DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType];
     const previousCollection = state[collectionStateKey];
     const nextCollection = removeExistingItemsInList(
       state[collectionStateKey],
@@ -705,6 +680,12 @@ export const getEmptyBreachesMetadata = (): VersionedBreachesMetadata => ({
   latestDataLeaksBreachesUpdate: 0,
 });
 export const countPersonalDataItems = (personalData: PersonalData) =>
-  Object.keys(DATAMODELOBJECT_TYPE_TO_STORE_KEY).reduce((sum, kwType) => {
-    return sum + personalData[DATAMODELOBJECT_TYPE_TO_STORE_KEY[kwType]].length;
-  }, 0);
+  Object.keys(DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY).reduce(
+    (sum, kwType) => {
+      return (
+        sum +
+        personalData[DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType]].length
+      );
+    },
+    0
+  );

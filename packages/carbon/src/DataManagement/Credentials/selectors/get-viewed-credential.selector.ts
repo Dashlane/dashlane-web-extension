@@ -2,7 +2,6 @@ import { createSelector } from "reselect";
 import { sharingDataSelector } from "Sharing/2/Services/selectors/sharing-data.selector";
 import { limitedSharingItemsSelector } from "Sharing/2/Services/selectors/limited-sharing-items.selector";
 import { credentialsSelector } from "DataManagement/Credentials/selectors/credentials.selector";
-import { credentialCategoriesSelector } from "DataManagement/Credentials/selectors/credential-categories.selector";
 import { iconsSelector } from "DataManagement/Icons/selectors";
 import { userIdSelector } from "Session/selectors";
 import { findDataModelObject } from "DataManagement/PersonalData/utils";
@@ -18,7 +17,6 @@ export const getViewedCredentialSelector = (credentialId: string) => {
     sharingDataSelector,
     userIdSelector,
     limitedSharingItemsSelector,
-    credentialCategoriesSelector,
     iconsSelector,
     spacesSelector,
     viewCredential

@@ -164,6 +164,11 @@ export const getImportableItemsFromUserFile = async (
   for (const item of itemsFromUserFile) {
     if (dataModelTypeDisplayedToTheUser.includes(item.kwType)) {
       importableItemCount++;
+    } else if (
+      (item.kwType as string) === "KWSecureNoteCategory" ||
+      (item.kwType as string) === "KWAuthCategory"
+    ) {
+      continue;
     }
     const itemToImport = await prepareItemForImport(
       sanitizeInputPersonalData(convertImportable(item))

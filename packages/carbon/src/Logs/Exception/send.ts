@@ -1,6 +1,6 @@
 import { postDataToUrl } from "Utils";
 import { ExceptionLogRequest } from "Logs/Exception/types";
-export const EXCEPTION_LOG_ENDPOINT = "*****";
+export const EXCEPTION_LOG_ENDPOINT = "__REDACTED__";
 const MAX_EXCEPTION_COUNT_PER_TYPE_PER_SESSION = 10;
 export default function (log: ExceptionLogRequest): Promise<void> {
   return limitExceptionPerType(

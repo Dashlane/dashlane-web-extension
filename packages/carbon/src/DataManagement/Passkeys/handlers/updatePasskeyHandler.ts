@@ -15,7 +15,7 @@ import { sanitizeInputPersonalData } from "DataManagement/PersonalData/sanitize"
 export const getPasskeyModifiedProperties = (
   newPasskeyData: UpdatePasskeyRequest,
   existingPasskeyData: Partial<Passkey>
-): Partial<Passkey> => {
+): Pick<Passkey, "Counter" | "Note" | "SpaceId" | "ItemName" | "LastUse"> => {
   const passkeyModificationDate = getUnixTimestamp();
   return {
     Counter: newPasskeyData.counter ?? existingPasskeyData.Counter,

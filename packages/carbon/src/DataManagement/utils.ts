@@ -1,11 +1,14 @@
 export const nextTick = require("next-tick");
-import { DataModelObject, DataModelType } from "@dashlane/communication";
+import {
+  DataModelObject,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
+  DataModelType,
+} from "@dashlane/communication";
 import { Trigger } from "@dashlane/hermes";
 import { SyncDebounceFunction } from "DataManagement/types";
 import { debounce } from "Helpers/debounce";
 import { Debugger } from "Logs/Debugger";
 import { reportDataUpdate } from "Session/SessionCommunication";
-import dataTypes from "Session/Store/personalData/dataTypes";
 import { PersonalData } from "Session/Store/personalData/types";
 import { StoreService } from "Store";
 import { SessionService } from "User/Services/types";
@@ -42,7 +45,7 @@ export const getCurrentItems = (
   type: DataModelType,
   personalData: PersonalData
 ): DataModelObject[] => {
-  const storeName = dataTypes[type];
+  const storeName = DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[type];
   return personalData?.[storeName] || [];
 };
 export const getDefaultSpaceId = (storeService: StoreService): string => {

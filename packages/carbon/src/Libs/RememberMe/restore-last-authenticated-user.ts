@@ -64,7 +64,8 @@ export async function restoreLastAuthenticatedUser(
       return;
     }
     const shouldTriggerAutoLogin =
-      await services.autoLoginService.shouldTrigger(login);
+      lastLocalAccountUsed.rememberMeType === "autologin" &&
+      (await services.autoLoginService.shouldTrigger(login));
     const loginController = makeLoginController(services);
     if (!shouldTriggerAutoLogin) {
       loginController.openSession(login);

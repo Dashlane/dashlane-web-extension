@@ -164,6 +164,7 @@ export const carbonServices = (options: {
     taskTrackingClient: moduleClients.taskTracking,
   });
   const autoLoginService = makeAutoLoginService({
+    storageService,
     autoLoginEncryptorService,
     localStorageService,
     wsService,
@@ -174,6 +175,7 @@ export const carbonServices = (options: {
   const webAuthnAuthenticationService = makeWebAuthnAuthenticationService({
     webAuthnAuthenticationEncryptorService,
     storeService,
+    storageService,
     localStorageService,
     authorizationKeysEncryptorService,
     sessionClient,

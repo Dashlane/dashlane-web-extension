@@ -22,7 +22,6 @@ import { getDashlaneXml } from "Libs/XML";
 import { announcements, AnnounceSync } from "Libs/Backup/Probe";
 export const supportedDataTypesForUpload: DataModelType[] = [
   "KWAddress",
-  "KWAuthCategory",
   "KWAuthentifiant",
   "KWBankStatement",
   "KWCollection",
@@ -42,7 +41,6 @@ export const supportedDataTypesForUpload: DataModelType[] = [
   "KWSecret",
   "KWSecureFileInfo",
   "KWSecureNote",
-  "KWSecureNoteCategory",
   "KWSecurityBreach",
   "KWSettingsManagerApp",
   "KWSocialSecurityStatement",

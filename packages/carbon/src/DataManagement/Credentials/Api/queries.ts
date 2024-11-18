@@ -1,5 +1,4 @@
 import {
-  CredentialCategoryDetailView,
   CredentialDataQuery,
   CredentialDetailView,
   CredentialItemView,
@@ -11,10 +10,6 @@ import {
 import { Query } from "Shared/Api";
 export type CredentialQueries = {
   getCredential: Query<string, CredentialDetailView>;
-  getCredentialCategories: Query<
-    void,
-    ListResults<CredentialCategoryDetailView>
-  >;
   getCredentials: Query<CredentialDataQuery, ListResults<CredentialItemView>>;
   getCredentialsByDomain: Query<
     CredentialsByDomainDataQuery,

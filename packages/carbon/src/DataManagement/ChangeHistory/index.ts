@@ -1,6 +1,7 @@
 import { equals, last } from "ramda";
 import {
   DataModelObject,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
   isCredential,
   isNote,
   isSecret,
@@ -17,7 +18,6 @@ import {
   ChangeSet,
   ChangeSetCurrentData,
 } from "DataManagement/ChangeHistory/ChangeSet/types";
-import dataTypes from "Session/Store/personalData/dataTypes";
 import { PersonalData } from "Session/Store/personalData/types";
 import { getTransactionTypeFromDataModelType } from "Libs/Backup/Transactions/types";
 import { findDataModelObject } from "DataManagement/PersonalData/utils";
@@ -73,7 +73,7 @@ export function getUpdatedItemChangeHistory(
           change.updatedItem.kwType,
           change.updatedItem.Title,
         ];
-  const dataTypeKeyInStore = dataTypes[kwType];
+  const dataTypeKeyInStore = DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType];
   const storedItem = findDataModelObject<DataModelObject>(
     itemId,
     personalData[dataTypeKeyInStore]

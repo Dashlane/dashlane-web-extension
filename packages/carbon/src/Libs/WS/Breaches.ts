@@ -22,7 +22,7 @@ export interface GetResponse extends WSResponseBase {
       leakedData?: string[];
       criticality?: "info" | "warning" | "error";
       restrictiedArea?: string[];
-      status?: "legacy" | "live" | "*****" | "deleted";
+      status?: "legacy" | "live" | "__REDACTED__" | "deleted";
       sensitiveDomain?: boolean;
       relatedLinks?: {
         en: string;

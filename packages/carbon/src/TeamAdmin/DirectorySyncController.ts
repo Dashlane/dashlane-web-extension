@@ -20,13 +20,7 @@ export interface DirectorySyncController {
 export const makeDirectorySyncController = (
   services: DirectorySyncControllerServices
 ): DirectorySyncController => {
-  const {
-    storeService,
-    localStorageService,
-    wsService,
-    sessionService,
-    sharingService,
-  } = services;
+  const { storeService, wsService, sessionService, sharingService } = services;
   return {
     directorySyncForAllTeams: () =>
       directorySyncService.directorySyncForAllTeams(
@@ -38,7 +32,6 @@ export const makeDirectorySyncController = (
       keyValidatedByTacAdmin(
         sharingService,
         storeService,
-        localStorageService,
         wsService,
         sessionService,
         teamId,
@@ -56,7 +49,6 @@ export const makeDirectorySyncController = (
 function keyValidatedByTacAdmin(
   sharingService: ISharingServices,
   storeService: StoreService,
-  localStorageService: LocalStorageService,
   wsService: WSService,
   sessionService: SessionService,
   teamId: string,
@@ -68,7 +60,7 @@ function keyValidatedByTacAdmin(
     directorySyncService.saveDirectorySyncKey(
       sharingService,
       storeService,
-      localStorageService,
+      sessionService,
       currentUserInfo,
       adminData,
       teamId,

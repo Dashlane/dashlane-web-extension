@@ -1,5 +1,5 @@
 import { createSelector } from "reselect";
-import { Credential, CredentialWithCategory } from "@dashlane/communication";
+import { Credential } from "@dashlane/communication";
 import { ParsedURL } from "@dashlane/url-parser";
 import { credentialsSelector } from "DataManagement/Credentials/selectors/credentials.selector";
 import {
@@ -32,7 +32,7 @@ export const getCredentialByDomainMatchType = (
   return DomainMatchType.None;
 };
 const filterCredentialsByDomain = (
-  credentials: CredentialWithCategory[],
+  credentials: Credential[],
   domain: string
 ) => {
   return credentials.filter((credential) => {

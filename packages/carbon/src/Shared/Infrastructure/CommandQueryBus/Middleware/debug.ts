@@ -32,28 +32,17 @@ export const perfDebugMiddleware: CommandBusMiddleware<any> =
       throw error;
     }
   };
-let VERBOSE_CARBON_BUS_LOGS = true;
-export function disableVerboseCommandQueryBusLogs() {
-  console.log(
-    `[background/carbon] Disabling verbose logging of incoming CarbonApi requests`
-  );
-  VERBOSE_CARBON_BUS_LOGS = false;
-}
 export const debugMiddleware: CommandBusMiddleware<any> =
   (next) => async (ctxPromise) => {
     const ctx = await ctxPromise;
     try {
-      if (VERBOSE_CARBON_BUS_LOGS) {
-        console.log(
-          `[background/carbon] Processing CarbonApi request (type:${ctx.messageType}, name:${ctx.messageName}, id:${ctx.requestId})`
-        );
-      }
+      console.log(
+        `[background/carbon] Processing CarbonApi request (type:${ctx.messageType}, name:${ctx.messageName}, id:${ctx.requestId})`
+      );
       const result = await next(ctxPromise);
-      if (VERBOSE_CARBON_BUS_LOGS) {
-        console.log(
-          `[background/carbon] Done processing CarbonApi request (type:${ctx.messageType}, name:${ctx.messageName}, id:${ctx.requestId})`
-        );
-      }
+      console.log(
+        `[background/carbon] Done processing CarbonApi request (type:${ctx.messageType}, name:${ctx.messageName}, id:${ctx.requestId})`
+      );
       return result;
     } catch (error) {
       console.error(

@@ -28,10 +28,10 @@ import {
 } from "../constants";
 const generateTeamDeviceUserLogin = (teamId: string | number) => {
   const nonce = Math.floor(Math.random() * 0x100000000).toString(16);
-  return `special-admin-${teamId}-${nonce}@teamdevice.dashlane.com`;
+  return `special-admin-${teamId}-${nonce}__REDACTED__`;
 };
 export const generateDeviceKeyPair = async (
-  services: CoreServices,
+  services: CoreServices
 ): Promise<{
   devicePublicKey: string;
   devicePrivateKey: string;
@@ -55,7 +55,7 @@ export const generateDeviceKeyPair = async (
 export const reregisterTeamDevice = async (
   services: CoreServices,
   existingConfig?: BasicConfig,
-  platform: TeamDevicePlatform = TeamDevicePlatform.ENCRYPTION_SERVICE,
+  platform: TeamDevicePlatform = TeamDevicePlatform.ENCRYPTION_SERVICE
 ) => {
   if (existingConfig?.deviceAccessKey) {
     await deactivateTeamDevice(services, {
@@ -73,7 +73,7 @@ export const reregisterTeamDevice = async (
 };
 export const registerTeamDeviceAccount = async (
   services: CoreServices,
-  request: RegisterTeamDeviceAccountRequest,
+  request: RegisterTeamDeviceAccountRequest
 ): Promise<RegisterTeamDeviceAccountResult> => {
   let devicePublicKey: string;
   let devicePrivateKey: string;
@@ -81,8 +81,9 @@ export const registerTeamDeviceAccount = async (
     devicePublicKey = request.devicePublicKey;
     devicePrivateKey = request.devicePrivateKey;
   } else {
-    ({ devicePublicKey, devicePrivateKey } =
-      await generateDeviceKeyPair(services));
+    ({ devicePublicKey, devicePrivateKey } = await generateDeviceKeyPair(
+      services
+    ));
   }
   const { storeService, wsService } = services;
   const { crypto } = makeSharingService(storeService, wsService);
@@ -90,29 +91,29 @@ export const registerTeamDeviceAccount = async (
   const currentTeamId = currentTeamIdSelector(storeService.getState());
   const adminData = adminDataForTeamSelector(
     storeService.getState(),
-    currentTeamId,
+    currentTeamId
   );
   const { revision: userGroupRevision } = await loadSpecialUserGroup(
     wsService,
     currentUserInfo.login,
     currentUserInfo.uki,
-    adminData,
+    adminData
   );
   const specialUserGroupKey = await getSpecialUserGroupKey(
     crypto,
     currentUserInfo,
-    adminData,
+    adminData
   );
   const pemPublicKey = `${PUBLIC_KEY_HEADER}\n${devicePublicKey}\n${PUBLIC_KEY_FOOTER}`;
   const groupKey = await crypto.asymmetricEncryption.encrypt(
     pemPublicKey,
-    specialUserGroupKey,
+    specialUserGroupKey
   );
   const teamDeviceLogin = generateTeamDeviceUserLogin(currentTeamId);
   const proposeSignature = await generateProposeSignature(
     crypto,
     specialUserGroupKey,
-    teamDeviceLogin,
+    teamDeviceLogin
   );
   const teamDeviceAccountResponse = await createTeamDeviceAccount(services, {
     teamDeviceAccessKey: request.deviceAccessKey,
@@ -128,7 +129,7 @@ export const registerTeamDeviceAccount = async (
       error: {
         code: getCode(
           teamDeviceAccountResponse.error.code,
-          createTeamDeviceAccountErrors,
+          createTeamDeviceAccountErrors
         ),
       },
     };

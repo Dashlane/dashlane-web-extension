@@ -22,8 +22,14 @@ export function setupSubscriptions(
     if (event.initMode === InitMode.Resume) {
       services.sessionService.tryRestoreInstance();
       if (sessionService.isSessionStarted()) {
+        console.log(
+          "[background/carbon] Loading non non-resumable data from storage"
+        );
         const { user } = services.sessionService.getInstance();
         await user.loadNonResumableSessionData();
+        console.log(
+          "[background/carbon] Done loading non non-resumable data from storage"
+        );
       }
     }
   });

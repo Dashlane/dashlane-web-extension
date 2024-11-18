@@ -29,7 +29,6 @@ import {
 import { getRandomValues } from "Libs/CryptoCenter/Helpers/WebCryptoWrapper";
 import { generateIV } from "Libs/CryptoCenter/legacy/DashlaneSecureData";
 import {
-  secureFileSetStorageInfoAction,
   secureFileStartCipheringAction,
   secureFileStartUploadAction,
   secureFileUploadChunkAction,
@@ -38,7 +37,6 @@ import {
   secureFileUploadErrorAction,
 } from "Session/Store/secureFileStorage";
 import { WSError } from "Libs/WS/Errors";
-import { secureFilesQuotaSelector } from "../selectors";
 import { validateSecureFile } from "../services/validateSecureFile";
 const ERROR_RESULT: AddSecureFileResult = {
   success: false,
@@ -53,6 +51,8 @@ const mapErrorCode = (errorCode: string): SecureFileResultErrorCode => {
     case SecureFileResultErrorCode.MAX_CONTENT_LENGTH_EXCEEDED:
       return SecureFileResultErrorCode.MAX_CONTENT_LENGTH_EXCEEDED;
     case SecureFileResultErrorCode.QUOTA_EXCEEDED:
+    case SecureFileResultErrorCode.SOFT_QUOTA_EXCEEDED:
+    case SecureFileResultErrorCode.HARD_QUOTA_EXCEEDED:
       return SecureFileResultErrorCode.QUOTA_EXCEEDED;
     default:
       return SecureFileResultErrorCode.SERVER_ERROR;
@@ -101,7 +101,7 @@ export async function createSecureFile(
   owner: string
 ) {
   try {
-    const { cryptoConfig } = parsePayload("*****");
+    const { cryptoConfig } = parsePayload("__REDACTED__");
     const cryptoKey = getRandomValues(32);
     const keys = await hashAndSplitKey(cryptoKey);
     const iv = generateIV();
@@ -199,15 +199,6 @@ export async function addSecureFileHandler(
     params.fileType,
     login
   );
-  const quota = secureFilesQuotaSelector(storeService.getState());
-  if (quota.remaining < secureFileDataBuffer.byteLength) {
-    return {
-      success: false,
-      error: {
-        code: SecureFileResultErrorCode.QUOTA_EXCEEDED,
-      },
-    };
-  }
   const interval = setInterval(() => {
     storeService.dispatch(secureFileUploadChunkAction(CHUNK_SIZE));
   }, DELAY);
@@ -230,9 +221,6 @@ export async function addSecureFileHandler(
       clearInterval(interval);
       return ERROR_RESULT;
     }
-    storeService.dispatch(
-      secureFileSetStorageInfoAction(getUploadLink.content.quota)
-    );
     clearInterval(interval);
     storeService.dispatch(secureFileUploadDoneAction());
     storeService.dispatch(secureFileUploadClearAction());

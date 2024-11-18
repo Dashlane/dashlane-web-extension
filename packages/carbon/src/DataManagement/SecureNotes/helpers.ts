@@ -1,5 +1,5 @@
-import { curry, isNil } from "ramda";
-import { Note, NoteCategory } from "@dashlane/communication";
+import { isNil } from "ramda";
+import { Note } from "@dashlane/communication";
 export class RequestError extends Error {
   code: string;
   constructor(message: string, code: string) {
@@ -9,10 +9,6 @@ export class RequestError extends Error {
     this.code = code;
   }
 }
-export const getCategory = curry(
-  (categories: NoteCategory[], categoryId: string) =>
-    categories.find((c) => c.Id === categoryId)
-);
 export const createdAt = (note: Note) =>
   isNil(note.CreationDatetime)
     ? isNil(note.CreationDate)

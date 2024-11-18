@@ -2,6 +2,7 @@ import { firstValueFrom } from "rxjs";
 import {
   ApplicationModulesAccess,
   DataModelObject,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
   DataModelType,
   isCredential,
   isNote,
@@ -23,7 +24,6 @@ import { EventLoggerService } from "Logs/EventLogger";
 import { UpdateCredentialOrigin } from "@dashlane/hermes";
 import { currentTeamIdSelector } from "TeamAdmin/Services/selectors";
 import { computeAndSendDeletedCredentialActivityLog } from "DataManagement/helpers";
-import DATAMODELOBJECT_TYPE_TO_STORE_KEY from "Session/Store/personalData/dataTypes";
 const deletablePersonalDataStoreKeys = [
   "addresses",
   "bankAccounts",
@@ -35,7 +35,6 @@ const deletablePersonalDataStoreKeys = [
   "fiscalIds",
   "idCards",
   "identities",
-  "noteCategories",
   "notes",
   "passkeys",
   "passports",
@@ -55,7 +54,7 @@ export function findPersonalDataItemToDelete(
   let itemToDelete: DataModelObject | null = null;
   const personalData = storeService.getPersonalData();
   const matchingPersonalDataStoreLookupKey = kwType
-    ? DATAMODELOBJECT_TYPE_TO_STORE_KEY[kwType] ?? null
+    ? DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType] ?? null
     : null;
   if (kwType && !matchingPersonalDataStoreLookupKey) {
     return null;

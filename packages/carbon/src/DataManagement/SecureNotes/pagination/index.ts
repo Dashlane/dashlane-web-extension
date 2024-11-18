@@ -2,7 +2,6 @@ import { curry } from "ramda";
 import {
   DataQuery,
   Note,
-  NoteCategory,
   NoteFilterField,
   NoteFilterToken,
   NoteItemView,
@@ -14,7 +13,6 @@ import { generateFirstToken, getBatch } from "Libs/Pagination";
 import { Token } from "Libs/Pagination/types";
 import { NoteMappers } from "DataManagement/SecureNotes/types";
 import { listView } from "DataManagement/SecureNotes/views/list";
-import { getCategory } from "DataManagement/SecureNotes/helpers";
 export const getNotesFilterToken = ({
   filterCriteria,
 }: NotesFirstTokenParams): NoteFilterToken => ({
@@ -38,12 +36,8 @@ export const getNotesFirstToken = (
     params.initialBatchSize || 30,
     sortedNotes
   );
-export const viewNotesBatch = (
-  batch: Note[],
-  categories: NoteCategory[]
-): NoteItemView[] => {
-  const getCategoryById = getCategory(categories);
-  const view = listView(getCategoryById, batch);
+export const viewNotesBatch = (batch: Note[]): NoteItemView[] => {
+  const view = listView(batch);
   return view;
 };
 export const getNotesBatch = curry(

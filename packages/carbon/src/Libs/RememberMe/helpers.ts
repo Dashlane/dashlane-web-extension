@@ -81,7 +81,7 @@ export const cleanRememberMeStorageData = async (
     });
     tasks.push(disableRememberMeTask);
   }
-  await Promise.all(tasks);
+  await Promise.allSettled(tasks);
 };
 export const shouldAskMasterPassword = (login: string): boolean | undefined => {
   const rememberMeType = getLocalAccountRememberMeType(login);
@@ -105,7 +105,9 @@ export const hasSessionKeysInStorage = async (
 };
 export const loadSessionKeysToStore = async (
   storeService: StoreService,
-  localStorageService: LocalStorageService
+  storageService: StorageService,
+  localStorageService: LocalStorageService,
+  sessionClient: SessionClient
 ): Promise<void> => {
   try {
     if (!hasSessionKeysInStorage(localStorageService)) {
@@ -117,7 +119,11 @@ export const loadSessionKeysToStore = async (
     storeService.dispatch(loadSessionKeys(keys as SessionKeys));
   } catch (error) {
     if (error.message.indexOf(DATA_TAMPERED_ERROR) > -1) {
-      localStorageService.getInstance().cleanAuthenticationKey();
+      void cleanRememberMeStorageData(
+        storeService,
+        storageService,
+        sessionClient
+      );
     }
     throw error;
   }

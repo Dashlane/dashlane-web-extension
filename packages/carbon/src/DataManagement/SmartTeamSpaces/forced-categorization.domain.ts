@@ -21,7 +21,7 @@ import {
 import { getBestUrl } from "DataManagement/Credentials/url";
 import { findAssociatedCredential } from "DataManagement/GeneratedPassword/associated-credential";
 import { getUserAddedLinkedWebsiteDomains } from "DataManagement/LinkedWebsites";
-const someFieldsMatchTeamDomains = (
+export const someFieldsMatchTeamDomains = (
   fields: string[],
   teamDomains: string[]
 ): boolean => {
@@ -98,7 +98,7 @@ export const ForceCategorizableKWTypes = [
   DataModelType.KWGeneratedPassword,
 ];
 export const pickBestTeamSpaceForForcedCategorizationForSharedItem = (
-  spaces: SpaceWithForceCategorization["details"][],
+  spaces: SpaceDetails[],
   item: PendingCredentialInvite
 ): ForceCategorizationTeamSpacePick | null => {
   const fields = getSharedItemFieldsForForcedCategorization(item);
@@ -106,7 +106,7 @@ export const pickBestTeamSpaceForForcedCategorizationForSharedItem = (
   return pickBestTeamSpace(spaces, fields, itemSpaceId);
 };
 export const pickBestTeamSpaceForForcedCategorization = (
-  spaces: SpaceWithForceCategorization["details"][],
+  spaces: SpaceDetails[],
   item: ForceCategorizable,
   credentials: Credential[]
 ): ForceCategorizationTeamSpacePick | null => {
@@ -116,18 +116,24 @@ export const pickBestTeamSpaceForForcedCategorization = (
     : getFieldsForForcedCategorization(item);
   return pickBestTeamSpace(spaces, fields, itemSpaceId);
 };
-const pickBestTeamSpace = (
-  spaces: SpaceWithForceCategorization["details"][],
+export type SpaceDetails = SpaceWithForceCategorization["details"];
+export const pickBestTeamSpace = (
+  spaces: SpaceDetails[],
   fields: string[],
   itemSpaceId: string
 ) => {
-  const domainsMatchingResults = spaces.reduce((acc, space) => {
-    const matchesDomains = someFieldsMatchTeamDomains(
-      fields,
-      space.info.teamDomains
-    );
-    return { ...acc, [space.teamId]: matchesDomains };
-  }, {});
+  const domainsMatchingResults = spaces.reduce(
+    (acc, space) => {
+      const matchesDomains = someFieldsMatchTeamDomains(
+        fields,
+        space.info.teamDomains
+      );
+      return { ...acc, [space.teamId]: matchesDomains };
+    },
+    {} as {
+      [spaceId: string]: boolean;
+    }
+  );
   const matchingSpaces = spaces.filter(
     (space) =>
       domainsMatchingResults[space.teamId] ||
@@ -153,10 +159,18 @@ const pickBestTeamSpace = (
     return null;
   }
   const bestMatchingSpace = orderedMatchingSpaces[0];
-  if (
+  const isItemAlreadyInNotQuarantinedBestMatchingSpace =
     bestMatchingSpace.teamId === itemSpaceId &&
-    !isTeamSpaceQuarantined(bestMatchingSpace)
-  ) {
+    !isTeamSpaceQuarantined(bestMatchingSpace);
+  const currentItemSpace: SpaceDetails | undefined = spaces.find(
+    (space) => space.teamId === itemSpaceId
+  );
+  const isItemAlreadyInAnotherActiveSpace =
+    currentItemSpace?.status === "accepted";
+  const isNoActionRequired =
+    isItemAlreadyInAnotherActiveSpace ||
+    isItemAlreadyInNotQuarantinedBestMatchingSpace;
+  if (isNoActionRequired) {
     return null;
   }
   return {

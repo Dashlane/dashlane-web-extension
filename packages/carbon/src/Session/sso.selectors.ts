@@ -1,7 +1,6 @@
 import { AuthenticationFlowContracts } from "@dashlane/authentication-contracts";
 import { createSelector } from "reselect";
 import { State } from "Store";
-import { activeSpacesSelector } from "Session/selectors";
 import { SSOSettingsData } from "@dashlane/communication";
 export const ssoSettingsSelector = (state: State): SSOSettingsData =>
   state.userSession.ssoSettings;
@@ -28,6 +27,5 @@ export const ssoProviderInfoSelector = createSelector(
   }
 );
 export const isSSOUserSelector = (state: State): boolean => {
-  const activeSpaces = activeSpacesSelector(state);
-  return (activeSpaces.length > 0 && activeSpaces[0].isSSOUser) || false;
+  return state.userSession.ssoSettings.ssoUser;
 };

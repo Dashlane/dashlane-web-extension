@@ -103,13 +103,10 @@ export interface ProposeMembersParams extends BaseParams {
   proposedMemberLogins: string[];
   force: boolean;
   origin?: string;
-  notificationOptions?:
-    | {
-        skipAccountCreationRequiredAlerts: true;
-      }
-    | {
-        skipAccountCreationRequiredAlerts: false;
-      };
+  notificationOptions?: {
+    skipAccountCreationRequiredAlerts?: boolean;
+    skipReproposals?: boolean;
+  };
 }
 export interface ProposeMembersResponse extends BaseResponse {
   content: {

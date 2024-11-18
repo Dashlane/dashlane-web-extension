@@ -56,11 +56,7 @@ export const importPersonalDataItems = async (
       dataType,
       items
     );
-    if (
-      dataType !== DataModelType.KWCollection &&
-      dataType !== DataModelType.KWSecureNoteCategory &&
-      dataType !== DataModelType.KWAuthCategory
-    ) {
+    if (dataType !== DataModelType.KWCollection) {
       importedItemCount += items.length;
     }
     if (dataType === DataModelType.KWAuthentifiant) {

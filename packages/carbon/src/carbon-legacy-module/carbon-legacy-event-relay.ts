@@ -15,6 +15,7 @@ export const LEGACY_LEELOO_EVENTS_TO_SUBSCRIBE: AllLeelooEvents[] = [
   "openSessionFailed",
   "openSessionSsoRedirectionToIdpRequired",
   "openSessionMasterPasswordLess",
+  "ssoSolutionChanged",
 ];
 export function relayLeelooLegacyEvents(
   eventInterface: CarbonLeelooEvents,

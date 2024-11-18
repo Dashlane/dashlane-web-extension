@@ -4,8 +4,6 @@ import {
   DataQuery,
   ListResults,
   Note,
-  NoteCategory,
-  NoteCategoryDetailView,
   NoteDetailView,
   NoteFilterField,
   NoteFilterToken,
@@ -46,7 +44,6 @@ import { noteMatch, NoteMatch } from "DataManagement/SecureNotes/search";
 import { getQuerySelector } from "DataManagement/query-selector";
 import { viewListResults } from "DataManagement/Search/views";
 import { makeLiveSelectorGetter } from "DataManagement/live-selector-getter";
-import { listView as noteCategoriesListView } from "DataManagement/SecureNotes/views/category";
 import { notesSelector } from "DataManagement/SecureNotes/selectors/notes.selector";
 const countNotes = (
   mappers: NoteMappers,
@@ -57,8 +54,6 @@ const countNotes = (
   const matching = filterData(mappers, noteMatch, filterToken, notes);
   return matching.length;
 };
-export const noteCategoriesSelector = (state: State): NoteCategory[] =>
-  state.userSession.personalData.noteCategories;
 export const noteSelector = (state: State, noteId: string): Note => {
   const notes = notesSelector(state);
   return findDataModelObject(noteId, notes);
@@ -71,8 +66,7 @@ export const viewedNoteSelector = (
   if (!note) {
     return undefined;
   }
-  const categories = noteCategoriesSelector(state);
-  return viewNote(note, categories);
+  return viewNote(note);
 };
 export const notesPageSelector = (
   state: State,
@@ -83,13 +77,12 @@ export const notesPageSelector = (
   const tokens = { sortToken, filterToken };
   const mappers = fieldMappersSelector(state);
   const notes = notesQuerySelector(state, tokens);
-  const listView = listViewSelector(state);
   const nextToken = generateNextToken(mappers, token, notes);
   const prevToken = generatePrevToken(mappers, token, notes);
   const batch = getBatch(mappers, token, notes);
   const nextTokenString = stringifyToken(nextToken);
   const prevTokenString = stringifyToken(prevToken);
-  const viewedBatch = listView(batch);
+  const viewedBatch = viewNotesBatch(batch);
   return {
     batch: viewedBatch,
     nextToken: nextTokenString,
@@ -109,15 +102,7 @@ export const notesPaginationTokenSelector = (
   const stringified = stringifyToken(token);
   return stringified;
 };
-export const viewedNoteCategoriesSelector = createSelector(
-  noteCategoriesSelector,
-  (categories): ListResults<NoteCategoryDetailView> => ({
-    items: noteCategoriesListView(categories),
-    matchingCount: categories.length,
-  })
-);
 export const fieldMappersSelector = createSelector(
-  noteCategoriesSelector,
   limitedSharingItemsSelector,
   getNoteMappers
 );
@@ -152,21 +137,11 @@ export const getViewedNotesBatchSelector = (
     getBatch
   );
   const optimizedBatchSelector = optimizeBatchSelector(batchSelector);
-  return createSelector(
-    optimizedBatchSelector,
-    noteCategoriesSelector,
-    viewNotesBatch
-  );
-};
-const listViewSelector = (
-  state: State
-): ((notes: Note[]) => NoteItemView[]) => {
-  const categories = noteCategoriesSelector(state);
-  return (notes: Note[]) => viewNotesBatch(notes, categories);
+  return createSelector(optimizedBatchSelector, viewNotesBatch);
 };
 export const getLiveNotesSelector = makeLiveSelectorGetter(
   notesSelector,
-  listViewSelector,
+  () => viewNotesBatch,
   noteMatchSelector,
   fieldMappersSelector
 );
@@ -174,7 +149,7 @@ export const getViewedNoteSelector = (noteId: string) => {
   const noteSelector = createSelector(notesSelector, (notes) =>
     findDataModelObject(noteId, notes)
   );
-  return createSelector(noteSelector, noteCategoriesSelector, viewNote);
+  return createSelector(noteSelector, viewNote);
 };
 export const queryNotesSelector = getQuerySelector(
   notesSelector,
@@ -186,8 +161,7 @@ export const viewedQueriedNotesSelector = (
   query: DataQuery<NoteSortField, NoteFilterField>
 ): ListResults<NoteItemView> => {
   const queryResults = queryNotesSelector(state, query);
-  const listView = listViewSelector(state);
-  return viewListResults(listView)(queryResults);
+  return viewListResults(viewNotesBatch)(queryResults);
 };
 export const notesCountSelector = createSelector(
   fieldMappersSelector,

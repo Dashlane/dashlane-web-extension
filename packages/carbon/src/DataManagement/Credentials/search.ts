@@ -1,24 +1,20 @@
-import { CredentialWithCategory, Match } from "@dashlane/communication";
+import { Credential, Match } from "@dashlane/communication";
 import { match } from "DataManagement/Search/match";
 import { stringProp } from "DataManagement/Search/utils";
 import {
   getDashlaneDefinedLinkedWebsites,
   getUserAddedLinkedWebsitesRootDomains,
 } from "DataManagement/LinkedWebsites";
-const getSearchGetters: () => ((
-  c: CredentialWithCategory
-) => string)[] = () => {
+const getSearchGetters: () => ((c: Credential) => string)[] = () => {
   return [
-    stringProp<CredentialWithCategory>("Email"),
-    stringProp<CredentialWithCategory>("Login"),
-    stringProp<CredentialWithCategory>("Title"),
-    stringProp<CredentialWithCategory>("Note"),
-    stringProp<CredentialWithCategory>("SecondaryLogin"),
-    (c: CredentialWithCategory) =>
-      getDashlaneDefinedLinkedWebsites(c.Url).join(" "),
-    (c: CredentialWithCategory) =>
-      getUserAddedLinkedWebsitesRootDomains(c).join(" "),
+    stringProp<Credential>("Email"),
+    stringProp<Credential>("Login"),
+    stringProp<Credential>("Title"),
+    stringProp<Credential>("Note"),
+    stringProp<Credential>("SecondaryLogin"),
+    (c: Credential) => getDashlaneDefinedLinkedWebsites(c.Url).join(" "),
+    (c: Credential) => getUserAddedLinkedWebsitesRootDomains(c).join(" "),
   ];
 };
-export type CredentialMatch = Match<CredentialWithCategory>;
+export type CredentialMatch = Match<Credential>;
 export const credentialMatcher: CredentialMatch = match(getSearchGetters());

@@ -25,7 +25,7 @@ export function getCredentialsExport(
     { headerKey: "note", dataKey: "Note" },
     { headerKey: "url", dataKey: "Url" },
     { headerKey: "category", dataKey: "Category" },
-    { headerKey: "otpSecret", dataKey: "OtpSecret" },
+    { headerKey: "otpUrl", dataKey: "OtpUrl" },
   ];
   const filterCredentialData = (credentials: Credential[]) => {
     return credentials.map((credential) => {
@@ -36,6 +36,11 @@ export function getCredentialsExport(
       ].filter((username) => username !== undefined && username !== "");
       const [usernameVal = "", usernameVal2 = "", usernameVal3 = ""] =
         validUsernames;
+      const otpUrl =
+        credential.OtpUrl ??
+        (credential.OtpSecret
+          ? `otpauth://totp/?secret=${credential.OtpSecret.toLowerCase()}&algorithm=SHA1&digits=6&period=30&lock=false`
+          : "");
       return metaData
         .map((data) => {
           const filteredValue = credential[data.dataKey] ?? "";
@@ -54,6 +59,8 @@ export function getCredentialsExport(
           } else if (data.dataKey === "Password") {
             const value = `${filteredValue}`;
             return handleSpecialCharacter(value);
+          } else if (data.dataKey === "OtpUrl") {
+            return handleSpecialCharacter(otpUrl);
           } else {
             const value = `${filteredValue}`;
             return handleSpecialCharacter(value);

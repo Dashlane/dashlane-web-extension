@@ -24,6 +24,8 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { updateTeamDeviceEncryptedConfig } from "../TeamDeviceEncryptedConfig/updateTeamDeviceEncryptedConfig";
 import { getUnixTime } from "date-fns";
+import { updateTeamSettings } from "TeamAdmin/Services/Settings/updateTeamSettings";
+import { triggerSsoSolutionChanged } from "Session/SessionCommunication";
 const generateUuidKeyPair = async (): Promise<{
   key: string;
   encryptionKeyUuid: string;
@@ -58,6 +60,11 @@ const generateAndSaveBasicConfig = async (
       error: teamDeviceAccountResponse.error,
     };
   }
+  await updateTeamSettings(services, {
+    ssoSolution: "self-hosted-saml",
+    provisioningSolution: "self-hosted-scim",
+  });
+  triggerSsoSolutionChanged("self-hosted-saml");
   const { encryptionKeyUuid, key: configEncryptionKey } =
     await generateUuidKeyPair();
   const configGenerator =

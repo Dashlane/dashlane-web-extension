@@ -4,7 +4,6 @@ import { NoteLiveQueries } from "DataManagement/SecureNotes/Api/live-queries";
 import {
   notesPageSelector,
   notesPaginationTokenSelector,
-  viewedNoteCategoriesSelector,
   viewedNoteSelector,
   viewedQueriedNotesSelector,
 } from "DataManagement/SecureNotes/selectors";
@@ -17,7 +16,6 @@ export const config: CommandQueryBusConfig<
   commands: {},
   queries: {
     getNote: { selector: viewedNoteSelector },
-    getNoteCategories: { selector: viewedNoteCategoriesSelector },
     getNotes: { selector: viewedQueriedNotesSelector },
     getNotesPage: { selector: notesPageSelector },
     getNotesPaginationToken: { selector: notesPaginationTokenSelector },

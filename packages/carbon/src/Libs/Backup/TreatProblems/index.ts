@@ -1,13 +1,13 @@
 import {
   BaseDataModelObject,
   DataModelObject,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
   TRANSACTION_TYPE_TO_DATAMODEL_TYPE,
   TransactionType,
   transactionTypes,
 } from "@dashlane/communication";
 import { difference, pluck } from "ramda";
 import { PersonalData } from "Session/Store/personalData/types";
-import dataTypes from "Session/Store/personalData/dataTypes";
 import { UploadChange } from "Libs/Backup/Upload/UploadChange";
 import { SyncSummary } from "Libs/WS/Backup/types";
 import {
@@ -28,13 +28,16 @@ function getMissingIdentifiersForType(
   summary: SyncSummary
 ): MissingObjectsFromSummary {
   const dataModelType = TRANSACTION_TYPE_TO_DATAMODEL_TYPE[transactionType];
-  if (!dataModelType || !dataTypes[dataModelType]) {
+  if (
+    !dataModelType ||
+    !DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[dataModelType]
+  ) {
     return {
       missingLocally: [],
       missingRemotely: [],
     };
   }
-  const type = dataTypes[dataModelType];
+  const type = DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[dataModelType];
   if (!state[type]) {
     return {
       missingLocally: [],

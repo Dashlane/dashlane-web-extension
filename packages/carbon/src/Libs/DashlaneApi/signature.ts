@@ -25,7 +25,12 @@ export const allowedUnsignedClientHeaders = [
   "user-agent",
   "accept-encoding",
 ];
-export const allowedUnsignedProxyHeaders = ["*****", "*****", "*****", "*****"];
+export const allowedUnsignedProxyHeaders = [
+  "__REDACTED__",
+  "__REDACTED__",
+  "__REDACTED__",
+  "__REDACTED__",
+];
 export const allowedUnsignedHeaders = [
   ...allowedUnsignedClientHeaders,
   ...allowedUnsignedProxyHeaders,

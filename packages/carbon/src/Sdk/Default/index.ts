@@ -102,6 +102,9 @@ export async function initCarbon(
       );
       throw error;
     }
+    console.log(
+      `[background/carbon] Done publishing lifecycle event coreServicesReady`
+    );
     loadFrequencyLists();
     if (options.plugins) {
       setPlugins(options.plugins);

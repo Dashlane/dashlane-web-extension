@@ -20,7 +20,7 @@ import {
   buildNoteObj,
   buildPaymentCardObj,
 } from "../utils";
-export const LAST_PASS_SECURE_NOTE_URL = "*****";
+export const LAST_PASS_SECURE_NOTE_URL = "__REDACTED__";
 export const enum LastPassNoteType {
   BankAccountType = "Bank Account",
   PaymentCardType = "Credit Card",

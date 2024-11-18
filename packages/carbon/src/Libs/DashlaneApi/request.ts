@@ -27,7 +27,7 @@ import {
   getApiCredentials,
 } from "Libs/DashlaneApi/credentials";
 import { config } from "config-service";
-import { getHeaders } from "Libs/Http/cloudflare-headers";
+import { _redacted_ } from "Libs/Http/cloudflare-headers";
 import { HttpRequestResponseTypes } from "Libs/Http/types";
 export function getMakeApiRequest<
   AuthType extends ApiAuthType,
@@ -39,56 +39,6 @@ export function getMakeApiRequest<
   responseType: HttpRequestResponseTypes,
   accept?: string
 ): MakeApiRequest<Method, AuthType> {
-  const makeApiRequest = async <
-    Payload extends {},
-    Success extends {},
-    Err extends string
-  >(
-    storeService: StoreService,
-    params?: ApiRequestParams<AuthType, Method, Payload>
-  ): Promise<ApiResponse<Success, Err>> => {
-    const defaults = {
-      login: "",
-      teamUuid: "",
-      payload: {} as Payload,
-      ...(params || {}),
-    };
-    const methodParams = getMethodParams<Payload>(method, defaults.payload);
-    const authParams = getAuthParams(authenticationType, {
-      login: defaults.login,
-      teamUuid: defaults.teamUuid,
-    });
-    const credentials = getApiCredentials(storeService.getState(), authParams);
-    const headers = {
-      Accept: accept ?? "application/json",
-      "Content-Type": "application/json; charset=UTF-8",
-      "dashlane-client-agent": getApiClientAgentHeader(getPlatformInfo()),
-    };
-    const signedHeaders = {
-      ...headers,
-      Host: new URL(config.DASHLANE_API_HOST_WITH_SCHEME).hostname,
-    };
-    const authorizationHeader = await getAuthorizationHeader(
-      storeService,
-      pathname,
-      credentials,
-      signedHeaders,
-      methodParams
-    );
-    const headersWithAuth = {
-      ...headers,
-      ...authorizationHeader,
-      ...getHeaders(),
-    };
-    const endpointUrl = `${config.DASHLANE_API_HOST_WITH_SCHEME}${pathname}`;
-    const { data } = await send<Payload, Success, Err>(
-      methodParams,
-      endpointUrl,
-      headersWithAuth,
-      responseType
-    );
-    return makeApiResponse(data);
-  };
   return makeApiRequest as MakeApiRequest<Method, AuthType>;
 }
 export interface ApiRawResponse<T, E extends string> {

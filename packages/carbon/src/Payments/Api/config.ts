@@ -9,7 +9,6 @@ import { cancelAutoRenew } from "Payments/handlers/cancel-auto-renew";
 import { fetchInvoiceList } from "Payments/handlers/fetch-invoice-list";
 import { PaymentsCommands } from "Payments/Api/commands";
 import { PaymentsQueries } from "Payments/Api/queries";
-import { requestRefund } from "Payments/handlers/request-refund";
 export const config: CommandQueryBusConfig<PaymentsCommands, PaymentsQueries> =
   {
     commands: {
@@ -21,9 +20,6 @@ export const config: CommandQueryBusConfig<PaymentsCommands, PaymentsQueries> =
       },
       fetchInvoiceList: {
         handler: fetchInvoiceList,
-      },
-      requestRefund: {
-        handler: requestRefund,
       },
     },
     queries: {

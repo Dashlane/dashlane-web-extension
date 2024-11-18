@@ -13,7 +13,6 @@ import type { ExportCommands } from "DataManagement/Export/Api/commands";
 import type { SettingsCommands } from "DataManagement/Settings/Api/commands";
 import type { ImportPersonalDataCommands } from "DataManagement/Import/Api/commands";
 import type { SecureFilesCommands } from "DataManagement/SecureFiles/Api/commands";
-import type { SecureNoteCategoryCommands } from "DataManagement/SecureNoteCategory/Api/commands";
 import type { VaultCommands } from "DataManagement/Vault/Api/commands";
 export type DataManagementCommands = VaultCommands &
   BreachCommands &
@@ -29,6 +28,5 @@ export type DataManagementCommands = VaultCommands &
   PassportCommands &
   PaymentCardCommands &
   SecureFilesCommands &
-  SecureNoteCategoryCommands &
   SettingsCommands &
   SocialSecurityIdCommands;

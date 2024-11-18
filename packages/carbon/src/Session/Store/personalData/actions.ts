@@ -3,7 +3,6 @@ import type {
   BreachesUpdaterStatus,
   DataModelType,
   GeneratedPassword,
-  NoteCategory,
   PaymentCard,
 } from "@dashlane/communication";
 import { Action } from "Store";
@@ -17,7 +16,6 @@ export const LOAD_STORED_PERSONAL_DATA =
 export const SAVE_GENERATED_PASSWORD = "PERSONAL_DATA/SAVE_GENERATED_PASSWORD";
 export const SAVE_PERSONAL_ITEM = "PERSONAL_DATA/SAVE_PERSONAL_ITEM";
 export const SAVE_PERSONAL_ITEMS = "PERSONAL_DATA/SAVE_PERSONAL_ITEMS";
-export const SAVE_NOTE_CATEGORY = "SAVE_NOTE_CATEGORY";
 export const SAVE_PAYMENT_CARD = "SAVE_PAYMENT_CARD";
 export const UPDATE_LAST_BACKUP_TIME = "UPDATE_LAST_BACKUP_TIME";
 export const BREACHES_UPDATED = "BREACHES_UPDATED";
@@ -90,12 +88,6 @@ export function saveGeneratedPassword(
   return {
     type: SAVE_GENERATED_PASSWORD,
     generatedPassword,
-  };
-}
-export function saveNoteCategory(noteCategory: NoteCategory): Action {
-  return {
-    type: SAVE_NOTE_CATEGORY,
-    noteCategory,
   };
 }
 export function deleteVaultModuleItem(payload: {

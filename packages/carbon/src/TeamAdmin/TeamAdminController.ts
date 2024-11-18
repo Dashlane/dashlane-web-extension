@@ -73,7 +73,8 @@ export interface TeamAdminController {
     renameUserGroupRequest: RenameUserGroupRequest
   ) => Promise<RenameUserGroupResult>;
   inviteUserGroupMembersAction: (
-    inviteMemberRequest: InviteUserGroupMembersRequest
+    inviteMemberRequest: InviteUserGroupMembersRequest,
+    skipReproposals?: boolean
   ) => Promise<InviteUserGroupMembersResult>;
   revokeUserGroupMembersAction: (
     revokeUserGroupMembersRequest: RevokeUserGroupMembersRequest
@@ -116,11 +117,12 @@ export const makeTeamAdminController = (
       deleteUserGroupAction(storeService, wsService, deleteUserGroupRequest),
     renameUserGroupAction: (renameUserGroupRequest) =>
       renameUserGroupAction(storeService, wsService, renameUserGroupRequest),
-    inviteUserGroupMembersAction: (inviteMemberRequest) =>
+    inviteUserGroupMembersAction: (inviteMemberRequest, skipReproposals) =>
       inviteUserGroupMembersAction(
         storeService,
         wsService,
-        inviteMemberRequest
+        inviteMemberRequest,
+        skipReproposals
       ),
     revokeUserGroupMembersAction: (revokeUserGroupMembersRequest) =>
       revokeUserGroupMembersAction(
@@ -346,7 +348,8 @@ function findUserGroupInState(storeService: StoreService, groupId: string) {
 function inviteUserGroupMembersAction(
   storeService: StoreService,
   wsService: WSService,
-  inviteMemberRequest: InviteUserGroupMembersRequest
+  inviteMemberRequest: InviteUserGroupMembersRequest,
+  skipReproposals?: boolean
 ): Promise<InviteUserGroupMembersResult> {
   if (!storeService.isAuthenticated()) {
     return emptySessionResponse(inviteMemberRequest);
@@ -369,7 +372,10 @@ function inviteUserGroupMembersAction(
       proposedMemberLogins: Object.keys(invitedUsersMap),
       teamId: inviteMemberRequest.teamId,
       origin: "teamInviteUserGroupUsers",
-      notificationOptions: { skipAccountCreationRequiredAlerts: true },
+      notificationOptions: {
+        skipAccountCreationRequiredAlerts: true,
+        skipReproposals,
+      },
     };
   return proposeMembers(storeService, wsService, proposeMemberRequest)
     .then((proposeMemberResult) => {

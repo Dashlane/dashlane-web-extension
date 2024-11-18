@@ -1,12 +1,12 @@
 import { Omit } from "utility-types";
 import {
   Credential,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
   DataModelType,
   Email,
   GeneratedPassword,
   Space,
 } from "@dashlane/communication";
-import dataTypes from "Session/Store/personalData/dataTypes";
 import { PersonalData } from "Session/Store/personalData/types";
 export type ForceCategorizable = Credential | Email | GeneratedPassword;
 export type ForceCategorizableKWType = Extract<
@@ -34,5 +34,6 @@ export interface SpaceWithForceCategorization extends Space {
     };
   };
 }
-export type PersonalDataItemTypeFromKWType<T extends keyof typeof dataTypes> =
-  PersonalData[(typeof dataTypes)[T]][number];
+export type PersonalDataItemTypeFromKWType<
+  T extends keyof typeof DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY
+> = PersonalData[(typeof DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY)[T]][number];

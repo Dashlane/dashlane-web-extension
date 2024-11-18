@@ -14,8 +14,8 @@ const ALARM_NAME = "killswitch-alarm";
 async function startSyncKillswitchTimerWithAlarm(storeService: StoreService) {
   const alarmAlreadyExists = await alarmsGet(ALARM_NAME);
   if (!alarmAlreadyExists) {
+    updateKillswitchState(storeService);
     alarmsCreate(ALARM_NAME, {
-      delayInMinutes: 1,
       periodInMinutes: syncKillswitchTimeIntervalInMin,
     });
   }

@@ -3,7 +3,6 @@ import {
   CredentialSortField,
 } from "@dashlane/communication";
 import { createSelector } from "reselect";
-import { credentialCategoriesSelector } from "DataManagement/Credentials/selectors/credential-categories.selector";
 import { credentialsQuerySelector } from "DataManagement/Credentials/selectors/credentials-query.selector";
 import { fieldMappersSelector } from "DataManagement/Credentials/selectors/field-mappers.selector";
 import { iconsSelector } from "DataManagement/Icons/selectors";
@@ -27,7 +26,6 @@ export const getViewedCredentialsBatchSelector = (
   const optimizedBatchSelector = optimizeBatchSelector(batchSelector);
   return createSelector(
     optimizedBatchSelector,
-    credentialCategoriesSelector,
     iconsSelector,
     viewCredentialsBatch
   );

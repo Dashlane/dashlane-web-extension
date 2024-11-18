@@ -1,6 +1,7 @@
 import {
   BaseDataModelObject,
   DataModelObject,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
   DataModelType,
   GeneratedPassword,
   PremiumStatus,
@@ -10,7 +11,6 @@ import { Action } from "Store";
 import { LocalSettings } from "Session/Store/localSettings/types";
 import { ChangeHistory } from "DataManagement/ChangeHistory";
 import { PersonalData } from "Session/Store/personalData/types";
-import dataTypes from "Session/Store/personalData/dataTypes";
 import {
   PersonalSettingsAction,
   PersonalSettingsActionType,
@@ -39,7 +39,7 @@ export function savePersonalDataItem(
 ): SavePersonalDataItemAction {
   return {
     type: SAVE_PERSONAL_ITEM,
-    dataType: dataTypes[kwType],
+    dataType: DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType],
     dataModelObject,
     changeHistory,
   };
@@ -56,7 +56,7 @@ export function savePersonalDataItems(
 ): SavePersonalDataItemsAction {
   return {
     type: SAVE_PERSONAL_ITEMS,
-    dataType: dataTypes[kwType],
+    dataType: DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType],
     dataModelObjects,
     changeHistory,
   };

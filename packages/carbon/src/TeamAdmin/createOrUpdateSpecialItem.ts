@@ -1,3 +1,4 @@
+import { Trigger } from "@dashlane/hermes";
 import { generateItemUuid } from "Utils/generateItemUuid";
 import { CoreServices } from "Services";
 import { ISharingServices } from "Sharing/2/Services";
@@ -8,14 +9,12 @@ import {
   adminDataForTeamSelector,
   currentTeamIdSelector,
 } from "TeamAdmin/Services/selectors";
-import { updateAdminDataAfterItemAddedOrUpdated } from "./updateAdminDataAfterItemAddedOrUpdated";
-import { updateSharingDataAfterItemAddedOrUpdated } from "./updateSharingDataAfterItemAddedOrUpdated";
 export const createOrUpdateSpecialItem = async <T>(
   services: CoreServices,
   sharingService: ISharingServices,
   dataToPersist: T
 ): Promise<T> => {
-  const { storeService, localStorageService } = services;
+  const { storeService, sessionService } = services;
   requireAdmin(storeService);
   const teamId = currentTeamIdSelector(storeService.getState());
   const adminData = adminDataForTeamSelector(storeService.getState(), teamId);
@@ -62,19 +61,6 @@ export const createOrUpdateSpecialItem = async <T>(
   if (!addedOrUpdatedItem) {
     throw new Error("unable to persist item");
   }
-  await updateAdminDataAfterItemAddedOrUpdated(
-    storeService,
-    localStorageService,
-    sharingService.ws,
-    currentUserInfo,
-    teamId,
-    itemAddedOrUpdatedResponse
-  );
-  await updateSharingDataAfterItemAddedOrUpdated(
-    services.storeService,
-    services.localStorageService,
-    addedOrUpdatedItem,
-    itemAddedOrUpdatedResponse.itemGroups[0]
-  );
+  await sessionService.getInstance().user.attemptSync(Trigger.SettingsChange);
   return dataToPersist;
 };

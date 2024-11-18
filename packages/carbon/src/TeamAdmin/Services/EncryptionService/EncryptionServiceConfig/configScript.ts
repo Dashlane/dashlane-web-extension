@@ -24,12 +24,7 @@ export const createAzureEncryptionServiceConfig = ({
 }: ConfigArguments): string => {
   const { host } = new URL(encryptionServiceEndpoint);
   const siteName = host.split(".").slice(0, -2).join(".");
-  return `{
-      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-      "contentVersion": "1.0.0.0",
-      "parameters": {
-        "siteName": {
-          "value": "${siteName}"
+  return `__REDACTED__${siteName}"
         },
         "servicePlanSku": {
           "value": "B1"

@@ -3,8 +3,6 @@ import {
   DownloadCustomerInvoiceRequest,
   DownloadCustomerInvoiceResult,
   GetInvoiceListResult,
-  RequestRefundRequest,
-  RequestRefundResult,
 } from "@dashlane/communication";
 import { Command } from "Shared/Api";
 export type PaymentsCommands = {
@@ -14,5 +12,4 @@ export type PaymentsCommands = {
     DownloadCustomerInvoiceResult
   >;
   fetchInvoiceList: Command<void, GetInvoiceListResult>;
-  requestRefund: Command<RequestRefundRequest, RequestRefundResult>;
 };

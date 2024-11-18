@@ -5,6 +5,7 @@ import {
   DataModelObject,
   EmbeddedAttachment,
   GeneratedPassword,
+  LegacyPasskey,
   LinkedWebsite,
   Note,
   Passkey,
@@ -322,7 +323,7 @@ export function fixPasskeyTypesFromTransaction(passkey: Passkey): Passkey {
     "Counter",
     "KeyAlgorithm",
   ];
-  const jsonProperties: (keyof Passkey)[] = ["PrivateKey"];
+  const jsonProperties: (keyof LegacyPasskey)[] = ["PrivateKey"];
   const stringProperties: (keyof Passkey)[] = [
     ...commonStringProperties,
     "CredentialId",

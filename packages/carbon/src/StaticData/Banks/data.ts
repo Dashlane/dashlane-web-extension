@@ -1777,8 +1777,8 @@ export const banks: BanksData = {
       code: "CORPORATIONBANK",
     },
     {
-      localizedString: "*****",
-      code: "*****",
+      localizedString: "__REDACTED__",
+      code: "__REDACTED__",
     },
     {
       localizedString: "Dena Bank",
@@ -2156,7 +2156,7 @@ export const banks: BanksData = {
       code: "NEDERLANDSEWATERSCHA",
     },
     {
-      localizedString: "*****",
+      localizedString: "__REDACTED__",
       code: "NETHERLANDSDEVELOPME",
     },
     {
@@ -2500,8 +2500,8 @@ export const banks: BanksData = {
       code: "DEUTSCHEBANK",
     },
     {
-      localizedString: "*****",
-      code: "*****",
+      localizedString: "__REDACTED__",
+      code: "__REDACTED__",
     },
     {
       localizedString: "EastWest Bank",
@@ -2718,8 +2718,8 @@ export const banks: BanksData = {
       code: "CITIBANK",
     },
     {
-      localizedString: "*****",
-      code: "*****",
+      localizedString: "__REDACTED__",
+      code: "__REDACTED__",
     },
     {
       localizedString: "HSBC",
@@ -3010,8 +3010,8 @@ export const banks: BanksData = {
       code: "SOFITASA",
     },
     {
-      localizedString: "*****",
-      code: "*****",
+      localizedString: "__REDACTED__",
+      code: "__REDACTED__",
     },
   ],
   [Country.ZA]: [

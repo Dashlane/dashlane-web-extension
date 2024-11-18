@@ -1,10 +1,5 @@
-import { curry } from "ramda";
-import { Credential, CredentialCategory, Space } from "@dashlane/communication";
+import { Credential, Space } from "@dashlane/communication";
 import { isCredentialSmartCategorized } from "DataManagement/Account/Spaces";
-export const getCategory = curry(
-  (categories: CredentialCategory[], categoryId: string) =>
-    categories.find((c) => c.Id === categoryId)
-);
 const getActiveSpacesWithForceCategorization = (spaces: Space[]) => {
   return spaces.filter(
     (space) =>

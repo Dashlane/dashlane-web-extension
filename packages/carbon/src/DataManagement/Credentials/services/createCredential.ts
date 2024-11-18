@@ -15,7 +15,7 @@ import {
   saveCredentialAsPersonalDataItem,
   UpdateCredentialServices,
 } from "./saveCredentialAsPersonalDataItem";
-import { getCategoryIdByName, getUrlFields } from "./helpers";
+import { getUrlFields } from "./helpers";
 import {
   computeAndSendCreatedCredentialActivityLog,
   shouldSendCreateOrModifiedCredentialActivityLog,
@@ -65,9 +65,7 @@ export async function createCredential<CreateModel>(
     request.login,
     request.secondaryLogin
   );
-  const personalData = storeService.getPersonalData();
   const platformInfo = storeService.getPlatformInfo();
-  const category = getCategoryIdByName(personalData, request.category);
   const Password = defaultTo("", request.password);
   const SpaceId = defaultTo(defaultSpaceId, request.spaceId);
   const Strength = Password ? await evaluatePasswordStrength(Password) : 0;
@@ -84,7 +82,6 @@ export async function createCredential<CreateModel>(
     Password,
     Strength,
     Status: "ACCOUNT_NOT_VERIFIED",
-    Category: category,
     SpaceId,
     AutoLogin: request.autoLogin ?? true,
     ...urlFields,

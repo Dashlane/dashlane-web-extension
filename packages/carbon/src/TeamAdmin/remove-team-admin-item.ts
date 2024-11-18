@@ -2,17 +2,17 @@ import { CoreServices } from "Services";
 import { makeSharingService } from "Sharing/2/Services";
 import { getCurrentUserInfo } from "Session/utils";
 import { AdminData } from "Session/Store/teamAdminData";
-import { updateDataAfterSpecialItemRemoved } from "./update-data-after-special-item-removed";
 import {
   adminDataForTeamSelector,
   currentTeamIdSelector,
 } from "TeamAdmin/Services/selectors";
+import { Trigger } from "@dashlane/hermes";
 type SupportedRemovals = Extract<
   keyof AdminData,
   "adminProvisioningKey" | "encryptionServiceData" | "ssoConnectorKey"
 >;
 export const removeTeamAdminItem = async (
-  { storeService, localStorageService, wsService }: CoreServices,
+  { storeService, sessionService, wsService }: CoreServices,
   itemPropertyKey: SupportedRemovals
 ): Promise<{
   success: true;
@@ -40,20 +40,13 @@ export const removeTeamAdminItem = async (
   const removeItemsEvent = await item.makeRemoveItemsEvent(groupId, revision, [
     itemId,
   ]);
-  const itemGroupResponse = await item.removeItems(
+  await item.removeItems(
     ws,
     currentUserInfo.login,
     currentUserInfo.uki,
     removeItemsEvent
   );
-  await updateDataAfterSpecialItemRemoved(
-    storeService,
-    localStorageService,
-    sharingService.ws,
-    currentUserInfo,
-    itemGroupResponse,
-    removeItemsEvent
-  );
+  await sessionService.getInstance().user.attemptSync(Trigger.SettingsChange);
   return {
     success: true,
   };

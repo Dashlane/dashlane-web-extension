@@ -33,7 +33,7 @@ export function filterOutInvalidUserGroupUsers(
 }
 function filterOutInvalidUsers(
   crypto: ICryptoService,
-  groupKey: string,
+  groupKey: string | null,
   users: UserDownload[]
 ): Promise<UserDownload[]> {
   const userValidationPromises: Promise<boolean>[] = users.map((user) => {
@@ -41,6 +41,9 @@ function filterOutInvalidUsers(
       return Promise.resolve(true);
     }
     if (!user.proposeSignature) {
+      return Promise.resolve(false);
+    }
+    if (groupKey === null) {
       return Promise.resolve(false);
     }
     const contentToSign = user.proposeSignatureUsingAlias

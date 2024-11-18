@@ -3,7 +3,6 @@ import { defaultTo, equals, isNil, pick } from "ramda";
 import { Enum } from "typescript-string-enums";
 import {
   type Credential,
-  type CredentialCategory,
   type CredentialDetailView,
   type DataModelObject,
   SaveOrigin,
@@ -39,10 +38,7 @@ import { PersonalData } from "Session/Store/personalData/types";
 import { detailView } from "DataManagement/Credentials/views/detail";
 import { IconDomains } from "Session/Store/Icons";
 import { getSharingStatusDetail } from "Sharing/2/Services/views";
-import {
-  getCategory,
-  getSmartCategorizedSpace,
-} from "DataManagement/SmartTeamSpaces/helpers";
+import { getSmartCategorizedSpace } from "DataManagement/SmartTeamSpaces/helpers";
 import {
   SaveCredential,
   SaveCredentialContent,
@@ -356,7 +352,6 @@ export function viewCredential(
   limitedSharedItems: {
     [id: string]: boolean;
   },
-  categories: CredentialCategory[],
   icons: IconDomains,
   spaces: Space[]
 ): CredentialDetailView | undefined {
@@ -369,12 +364,10 @@ export function viewCredential(
     userId
   );
   const getIconById = getIcon(icons);
-  const getCategoryById = getCategory(categories);
   const getSmartCategorizedSpaceForCredential =
     getSmartCategorizedSpace(spaces);
   return detailView(
     getSharingStatusById,
-    getCategoryById,
     getIconById,
     getSmartCategorizedSpaceForCredential,
     credential

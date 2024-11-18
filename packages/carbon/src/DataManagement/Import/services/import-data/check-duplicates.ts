@@ -2,19 +2,18 @@ import { isEmpty } from "ramda";
 import {
   Address,
   BankAccount,
+  CloudPasskey,
   Collection,
   Company,
   Credential,
-  CredentialCategory,
   DataModelObject,
   DataModelType,
   DriverLicense,
   Email,
   IdCard,
   Identity,
+  LegacyPasskey,
   Note,
-  NoteCategory,
-  Passkey,
   Passport,
   PaymentCard,
   PersonalWebsite,
@@ -115,7 +114,8 @@ const uniqueIdentityKeys: UniqueIdentifierKeyObject<Identity> = {
   BirthDate: true,
   BirthPlace: true,
 };
-const uniquePassKeyKeys: UniqueIdentifierKeyObject<Passkey> = {
+const uniquePassKeyKeys: UniqueIdentifierKeyObject<CloudPasskey> &
+  UniqueIdentifierKeyObject<LegacyPasskey> = {
   ...sharedDataModelProperties,
   Counter: false,
   CredentialId: true,
@@ -123,6 +123,7 @@ const uniquePassKeyKeys: UniqueIdentifierKeyObject<Passkey> = {
   KeyAlgorithm: true,
   Note: true,
   PrivateKey: true,
+  CloudCipheringKey: true,
   RpId: true,
   RpName: true,
   UserDisplayName: true,
@@ -214,20 +215,11 @@ const uniqueCollectionKeys: UniqueIdentifierKeyObject<Collection> = {
   Name: true,
   VaultItems: true,
 };
-const uniqueAuthCategoryKeys: UniqueIdentifierKeyObject<CredentialCategory> = {
-  Attachments: false,
-  CategoryName: true,
-};
-const uniqueSecureNoteCategoryKeys: UniqueIdentifierKeyObject<NoteCategory> = {
-  Attachments: false,
-  CategoryName: true,
-};
 const getUniqueKeysFromObject = (object: Record<string, boolean>) => {
   return Object.keys(object).filter((key) => !!object[key]);
 };
 const KW_TYPE_TO_UNIQUE_KEYS: Record<DataModelType, string[]> = {
   KWAddress: getUniqueKeysFromObject(uniqueAddressKeys),
-  KWAuthCategory: getUniqueKeysFromObject(uniqueAuthCategoryKeys),
   KWAuthentifiant: getUniqueKeysFromObject(uniqueCredentialKeys),
   KWBankStatement: getUniqueKeysFromObject(uniqueBankAccountKeys),
   KWCollection: getUniqueKeysFromObject(uniqueCollectionKeys),
@@ -254,7 +246,6 @@ const KW_TYPE_TO_UNIQUE_KEYS: Record<DataModelType, string[]> = {
   KWSecureFileInfo: [],
   KWSecret: getUniqueKeysFromObject(uniqueSecretKeys),
   KWSecureNote: getUniqueKeysFromObject(uniqueSecureNoteKeys),
-  KWSecureNoteCategory: getUniqueKeysFromObject(uniqueSecureNoteCategoryKeys),
   KWSecurityBreach: [],
   KWSettingsManagerApp: [],
   KWSocialSecurityStatement: [],

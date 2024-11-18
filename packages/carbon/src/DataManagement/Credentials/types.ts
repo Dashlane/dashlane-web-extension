@@ -1,7 +1,7 @@
 import {
+  Credential,
   CredentialFilterField,
   CredentialSortField,
-  CredentialWithCategory,
   Mappers,
   SaveCredentialContentCapture,
   SaveCredentialContentUI,
@@ -20,7 +20,7 @@ export type SaveCredentialContentKeys =
   | keyof SaveCredentialContentUI
   | keyof SaveCredentialContentCapture;
 export type CredentialMappers = Mappers<
-  CredentialWithCategory,
+  Credential,
   CredentialSortField,
   CredentialFilterField
 >;

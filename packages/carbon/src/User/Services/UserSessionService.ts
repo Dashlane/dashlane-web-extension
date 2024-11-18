@@ -515,6 +515,237 @@ const errorLogger = (task: string): Logger => {
       message: `[Crypto] unable to ${task}. ErrorMessage: ${error}`,
     });
 };
+const loadSessionData = async (
+  localStorageService: LocalStorageService,
+  storeService: StoreService
+): Promise<void> => {
+  const personalDataPromise = localStorageService
+    .getInstance()
+    .getPersonalData()
+    .then((personalData) => {
+      Debugger.log("Personal data has been deciphered successfully");
+      return personalData;
+    })
+    .catch((error) => {
+      void sendExceptionLog({
+        message: `[Crypto] unable to loadPersonalData. ErrorMessage: ${error}`,
+      });
+      return getEmptyPersonalDataState();
+    });
+  const localSettingsPromise = localStorageService
+    .getInstance()
+    .getLocalSettings()
+    .then((localSettings) => {
+      Debugger.log("Local settings have been deciphered successfully");
+      return localSettings;
+    })
+    .catch((error) => ({
+      error: true,
+      logError: () => errorLogger("loadLocalSettings")(error),
+    }));
+  const personalSettingsPromise = localStorageService
+    .getInstance()
+    .getPersonalSettings()
+    .then((personalSettings) => {
+      Debugger.log("Personal settings have been deciphered successfully");
+      return personalSettings;
+    })
+    .catch((error) => ({
+      error: true,
+      logError: () => errorLogger("loadPersonalSettings")(error),
+    }));
+  const notificationsStatusPromise = localStorageService
+    .getInstance()
+    .doesNotificationStatusExist()
+    .then((doesNotificationStatusExist) => {
+      if (doesNotificationStatusExist) {
+        localStorageService
+          .getInstance()
+          .getNotificationStatus()
+          .then((notificationsStatus) => {
+            Debugger.log(
+              "Notifications status have been deciphered successfully"
+            );
+            storeService.dispatch(loadNotificationsStatus(notificationsStatus));
+            return notificationsStatus;
+          })
+          .catch((error) => ({
+            error: true,
+            logError: () => errorLogger("loadNotificationsStatus")(error),
+          }));
+      }
+    });
+  const userABTestsPromise = localStorageService
+    .getInstance()
+    .getUserABTests()
+    .then((abTests) => {
+      Debugger.log("User AB tests have been deciphered successfully");
+      return abTests;
+    })
+    .catch((error) => ({
+      error: true,
+      logError: () => errorLogger("loadUserABTests")(error),
+    }));
+  const analyticsIdsPromise = localStorageService
+    .getInstance()
+    .getAnalyticsIds()
+    .then((analyticsIds) => {
+      logInfo({
+        message: "User Analytics IDs have been deciphered successfully",
+      });
+      return analyticsIds;
+    })
+    .catch((error) => ({
+      error: true,
+      logError: () => errorLogger("loadAnalticsIds")(error),
+    }));
+  const loadAuthenticationDataPromise = loadUserAuthenticationData(
+    localStorageService,
+    storeService
+  );
+  const mainDataPromises = [
+    personalDataPromise,
+    localSettingsPromise,
+    personalSettingsPromise,
+  ] as Array<Promise<any>>;
+  if (await localStorageService.getInstance().hasAuthenticationData()) {
+    const authenticationDataPromise = loadAuthenticationDataPromise.then(
+      (result) => {
+        return !isLoadAuthenticationSuccess(result) &&
+          result.message !== FailedToRehydrateAuthenticationData
+          ? {
+              error: true,
+              logError: () =>
+                errorLogger("loadAuthenticationData")(result.error),
+            }
+          : { error: false };
+      }
+    );
+    mainDataPromises.push(authenticationDataPromise);
+  }
+  const mainResults = await Promise.all(mainDataPromises);
+  const isWrongMasterPassword = mainResults.every((res) => !!res && res.error);
+  const hasTamperedData = mainResults.some((res) => !!res && res.error);
+  if (isWrongMasterPassword) {
+    throw new Error(AuthenticationCode[AuthenticationCode.WRONG_PASSWORD]);
+  }
+  if (hasTamperedData) {
+    mainResults.forEach(
+      (res) => !!res && res.logError instanceof Function && res.logError()
+    );
+    throw new Error(AuthenticationCode[AuthenticationCode.DATA_TAMPERED_ERROR]);
+  }
+  try {
+    storeService.dispatch(
+      loadStoredPersonalData((await personalDataPromise) as PersonalData)
+    );
+    const localSettings = (await localSettingsPromise) as LocalSettings;
+    if (localSettings) {
+      const settings = localSettingsUpdated(localSettings);
+      storeService.dispatch(settings);
+      SessionCommunication.sendWebOnboardingModeUpdate(
+        localSettings.webOnboardingMode
+      );
+    }
+    storeService.dispatch(
+      loadStoredPersonalSettings(
+        (await personalSettingsPromise) as PersonalSettings
+      )
+    );
+    storeService.dispatch(
+      loadedStoredUserABTests((await userABTestsPromise) as UserABTests)
+    );
+    storeService.dispatch(
+      loadAnalyticsIds((await analyticsIdsPromise) as AnalyticsIds)
+    );
+    await loadAuthenticationDataPromise.then((result) => {
+      if (!isLoadAuthenticationSuccess(result)) {
+        throw result.error;
+      }
+    });
+  } catch (error) {
+    const errorMessage = `An error occurred when trying to write personalData, localSettings or personalSettings in Redux store ${error} `;
+    Debugger.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+  const loadSharingDataPromise = localStorageService
+    .getInstance()
+    .getSharingData()
+    .then((data) => {
+      Debugger.log(
+        `sharingData loaded for ${storeService.getAccountInfo().login}`
+      );
+      storeService.dispatch(sharingDataUpdated(data));
+    })
+    .catch(errorLogger("loadSharingDataPromise"));
+  const loadSharingSyncPromise = localStorageService
+    .getInstance()
+    .getSharingSync()
+    .then((data) => {
+      Debugger.log(
+        `sharingSync loaded for ${storeService.getAccountInfo().login}`
+      );
+      storeService.dispatch(
+        setAllPendingAction(data.pendingItemGroups, data.pendingUserGroups)
+      );
+    })
+    .catch(errorLogger("loadSharingSyncPromise"));
+  const loadTeamAdminDataPromise = localStorageService
+    .getInstance()
+    .getTeamAdminData()
+    .then((data) => {
+      Debugger.log(
+        `teamAdminData loaded for ${storeService.getAccountInfo().login}`
+      );
+      storeService.dispatch(teamAdminDataUpdated(data));
+    })
+    .catch(errorLogger("loadTeamAdminDataPromise"));
+  const loadIconsPromise = localStorageService
+    .getInstance()
+    .getIcons()
+    .then((icons) => {
+      if (icons !== null) {
+        const action = IconsCacheLoaded(icons);
+        storeService.dispatch(action);
+      }
+    })
+    .catch(errorLogger("loadIconsDataPromise"));
+  const loadUserActivityPromise = localStorageService
+    .getInstance()
+    .doesUserActivityExist()
+    .then(async (exist) => {
+      if (exist) {
+        const { lastSentAt } = await localStorageService
+          .getInstance()
+          .getUserActivity();
+        storeService.dispatch(userActivityLastSentAtUpdated(lastSentAt));
+      }
+    })
+    .catch(errorLogger("loadUserActivity"));
+  const loadVaultReportPromise = localStorageService
+    .getInstance()
+    .doesVaultReportExist()
+    .then(async (exist) => {
+      if (exist) {
+        const { lastSentAt } = await localStorageService
+          .getInstance()
+          .getVaultReport();
+        storeService.dispatch(vaultReportLastSentAtUpdated(lastSentAt));
+      }
+    })
+    .catch(errorLogger("loadVaultReport"));
+  return Promise.resolve().then(() => {
+    Promise.all([
+      loadSharingDataPromise,
+      loadSharingSyncPromise,
+      loadTeamAdminDataPromise,
+      notificationsStatusPromise,
+      loadIconsPromise,
+      loadUserActivityPromise,
+      loadVaultReportPromise,
+    ]);
+  });
+};
 const loadNonResumableSessionData = async (
   localStorageService: LocalStorageService,
   storeService: StoreService
@@ -1234,6 +1465,69 @@ const persistTeamAdminData = (
     .getInstance()
     .storeTeamAdminData(teamAdminData)
     .then(() => {});
+};
+const persistAllData = async (
+  localStorageService: LocalStorageService,
+  storeService: StoreService
+): Promise<void> => {
+  const abTests = userABTestsSelector(storeService.getState());
+  const localSettings = storeService.getLocalSettings();
+  const personalSettings = storeService.getPersonalSettings();
+  const sharingData = storeService.getSharingData();
+  const sharingSync = sharingSyncSelector(storeService.getState());
+  const accountInfo = storeService.getAccountInfo();
+  const notificationsStatus = storeService.getNotificationStatus();
+  const teamAdminData = storeService.getTeamAdminData();
+  const state = storeService.getState();
+  const authenticationKeys = sessionKeysSelector(state);
+  const analyticsIds = analyticsIdsSelector(state);
+  const storeAuthenticationKeysPromise = () =>
+    authenticationKeys
+      ? localStorageService
+          .getInstance()
+          .storeAuthenticationKeys(authenticationKeys)
+      : Promise.resolve();
+  if (shouldNotPersistData(accountInfo) || !accountInfo.isAuthenticated) {
+    return Promise.resolve();
+  }
+  if (isNaN(localSettings.lastSync)) {
+    sendExceptionLog({
+      message: "Persisting localSettings with a NaN lastSyncTimestamp",
+      code: ExceptionCriticality.WARNING,
+    });
+  }
+  const teams = teamAdminData?.teams ?? {};
+  const specialItemGroupItemIds = Object.keys(teams).reduce((acc, teamId) => {
+    const team = teamAdminData.teams[teamId];
+    const ids = team.specialItemGroup
+      ? (team.specialItemGroup.items || []).map((i) => i.itemId)
+      : [];
+    return acc.concat(ids);
+  }, []);
+  const sharingDataLight: SharingData = {
+    ...sharingData,
+    items: sharingData.items.map((item) => {
+      if (!item.content || specialItemGroupItemIds.includes(item.itemId)) {
+        return item;
+      }
+      return { ...item, content: "" };
+    }),
+  };
+  await Promise.all([
+    persistPersonalData(localStorageService, storeService),
+    persistLocalSettings(localStorageService, storeService),
+    localStorageService.getInstance().storePersonalSettings(personalSettings),
+    localStorageService.getInstance().storeSharingData(sharingDataLight),
+    localStorageService.getInstance().storeSharingSync(sharingSync),
+    localStorageService
+      .getInstance()
+      .storeNotificationsStatus(notificationsStatus),
+    storeAuthenticationKeysPromise(),
+    localStorageService.getInstance().storeTeamAdminData(teamAdminData),
+    persistUserAuthenticationData(localStorageService, storeService),
+    localStorageService.getInstance().storeUserABTests(abTests),
+    localStorageService.getInstance().storeAnalyticsIds(analyticsIds),
+  ]);
 };
 const refreshContactInfo = async (
   storeService: StoreService,

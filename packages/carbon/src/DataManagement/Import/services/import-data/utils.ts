@@ -39,7 +39,6 @@ export const convertImportable = (
 export const prepareCredentialForImport = async (base: Credential) => {
   return {
     ...base,
-    Category: "",
     Strength: base.Password ? await evaluatePasswordStrength(base.Password) : 0,
   };
 };
@@ -54,7 +53,6 @@ export const prepareSecureNoteForImport = (base: Note): Note => {
     Title:
       base.Title ?? `Untitled - ${secureNoteCreationDate.toLocaleString()}`,
     Content: base.Content ?? "",
-    Category: base.Category ?? "noCategory",
     Secured: base.Secured ?? false,
     Type: NoteTypes.includes(base.Type) ? base.Type : "GRAY",
     Attachments: base.Attachments ?? [],

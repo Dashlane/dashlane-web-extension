@@ -21,9 +21,9 @@ export interface CarbonConfig extends DashlaneAPISchemes {
 const defaultConfig: CarbonConfig = {
   LOG_LEVEL: Silent,
   LOG_TAGS: [],
-  DASHLANE_API_HOST_WITH_SCHEME: "*****",
-  DASHLANE_WS_HOST_WITH_SCHEME: "*****",
-  DASHLANE_STYX_HOST_WITH_SCHEME: "*****",
+  DASHLANE_API_HOST_WITH_SCHEME: "__REDACTED__",
+  DASHLANE_WS_HOST_WITH_SCHEME: "__REDACTED__",
+  DASHLANE_STYX_HOST_WITH_SCHEME: "__REDACTED__",
   CODE_NAME: null,
   MANIFEST_VERSION: null,
 };

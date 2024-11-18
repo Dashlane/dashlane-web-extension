@@ -5,7 +5,6 @@ import { credentialsCountSelector } from "DataManagement/Credentials/selectors/c
 import { credentialsPageSelector } from "DataManagement/Credentials/selectors/credentials-page.selector";
 import { credentialsPaginationTokenSelector } from "DataManagement/Credentials/selectors/credentials-pagination-token.selector";
 import { shouldShowRequireMasterPasswordSelector } from "DataManagement/Credentials/selectors/get-should-show-require-master-password-selector";
-import { viewedCredentialCategoriesSelector } from "DataManagement/Credentials/selectors/credential-categories.selector";
 import { viewedCredentialSelector } from "DataManagement/Credentials/selectors/viewed-credential.selector";
 import { viewedQueriedCredentialsSelector } from "DataManagement/Credentials/selectors/viewed-queried-credentials.selector";
 import { viewedQueriedCredentialsByDomainSelector } from "DataManagement/Credentials/selectors/viewed-credentials-by-domain.selector";
@@ -34,9 +33,6 @@ export const config: CommandQueryBusConfig<
   },
   queries: {
     getCredential: { selector: viewedCredentialSelector },
-    getCredentialCategories: {
-      selector: viewedCredentialCategoriesSelector,
-    },
     getCredentials: { selector: viewedQueriedCredentialsSelector },
     getCredentialsByDomain: {
       selector: viewedQueriedCredentialsByDomainSelector,

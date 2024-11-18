@@ -2,31 +2,6 @@ import { SecureFileResultErrorCode } from "@dashlane/communication";
 import { _makeRequest } from "Libs/WS/request";
 const WSVERSION = 1;
 const WSNAME = "securefile";
-interface WSSecureFileGetDownloadLinkRequest {
-  login: string;
-  uki: string;
-  key: string;
-}
-interface WSSecureFileGetDownloadLinkResultError {
-  code: 400;
-}
-interface WSSecureFileGetDownloadLinkResultSuccess {
-  code: 200;
-  content: {
-    url: string;
-  };
-}
-export type WSSecureFileGetDownloadLinkResult =
-  | WSSecureFileGetDownloadLinkResultSuccess
-  | WSSecureFileGetDownloadLinkResultError;
-function wsSecureFileGetDownloadLink(
-  params: WSSecureFileGetDownloadLinkRequest
-): Promise<WSSecureFileGetDownloadLinkResult> {
-  return _makeRequest<
-    WSSecureFileGetDownloadLinkResult,
-    WSSecureFileGetDownloadLinkRequest
-  >(WSNAME, WSVERSION, "getDownloadLink", params);
-}
 interface WSSecureFileDeleteRequest {
   login: string;
   uki: string;
@@ -127,9 +102,6 @@ function wsSecureFileCommit(
   );
 }
 export interface WSSecureFile {
-  getDownloadLink: (
-    params: WSSecureFileGetDownloadLinkRequest
-  ) => Promise<WSSecureFileGetDownloadLinkResult>;
   getUploadLink: (
     params: WSSecureFileGetUploadLinkRequest
   ) => Promise<WSSecureFileGetUploadLinkResult>;
@@ -142,7 +114,6 @@ export interface WSSecureFile {
 }
 export const makeWSSecureFile = (): WSSecureFile => {
   return {
-    getDownloadLink: wsSecureFileGetDownloadLink,
     getUploadLink: wsSecureFileGetUploadLink,
     commit: wsSecureFileCommit,
     delete: wsSecureFileDelete,

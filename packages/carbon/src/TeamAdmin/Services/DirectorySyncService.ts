@@ -43,15 +43,14 @@ import { ISharingServices } from "Sharing/2/Services";
 import leeloo from "Connector/CarbonLeelooConnector";
 import { JsonWebPublicKey } from "Libs/CryptoCenter";
 import { ItemGroupResponse } from "Libs/WS/Sharing/2/PerformItemGroupAction";
-import { LocalStorageService } from "Libs/Storage/Local/types";
 import { loadSpecialItemGroup } from "TeamAdmin/Services/UserGroupManagementSetupService/teamAdminData";
 import { ukiSelector } from "Authentication/selectors";
-import { updateAdminDataAfterItemAddedOrUpdated } from "TeamAdmin/updateAdminDataAfterItemAddedOrUpdated";
+import { Trigger } from "@dashlane/hermes";
 const base64 = require("base-64");
 export async function saveDirectorySyncKey(
   sharingService: ISharingServices,
   storeService: StoreService,
-  localStorageService: LocalStorageService,
+  sessionService: SessionService,
   currentUserInfo: CurrentUserInfo,
   adminData: AdminData,
   teamId: string,
@@ -59,7 +58,9 @@ export async function saveDirectorySyncKey(
 ): Promise<void> {
   return addKey().catch(handleSharingError);
   function addKey(): Promise<void> {
-    return shareDirectorySyncKey().then(updateAdminData);
+    return shareDirectorySyncKey().then(() => {
+      sessionService.getInstance().user.attemptSync(Trigger.SettingsChange);
+    });
   }
   async function shareDirectorySyncKey(): Promise<ItemGroupResponse> {
     const addItemsEvent = await makeAddItemsEvent();
@@ -69,16 +70,6 @@ export async function saveDirectorySyncKey(
       currentUserInfo.uki,
       addItemsEvent
     );
-  }
-  async function updateAdminData(response: ItemGroupResponse): Promise<void> {
-    return updateAdminDataAfterItemAddedOrUpdated(
-      storeService,
-      localStorageService,
-      sharingService.ws,
-      currentUserInfo,
-      teamId,
-      response
-    ).then(() => {});
   }
   function handleSharingError(error: Error): Promise<void> {
     if (error.message === "Bad Request (ITEM_GROUP_UPDATE_CONFLICT)") {
@@ -430,7 +421,10 @@ export function directorySyncForTeam(
       users: usersToInvite.map(makeUserInvite),
       teamId: Number(teamId),
     };
-    return teamAdminController.inviteUserGroupMembersAction(invitesRequest);
+    return teamAdminController.inviteUserGroupMembersAction(
+      invitesRequest,
+      true
+    );
   }
   function revokeGroupMembers(
     currentGroup: UserGroupDownload,

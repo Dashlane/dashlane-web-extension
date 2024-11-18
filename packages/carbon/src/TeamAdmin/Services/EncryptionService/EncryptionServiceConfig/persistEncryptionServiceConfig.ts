@@ -1,3 +1,6 @@
+import { firstValueFrom } from "rxjs";
+import { SharingSyncFeatureFlips } from "@dashlane/sharing-contracts";
+import { getSuccess, isSuccess } from "@dashlane/framework-types";
 import {
   BasicConfig,
   PersistEncryptionServiceConfigFailure,
@@ -18,9 +21,8 @@ import {
   adminDataForTeamSelector,
   currentTeamIdSelector,
 } from "TeamAdmin/Services/selectors";
-import { updateAdminDataAfterItemAddedOrUpdated } from "TeamAdmin/updateAdminDataAfterItemAddedOrUpdated";
-import { updateSharingDataAfterItemAddedOrUpdated } from "TeamAdmin/updateSharingDataAfterItemAddedOrUpdated";
 import { requireAdmin } from "../requireAdmin";
+import { Trigger } from "@dashlane/hermes";
 const makeError = (): PersistEncryptionServiceConfigFailure => ({
   success: false,
   error: {
@@ -66,7 +68,7 @@ const updateEncryptionServiceConfig = async (
   newData: BasicConfig,
   currentData: BasicConfig
 ): Promise<BasicConfig> => {
-  const { storeService, localStorageService } = services;
+  const { storeService, sessionService, applicationModulesAccess } = services;
   const { crypto, item, ws } = sharingService;
   const { specialItemGroup } = adminData;
   if (!specialItemGroup) {
@@ -77,11 +79,36 @@ const updateEncryptionServiceConfig = async (
     encryptionServiceData,
   } = adminData;
   const { itemId } = encryptionServiceData;
-  const sharingData = storeService.getSharingData();
-  const { timestamp } = (sharingData.items ?? []).find(
-    ({ itemId: storedItemId }) => storedItemId === itemId
+  let specialItemTimestamp;
+  const { userFeatureFlip } =
+    applicationModulesAccess.createClients().featureFlips.queries;
+  const featureFlipResult = await firstValueFrom(
+    userFeatureFlip({
+      featureFlip: SharingSyncFeatureFlips.SharingSyncGrapheneMigrationDev,
+    })
   );
-  if (!timestamp) {
+  const sharingSyncInGrapheneEnabled = isSuccess(featureFlipResult)
+    ? getSuccess(featureFlipResult)
+    : false;
+  if (sharingSyncInGrapheneEnabled) {
+    const { getTeamAdminSharingData } =
+      applicationModulesAccess.createClients().sharingSync.queries;
+    const teamAdminDataResult = await firstValueFrom(getTeamAdminSharingData());
+    if (isSuccess(teamAdminDataResult)) {
+      const { specialItems } = getSuccess(teamAdminDataResult);
+      if (specialItems && specialItems[itemId]) {
+        const { timestamp } = specialItems[itemId];
+        specialItemTimestamp = timestamp;
+      }
+    }
+  } else {
+    const sharingData = storeService.getSharingData();
+    const { timestamp } = (sharingData.items ?? []).find(
+      ({ itemId: storedItemId }) => storedItemId === itemId
+    );
+    specialItemTimestamp = timestamp;
+  }
+  if (!specialItemTimestamp) {
     throw new Error("trying to update config before it was created.");
   }
   const mergedData = { ...currentData, ...newData };
@@ -104,10 +131,14 @@ const updateEncryptionServiceConfig = async (
     rawItemKey,
     btoa(JSON.stringify(dataToPersist))
   );
-  const updateItemEvent = await item.makeUpdateItemEvent(timestamp, itemKey, {
-    itemId,
-    itemContent: encryptedContent,
-  });
+  const updateItemEvent = await item.makeUpdateItemEvent(
+    specialItemTimestamp,
+    itemKey,
+    {
+      itemId,
+      itemContent: encryptedContent,
+    }
+  );
   const updateItemResponse = await item.updateItem(
     ws,
     currentUserInfo.login,
@@ -117,23 +148,7 @@ const updateEncryptionServiceConfig = async (
   if (!updateItemResponse.items.length) {
     throw new Error("unable to update encryption service special item");
   }
-  const teamId = currentTeamIdSelector(storeService.getState());
-  await updateAdminDataAfterItemAddedOrUpdated(
-    storeService,
-    localStorageService,
-    sharingService.ws,
-    currentUserInfo,
-    `${teamId}`,
-    {
-      items: updateItemResponse.items,
-      itemGroups: sharingData.itemGroups,
-    }
-  );
-  await updateSharingDataAfterItemAddedOrUpdated(
-    storeService,
-    localStorageService,
-    updateItemResponse.items[0]
-  );
+  await sessionService.getInstance().user.attemptSync(Trigger.SettingsChange);
   return mergedData;
 };
 const createEncryptionServiceConfig = async (

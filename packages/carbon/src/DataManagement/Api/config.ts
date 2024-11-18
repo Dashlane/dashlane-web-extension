@@ -16,7 +16,6 @@ import { config as generatedPasswordCommandQueryBusConfig } from "DataManagement
 import { config as secureFilesConfig } from "DataManagement/SecureFiles/Api/config";
 import { config as settingsConfig } from "DataManagement/Settings/Api/config";
 import { config as spaceConfig } from "DataManagement/Spaces/Api/config";
-import { config as noteCategoryCommandQueryBusConfig } from "DataManagement/SecureNoteCategory/Api/config";
 import { config as duplicationCommandQueryBusConfig } from "DataManagement/Duplication/Api/config";
 import { DataManagementQueries } from "DataManagement/Api/queries";
 import { DataManagementLiveQueries } from "DataManagement/Api/live-queries";
@@ -45,7 +44,6 @@ export const config: CommandQueryBusConfig<
     ...passwordHistoryCommandQueryBusConfig.commands,
     ...paymentCardsCommandQueryBusConfig.commands,
     ...secureFilesConfig.commands,
-    ...noteCategoryCommandQueryBusConfig.commands,
     ...settingsConfig.commands,
     ...socialSecurityIdCommandQueryBusConfig.commands,
     ...duplicationCommandQueryBusConfig.commands,

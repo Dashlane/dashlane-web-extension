@@ -18,7 +18,7 @@ import {
 import { RemoteFileError } from "RemoteFileUpdates/remoteFileErrors";
 import { RemoteFileUpdateError } from "@dashlane/hermes";
 const base64 = require("base-64");
-const REMOTE_FILE_S3_ENDPOINT = "*****" as const;
+const REMOTE_FILE_S3_ENDPOINT = "__REDACTED__" as const;
 const isProdFile = (s3URL: string): boolean =>
   s3URL.startsWith(REMOTE_FILE_S3_ENDPOINT + "prod/");
 const isDevFile = (s3URL: string): boolean =>
@@ -31,7 +31,10 @@ export const computePublicKeyForSignature = (
   } else if (isDevFile(s3URL)) {
     return REMOTE_FILE_KEY_DEV;
   } else {
-    throw new RemoteFileError(RemoteFileUpdateError.DecipherError, `*****`);
+    throw new RemoteFileError(
+      RemoteFileUpdateError.DecipherError,
+      `__REDACTED__`
+    );
   }
 };
 export async function decipherDecryptionKey(

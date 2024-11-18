@@ -1,11 +1,4 @@
-import {
-  SecureFileDownloadProgress,
-  SecureFilesQuota,
-  SecureFileUploadProgress,
-} from "@dashlane/communication";
-export type SecureFileDownload = Record<string, SecureFileDownloadProgress>;
+import { SecureFileUploadProgress } from "@dashlane/communication";
 export interface SecureFileStorageState {
-  downloads: SecureFileDownload;
-  quota: SecureFilesQuota;
   upload: SecureFileUploadProgress;
 }

@@ -72,13 +72,10 @@ export interface ProposeMembersRequest {
   teamId: number;
   proposedMemberLogins: string[];
   origin?: string;
-  notificationOptions?:
-    | {
-        skipAccountCreationRequiredAlerts: true;
-      }
-    | {
-        skipAccountCreationRequiredAlerts: false;
-      };
+  notificationOptions?: {
+    skipAccountCreationRequiredAlerts?: boolean;
+    skipReproposals?: boolean;
+  };
 }
 export interface ProposeMembersResult {
   accountCreationRequiredMembers: string[];

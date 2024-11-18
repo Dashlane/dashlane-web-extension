@@ -12,6 +12,7 @@ import {
   type SessionSyncStatus,
   Space,
   SpaceMemberRights,
+  SsoSolutionChangedEvent,
   type TeamAdminDataUpdatedEvent,
   type UpdatePaymentCardTokenResult,
   type WebOnboardingModeEvent,
@@ -144,6 +145,12 @@ export function triggerServerSidePairingStatusChanged(
     if (leelooConnector) {
       leelooConnector.serverSidePairingStatusChanged(event);
     }
+  }
+}
+export function triggerSsoSolutionChanged(event: SsoSolutionChangedEvent) {
+  const leelooConnector = leeloo();
+  if (leelooConnector) {
+    leelooConnector.ssoSolutionChanged(event);
   }
 }
 export function getAuthenticationCodeFromError(

@@ -14,6 +14,7 @@ import {
 import {
   BaseDataModelObject,
   DataModelObject,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
   DataModelType,
   PersonalSettings,
 } from "@dashlane/communication";
@@ -32,7 +33,6 @@ import {
   countEditionTransactions,
   countRemoveTransactions,
 } from "Libs/Backup/Transactions/utils";
-import dataTypes from "Session/Store/personalData/dataTypes";
 import { WSService } from "Libs/WS/index";
 import { SyncSummary } from "Libs/WS/Backup/types";
 import { CryptoCenterService } from "Libs/CryptoCenter/types";
@@ -69,7 +69,7 @@ export function gatherContentsToUpload(
   return supportedChangesToUpload
     .map((change) => {
       const { action, kwType, itemId } = change;
-      const keyInStore = dataTypes[kwType];
+      const keyInStore = DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType];
       if (isRemovalUploadChange(change)) {
         return {
           action,

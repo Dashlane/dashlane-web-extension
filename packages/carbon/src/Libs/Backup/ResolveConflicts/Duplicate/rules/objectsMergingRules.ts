@@ -11,7 +11,6 @@ export const mergingRules: MergingRules = {
     { property: "City", canonize: false },
     { property: "ZipCode", canonize: true },
   ],
-  AUTH_CATEGORY: [{ property: "CategoryName", canonize: false }],
   AUTHENTIFIANT: [
     { property: "Domain", canonize: false },
     { property: "Email", canonize: false },
@@ -80,7 +79,6 @@ export const mergingRules: MergingRules = {
     { property: "Title", canonize: false },
     { property: "Content", canonize: false },
   ],
-  SECURENOTE_CATEGORY: [{ property: "CategoryName", canonize: false }],
   SOCIALSECURITYSTATEMENT: [
     { property: "SocialSecurityNumber", canonize: true },
   ],

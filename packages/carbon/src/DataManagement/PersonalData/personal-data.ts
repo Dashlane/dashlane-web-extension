@@ -1,6 +1,7 @@
 import {
   ApplicationModulesAccess,
   DataModelObject,
+  DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY,
   DataModelType,
   ExceptionCriticality,
   isCredential,
@@ -8,7 +9,6 @@ import {
   SavePersonalDataItemResponse,
 } from "@dashlane/communication";
 import { StoreService } from "Store";
-import dataTypes from "Session/Store/personalData/dataTypes";
 import { PersonalData } from "Session/Store/personalData/types";
 import { SessionService } from "User/Services/types";
 import {
@@ -254,7 +254,8 @@ export async function addPersonalDataItem(
   const eventStore = getEventStoreInstance();
   const eventStoreConsumer = getEventStoreConsumerInstance();
   if (isUpdatingExistingItem) {
-    const dataTypeKeyInStore = dataTypes[itemToSave.kwType];
+    const dataTypeKeyInStore =
+      DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[itemToSave.kwType];
     const storedItem = findDataModelObject<DataModelObject>(
       itemToSave.Id,
       personalData[dataTypeKeyInStore]
@@ -325,7 +326,7 @@ export function updatePersonalDataUsageMetadata(
   url: string,
   kwType: DataModelType
 ): void {
-  const dataType = dataTypes[kwType];
+  const dataType = DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY[kwType];
   const cleanUrl = cleanUrlForPersonalData(url);
   const storedDataType = storeService.getPersonalData()[dataType];
   const dataModelObject = Array.isArray(storedDataType)

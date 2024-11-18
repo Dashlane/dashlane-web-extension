@@ -22,7 +22,7 @@ import {
 import {
   AutofillOptions,
   CredentialsByDomainDataQuery,
-  CredentialWithCategoryAndDomain,
+  CredentialWithDomain,
   ListResults,
   SingleCredentialDataQuery,
 } from "@dashlane/communication";
@@ -132,7 +132,7 @@ import {
   socialSecurityIdListView,
 } from "./views";
 import { passkeySelector } from "DataManagement/Passkeys/selectors";
-export type CredentialWithDomainAndSharing = CredentialWithCategoryAndDomain & {
+export type CredentialWithDomainAndSharing = CredentialWithDomain & {
   sharingStatus: SharingStatusItem;
 };
 export const autofillViewedAddressSelector = (

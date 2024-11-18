@@ -16,7 +16,6 @@ import type {
   Identity,
   VersionedBreaches as LegacyVersionedBreaches,
   Note,
-  NoteCategory,
   Passkey,
   Passport,
   PaymentCard,
@@ -46,7 +45,6 @@ export interface PersonalData {
   generatedPasswords: GeneratedPassword[];
   idCards: IdCard[];
   identities: Identity[];
-  noteCategories: NoteCategory[];
   notes: Note[];
   passkeys: Passkey[];
   passports: Passport[];

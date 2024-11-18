@@ -48,7 +48,6 @@ const noteFormatter = (newSecureNoteData: AddSecureNoteRequest): SecureNote => {
     LastBackupTime: 0,
     Title: newSecureNoteSanitized.title || "Untitled note",
     Content: newSecureNoteSanitized.content || "",
-    Category: newSecureNoteSanitized.category || "noCategory",
     Secured: newSecureNoteSanitized.secured || false,
     Type: newSecureNoteSanitized.type || "GRAY",
     Attachments: newSecureNoteSanitized.attachments || [],
@@ -182,7 +181,6 @@ export const constructSecureNote = (
   return noteFormatter({
     content: note.Content || "",
     title: note.Title || "",
-    category: "",
     secured: false,
     type: NoteTypes[0],
     spaceId: spaceId || "",

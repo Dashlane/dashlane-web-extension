@@ -1,7 +1,6 @@
 import { curry } from "ramda";
 import {
   Credential,
-  CredentialCategory,
   CredentialFilterField,
   CredentialFilterToken,
   CredentialItemView,
@@ -15,7 +14,6 @@ import { Token } from "Libs/Pagination/types";
 import { CredentialMappers } from "DataManagement/Credentials/types";
 import { listView } from "DataManagement/Credentials/views/list";
 import { IconDomains } from "Session/Store/Icons";
-import { getCategory } from "DataManagement/SmartTeamSpaces/helpers";
 import { getIcon } from "DataManagement/Icons/get-icons";
 export const getCredentialsFilterToken = ({
   filterCriteria,
@@ -42,12 +40,10 @@ export const getCredentialsFirstToken = (
   );
 export const viewCredentialsBatch = (
   batch: Credential[],
-  categories: CredentialCategory[],
   icons: IconDomains
 ): CredentialItemView[] => {
   const getIconById = getIcon(icons);
-  const getCategoryById = getCategory(categories);
-  const view = listView(getCategoryById, getIconById, batch);
+  const view = listView(getIconById, batch);
   return view;
 };
 export const getCredentialsBatch = curry(

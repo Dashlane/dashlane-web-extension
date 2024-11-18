@@ -1762,7 +1762,7 @@ export const GeographicStatesLevel0: GeographicStateLevelMap = {
     },
     "CO-0-LAG": {
       code: "LAG",
-      name: "*****",
+      name: "__REDACTED__",
     },
     "CO-0-MAG": {
       code: "MAG",

@@ -38,6 +38,7 @@ import {
 } from "Libs/RememberMe/helpers";
 import { setRememberMeTypeAction } from "Authentication/Store/currentUser/actions";
 import { SessionClient } from "@dashlane/session-contracts";
+import type { StorageService } from "Libs/Storage/types";
 export interface WebAuthnAuthenticationService {
   initialize: (
     authenticator: AttestationAuthenticator | AssertionAuthenticator
@@ -51,6 +52,7 @@ export interface WebAuthnAuthenticationService {
 }
 export interface WebAuthnAuthenticationServiceParams {
   storeService: StoreService;
+  storageService: StorageService;
   localStorageService: LocalStorageService;
   webAuthnAuthenticationEncryptorService: DataEncryptorService;
   authorizationKeysEncryptorService: DataEncryptorService;
@@ -113,7 +115,9 @@ const initialize = async (
 };
 export const shouldTrigger = async (
   storeService: StoreService,
+  storageService: StorageService,
   localStorageService: LocalStorageService,
+  sessionClient: SessionClient,
   login: string
 ): Promise<boolean> => {
   try {
@@ -124,7 +128,12 @@ export const shouldTrigger = async (
     if (!(await hasSessionKeysInStorage(localStorageService))) {
       return false;
     }
-    await loadSessionKeysToStore(storeService, localStorageService);
+    await loadSessionKeysToStore(
+      storeService,
+      storageService,
+      localStorageService,
+      sessionClient
+    );
     const sessionKeys = sessionKeysSelector(storeService.getState());
     if (!areSessionKeysValid(sessionKeys)) {
       return false;
@@ -210,7 +219,13 @@ export const makeWebAuthnAuthenticationService = (
     process: (login: string, authenticator: AssertionAuthenticator) =>
       process(options, login, authenticator),
     shouldTrigger: (login: string) =>
-      shouldTrigger(options.storeService, options.localStorageService, login),
+      shouldTrigger(
+        options.storeService,
+        options.storageService,
+        options.localStorageService,
+        options.sessionClient,
+        login
+      ),
     deactivate: (login: string) => deactivate(options, login),
   };
 };

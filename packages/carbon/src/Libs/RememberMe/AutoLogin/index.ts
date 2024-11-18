@@ -24,6 +24,7 @@ import {
 import { masterPasswordSelector, userLoginSelector } from "Session/selectors";
 import {
   areSessionKeysValid,
+  cleanRememberMeStorageData,
   hasSessionKeysInStorage,
   loadSessionKeysToStore,
   persistLocalAccountRememberMeType,
@@ -32,14 +33,16 @@ import {
 import { setRememberMeTypeAction } from "Authentication/Store/currentUser/actions";
 import { getWindowLocalStorage } from "Helpers/window-localStorage";
 import { SessionClient } from "@dashlane/session-contracts";
+import { StorageService } from "Libs/Storage/types";
 export const AUTOLOGIN_EXPIRATION_DATE = 14 * 24 * 60 * 60;
-const QA_STORAGE_KEY = "***";
+const QA_STORAGE_KEY = "__REDACTED__";
 export interface AutoLoginService {
   initialize: () => Promise<void>;
   process: (login: string) => Promise<void>;
   shouldTrigger: (login: string) => Promise<boolean>;
 }
 export interface AutoLoginServiceParams {
+  storageService: StorageService;
   storeService: StoreService;
   wsService: WSService;
   localStorageService: LocalStorageService;
@@ -53,6 +56,8 @@ export const createMasterPasswordCipheringKey = () => {
 export const shouldTrigger = async (
   storeService: StoreService,
   localStorageService: LocalStorageService,
+  storageService: StorageService,
+  sessionClient: SessionClient,
   login: string
 ): Promise<boolean> => {
   try {
@@ -63,9 +68,19 @@ export const shouldTrigger = async (
     if (!(await hasSessionKeysInStorage(localStorageService))) {
       return false;
     }
-    await loadSessionKeysToStore(storeService, localStorageService);
+    await loadSessionKeysToStore(
+      storeService,
+      storageService,
+      localStorageService,
+      sessionClient
+    );
     const sessionKeys = sessionKeysSelector(storeService.getState());
     if (!areSessionKeysValid(sessionKeys)) {
+      void cleanRememberMeStorageData(
+        storeService,
+        storageService,
+        sessionClient
+      );
       return false;
     }
     return localStorageService.getInstance().doesMasterPasswordExist();
@@ -80,13 +95,25 @@ export const shouldTrigger = async (
   }
 };
 export const loadMPFromStorageToStore = async (
+  storageService: StorageService,
   storeService: StoreService,
   autoLoginEncryptorService: DataEncryptorService,
   localStorageService: LocalStorageService,
+  sessionClient: SessionClient,
   login: string
 ): Promise<void> => {
   const result = await getMasterPasswordCipheringKey(storeService, login);
   if (isApiError(result)) {
+    if (
+      result.type === "invalid_request_error" &&
+      result.code === "unknown_session_key"
+    ) {
+      void cleanRememberMeStorageData(
+        storeService,
+        storageService,
+        sessionClient
+      );
+    }
     throw new Error(result.message);
   }
   autoLoginEncryptorService.setInstance(
@@ -105,20 +132,29 @@ const processAutoLogin = async (
   login: string
 ): Promise<void> => {
   try {
-    const { storeService, autoLoginEncryptorService, localStorageService } =
-      service;
+    const {
+      sessionClient,
+      storageService,
+      storeService,
+      autoLoginEncryptorService,
+      localStorageService,
+    } = service;
     const shouldProcess = await shouldTrigger(
       storeService,
       localStorageService,
+      storageService,
+      sessionClient,
       login
     );
     if (!shouldProcess) {
       return;
     }
-    return await loadMPFromStorageToStore(
+    await loadMPFromStorageToStore(
+      storageService,
       storeService,
       autoLoginEncryptorService,
       localStorageService,
+      sessionClient,
       login
     );
   } catch (error) {
@@ -135,6 +171,12 @@ export const makeAutoLoginService = (
     initialize: () => initialize(options),
     process: (login: string) => processAutoLogin(options, login),
     shouldTrigger: (login: string) =>
-      shouldTrigger(options.storeService, options.localStorageService, login),
+      shouldTrigger(
+        options.storeService,
+        options.localStorageService,
+        options.storageService,
+        options.sessionClient,
+        login
+      ),
   };
 };

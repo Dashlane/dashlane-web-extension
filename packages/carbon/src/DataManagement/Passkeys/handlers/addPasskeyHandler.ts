@@ -4,6 +4,7 @@ import {
   AddPasskeyResult,
   Country,
   Passkey,
+  WebAuthnKeyAlgorithm,
 } from "@dashlane/communication";
 import { CoreServices } from "Services";
 import { getDebounceSync, getDefaultSpaceId } from "DataManagement/utils";
@@ -14,9 +15,9 @@ import { sendExceptionLog } from "Logs/Exception";
 import { sanitizeInputPersonalData } from "DataManagement/PersonalData/sanitize";
 export function getNewPasskey(newPasskeyData: AddPasskeyRequest): Passkey {
   const passkeyCreationDate = getUnixTimestamp();
-  return {
-    kwType: "KWPasskey",
-    Id: generateItemUuid(),
+  const commonPart = {
+    kwType: "KWPasskey" as const,
+    Id: newPasskeyData.id ?? generateItemUuid(),
     LastBackupTime: 0,
     LastUse: passkeyCreationDate,
     LocaleFormat: Country.UNIVERSAL,
@@ -26,13 +27,23 @@ export function getNewPasskey(newPasskeyData: AddPasskeyRequest): Passkey {
     Counter: 0,
     CredentialId: newPasskeyData.credentialId,
     ItemName: newPasskeyData.itemName,
-    KeyAlgorithm: newPasskeyData.keyAlgorithm,
     Note: newPasskeyData.note,
-    PrivateKey: newPasskeyData.privateKey,
     RpId: newPasskeyData.rpId,
     RpName: newPasskeyData.rpName,
     UserDisplayName: newPasskeyData.userDisplayName,
     UserHandle: newPasskeyData.userHandle,
+  };
+  if (newPasskeyData.keyAlgorithm === WebAuthnKeyAlgorithm.CloudPasskey) {
+    return {
+      ...commonPart,
+      KeyAlgorithm: newPasskeyData.keyAlgorithm,
+      CloudCipheringKey: newPasskeyData.cloudCipheringKey,
+    };
+  }
+  return {
+    ...commonPart,
+    KeyAlgorithm: newPasskeyData.keyAlgorithm,
+    PrivateKey: newPasskeyData.privateKey,
   };
 }
 async function addPasskey(
