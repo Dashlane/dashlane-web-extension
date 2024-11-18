@@ -1,0 +1,4 @@
+export const VPN_HOTSPOTSHIELD_DOMAIN = "hotspotshield.com";
+export const VPN_DASHLANE_HOTSPOTSHIELD_SUBDOMAIN = "dashlane";
+export const VPN_CREDENTIAL_URL = `https://${VPN_DASHLANE_HOTSPOTSHIELD_SUBDOMAIN}.${VPN_HOTSPOTSHIELD_DOMAIN}`;
+export const VPN_CREDENTIAL_NAME = "VPN Hotspot Shield";
