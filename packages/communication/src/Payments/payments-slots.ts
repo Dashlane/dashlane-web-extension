@@ -7,8 +7,6 @@ import {
   DownloadCustomerInvoiceResult,
   GetInvoiceListResult,
   InvoiceDataQuery,
-  RequestRefundRequest,
-  RequestRefundResult,
 } from "./types";
 export const paymentsCommandsSlots = {
   cancelAutoRenew: slot<void, CancelAutoRenewResult>(),
@@ -17,7 +15,6 @@ export const paymentsCommandsSlots = {
     DownloadCustomerInvoiceResult
   >(),
   fetchInvoiceList: slot<void, GetInvoiceListResult>(),
-  requestRefund: slot<RequestRefundRequest, RequestRefundResult>(),
 };
 export const paymentsQueriesSlots = {
   getInvoicesCount: slot<void, number>(),

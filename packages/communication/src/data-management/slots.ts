@@ -41,7 +41,6 @@ import {
   secureFilesLiveQueriesSlots,
   secureFilesQueriesSlots,
 } from "./secure-files";
-import { secureNoteCategoryCommandsSlots } from "./secure-note-category";
 import { noteLiveQueriesSlots, noteQueriesSlots } from "./secure-notes";
 import {
   settingsCommandsSlots,
@@ -91,7 +90,6 @@ export const dataManagementCommandsSlots = combineEvents(
   passkeyCommandsSlots,
   paymentCardCommandsSlots,
   secureFilesCommandsSlots,
-  secureNoteCategoryCommandsSlots,
   settingsCommandsSlots,
   vaultCommandsSlots,
   duplicationCommandsSlots

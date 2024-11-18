@@ -37,6 +37,7 @@ export type PlanTier =
   | "legacy"
   | "team"
   | "business"
+  | "businessplus"
   | "entreprise"
   | "starter"
   | "standard";

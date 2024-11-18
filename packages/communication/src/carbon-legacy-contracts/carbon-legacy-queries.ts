@@ -8,6 +8,7 @@ export class CarbonStateQuery extends defineQuery<
   CarbonStateQueryParam
 >({
   scope: UseCaseScope.Device,
+  useCache: true,
 }) {}
 export class CarbonStateListQuery extends defineQuery<
   unknown[],
@@ -15,6 +16,7 @@ export class CarbonStateListQuery extends defineQuery<
   CarbonStateListQueryParam
 >({
   scope: UseCaseScope.Device,
+  useCache: true,
 }) {}
 export const queriesFromCarbonAPI = createQueryContractsFromConnectors(
   carbonQueriesSlots,

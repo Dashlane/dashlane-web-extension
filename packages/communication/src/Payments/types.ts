@@ -48,17 +48,6 @@ export type GetInvoiceListRequest = {
 export type GetInvoiceListResult =
   | GetInvoiceListFailure
   | GetInvoiceListSuccess;
-export interface RequestRefundFailure {
-  success: false;
-  reason?: string;
-}
-export type RequestRefundRequest = {
-  dryRun: boolean;
-};
-export interface RequestRefundSuccess {
-  success: true;
-}
-export type RequestRefundResult = RequestRefundFailure | RequestRefundSuccess;
 export enum OrderDir {
   ascending = "ascending",
   descending = "descending",

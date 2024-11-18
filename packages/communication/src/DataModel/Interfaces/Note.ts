@@ -1,7 +1,4 @@
 import * as Common from "./Common";
-export interface NoteCategory extends Common.BaseDataModelObject {
-  CategoryName: string;
-}
 export const NoteTypes = [
   "GRAY",
   "PURPLE",
@@ -14,13 +11,10 @@ export const NoteTypes = [
   "RED",
 ] as const;
 export type NoteType = (typeof NoteTypes)[number];
-export function isNoteCategory(o: any): o is NoteCategory {
-  return Boolean(o) && o.kwType === "KWSecureNoteCategory";
-}
 export interface Note extends Common.DataModelObject {
   Title: string;
   Content: string;
-  Category: string;
+  Category?: string;
   Secured: boolean;
   Type: NoteType;
   CreationDate?: number;

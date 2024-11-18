@@ -1,14 +1,8 @@
-import {
-  Credential,
-  CredentialCategory,
-  CredentialLinkedServices,
-  IconDataStructure,
-} from "../../DataModel";
+import { CredentialLinkedServices, IconDataStructure } from "../../DataModel";
 import { SharingStatusDetail } from "../../Sharing/2/Interfaces/types";
 import { Space } from "../../SpaceData";
 import { LinkedWebsites } from "../linked-websites/types";
 import {
-  BaseDataModelItemView,
   DataModelDetailView,
   DataModelItemView,
   DataQuery,
@@ -22,14 +16,12 @@ export type CredentialFilterField =
   | "email"
   | "title"
   | "spaceId"
-  | "category"
   | "isLimited"
   | "hasAttachments";
 export type CredentialSortField =
   | "id"
   | "title"
   | "login"
-  | "category"
   | "lastUse"
   | "numberUse";
 export type CredentialDataQuery = DataQuery<
@@ -41,7 +33,6 @@ export type CredentialsByDomainDataQuery = {
 } & CredentialDataQuery;
 export interface CredentialItemView extends DataModelItemView {
   autoProtected: boolean;
-  category?: CredentialCategoryDetailView;
   domainIcon?: IconDataStructure;
   email: string;
   login: string;
@@ -52,7 +43,6 @@ export interface CredentialItemView extends DataModelItemView {
 export interface CredentialDetailView extends DataModelDetailView {
   autoLogin: boolean;
   autoProtected: boolean;
-  category?: CredentialCategoryDetailView;
   domainIcon?: IconDataStructure;
   email: string;
   forceCategorizedSpace?: Space;
@@ -69,9 +59,6 @@ export interface CredentialDetailView extends DataModelDetailView {
   subdomainOnly: boolean;
   title: string;
   url: string;
-}
-export interface CredentialCategoryDetailView extends BaseDataModelItemView {
-  categoryName: string;
 }
 export enum CredentialLimitStatus {
   Unlimited = "unlimited",
@@ -108,7 +95,6 @@ export interface BaseCredentialModel {
   protectWithMasterPassword?: boolean;
   spaceId?: string;
   autoLogin?: boolean;
-  category?: string;
 }
 export interface BaseCredentialUpdateModel {
   id: string;
@@ -131,7 +117,5 @@ export interface DeleteCredentialsFailure {
   success: false;
   notRemoved?: number;
 }
-export type CredentialWithCategory = Credential &
-  Pick<CredentialCategory, "CategoryName">;
 export type CredentialFilterToken = FilterToken<CredentialFilterField>;
 export type CredentialSortToken = SortToken<CredentialSortField>;

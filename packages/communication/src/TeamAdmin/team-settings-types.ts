@@ -10,3 +10,8 @@ interface UpdateTeamSettingsFailure {
 export type UpdateTeamSettingsResult =
   | UpdateTeamSettingsSuccess
   | UpdateTeamSettingsFailure;
+export type SsoSolutionChangedEvent =
+  | "confidential-saml"
+  | "self-hosted-saml"
+  | "sso-connector"
+  | "none";

@@ -40,3 +40,28 @@ export type DeleteVaultModuleItemsBulkResponse =
         }>;
       };
     };
+export const DATAMODELOBJECT_TYPE_TO_CARBON_STORE_KEY = {
+  KWAddress: "addresses",
+  KWAuthentifiant: "credentials",
+  KWBankStatement: "bankAccounts",
+  KWCollection: "collections",
+  KWCompany: "companies",
+  KWDataChangeHistory: "changeHistories",
+  KWDriverLicence: "driverLicenses",
+  KWEmail: "emails",
+  KWFiscalStatement: "fiscalIds",
+  KWGeneratedPassword: "generatedPasswords",
+  KWIDCard: "idCards",
+  KWIdentity: "identities",
+  KWPasskey: "passkeys",
+  KWPassport: "passports",
+  KWPaymentMean_creditCard: "paymentCards",
+  KWPaymentMean_paypal: "paypalAccounts",
+  KWPersonalWebsite: "personalWebsites",
+  KWPhone: "phones",
+  KWSecureNote: "notes",
+  KWSecurityBreach: "securityBreaches",
+  KWSocialSecurityStatement: "socialSecurityIds",
+  KWSecureFileInfo: "secureFileInfo",
+  KWSecret: "secrets",
+} as const;

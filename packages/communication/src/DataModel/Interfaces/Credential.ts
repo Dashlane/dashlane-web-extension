@@ -8,11 +8,6 @@ export interface TrustedUrl {
 export interface CredentialCategory extends Common.BaseDataModelObject {
   CategoryName: string;
 }
-export function isCredentialCategory(
-  o: Common.BaseDataModelObject
-): o is CredentialCategory {
-  return Boolean(o) && o.kwType === "KWAuthCategory";
-}
 export type CredentialStatus =
   | "ACCOUNT_NOT_VERIFIED"
   | "ACCOUNT_VERIFIED"
@@ -30,7 +25,7 @@ export interface Credential extends Common.DataModelObject {
   Status?: CredentialStatus;
   SharedObject?: boolean;
   ModificationDatetime?: number;
-  Category: string;
+  Category?: string;
   Url: string;
   UserSelectedUrl?: string;
   UseFixedUrl: boolean;

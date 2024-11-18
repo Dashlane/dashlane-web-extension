@@ -1,6 +1,5 @@
 import { EmbeddedAttachment, NoteType } from "../../DataModel";
 import {
-  BaseDataModelItemView,
   DataModelDetailView,
   DataModelItemView,
   DataQuery,
@@ -12,7 +11,6 @@ import {
 export type NoteSortField =
   | "id"
   | "title"
-  | "category"
   | "updatedAt"
   | "createdAt"
   | "lastUse";
@@ -21,7 +19,6 @@ export type NoteDataQuery = DataQuery<NoteSortField, NoteFilterField>;
 export type NoteFilterToken = FilterToken<NoteFilterField>;
 export type NoteSortToken = SortToken<NoteSortField>;
 export interface SecureNoteSaveRequest {
-  category: string;
   content: string;
   secured: boolean;
   title: string;
@@ -64,12 +61,8 @@ export type DeleteSecureNoteResultError = {
 export type DeleteSecureNoteResult =
   | DeleteSecureNoteResultSuccess
   | DeleteSecureNoteResultError;
-export interface NoteCategoryDetailView extends BaseDataModelItemView {
-  categoryName: string;
-}
 export interface NoteItemView extends DataModelItemView {
   abbrContent: string;
-  category?: NoteCategoryDetailView;
   color: NoteType;
   createdAt: number;
   secured: boolean;
@@ -77,7 +70,6 @@ export interface NoteItemView extends DataModelItemView {
   updatedAt: number;
 }
 export interface NoteDetailView extends DataModelDetailView {
-  category?: NoteCategoryDetailView;
   color: NoteType;
   createdAt: number;
   content: string;

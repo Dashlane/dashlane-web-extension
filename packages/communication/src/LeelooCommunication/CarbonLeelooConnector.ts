@@ -58,6 +58,7 @@ import {
   SavePaymentCardEvent,
   SetTeamSettingsRequest,
   SetTeamSettingsResult,
+  SsoSolutionChangedEvent,
   TeamAdminDataUpdatedEvent,
   UpdatePaymentCardTokenResult,
   UpdateUserGroupMembersRequest,
@@ -108,6 +109,9 @@ export const CarbonLeelooConnector = {
   checkDirectorySyncKeyRequest: slot<CheckDirectorySyncKeyRequest>(),
   serverSidePairingStatusChanged:
     slot<OpenSessionEvents.ServerSidePairingStatusChanged>(),
+  ssoSolutionChanged: slot<SsoSolutionChangedEvent>({
+    noBuffer: true,
+  }),
   getUki: slot<null, OpenSessionEvents.GetUki>(),
   getAccountInfo: slot<null, OpenSessionEvents.AccountInfo>(),
   getDevicesList: slot<null, OpenSessionEvents.GetDevicesList>(),
@@ -200,5 +204,7 @@ export const CarbonLeelooConnector = {
     QueryStaticDataCollectionsResponse
   >(),
   resumeSession: slot<OpenSessionEvents.ResumeSession, boolean>(),
-  exceptionLog: slot<Logging.ExceptionLog>(),
+  exceptionLog: slot<Logging.ExceptionLog>({
+    noBuffer: true,
+  }),
 };

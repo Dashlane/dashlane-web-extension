@@ -264,7 +264,6 @@ export function getLocalFormat(obj: DataModelObject): Country {
 }
 export const DataModelType = Enum(
   "KWAddress",
-  "KWAuthCategory",
   "KWAuthentifiant",
   "KWBankStatement",
   "KWCollection",
@@ -291,7 +290,6 @@ export const DataModelType = Enum(
   "KWSecret",
   "KWSecureFileInfo",
   "KWSecureNote",
-  "KWSecureNoteCategory",
   "KWSecurityBreach",
   "KWSettingsManagerApp",
   "KWSocialSecurityStatement",
@@ -301,7 +299,6 @@ export type DataModelType = Enum<typeof DataModelType>;
 export const TransactionType = Enum(
   "ADDRESS",
   "AUTHENTIFIANT",
-  "AUTH_CATEGORY",
   "BANKACCESS",
   "BANKACCOUNT",
   "BANKCATEGORY",
@@ -352,7 +349,6 @@ export const TransactionType = Enum(
   "SECRET",
   "SECUREFILEINFO",
   "SECURENOTE",
-  "SECURENOTE_CATEGORY",
   "SECURITYALERT",
   "SECURITYALERTS",
   "SECURITYBREACH",
@@ -366,7 +362,6 @@ export const DATAMODEL_TYPE_TO_TRANSACTION_TYPE: {
   [k in DataModelType]: TransactionType;
 } = {
   KWAddress: TransactionType.ADDRESS,
-  KWAuthCategory: TransactionType.AUTH_CATEGORY,
   KWAuthentifiant: TransactionType.AUTHENTIFIANT,
   KWCollection: TransactionType.COLLECTION,
   KWBankStatement: TransactionType.BANKSTATEMENT,
@@ -393,7 +388,6 @@ export const DATAMODEL_TYPE_TO_TRANSACTION_TYPE: {
   KWSecret: TransactionType.SECRET,
   KWSecureFileInfo: TransactionType.SECUREFILEINFO,
   KWSecureNote: TransactionType.SECURENOTE,
-  KWSecureNoteCategory: TransactionType.SECURENOTE_CATEGORY,
   KWSecurityBreach: TransactionType.SECURITYBREACH,
   KWSettingsManagerApp: TransactionType.SETTINGS,
   KWSocialSecurityStatement: TransactionType.SOCIALSECURITYSTATEMENT,

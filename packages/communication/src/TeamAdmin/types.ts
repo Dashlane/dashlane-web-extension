@@ -51,7 +51,7 @@ export interface TeamMemberInfo {
   weakPasswords?: number | null;
   hasPublicKey: boolean;
   safePasswords?: number | null;
-  twoFAInformation: {
+  twoFAInformation?: {
     type?: "sso" | "email_token" | "totp_device_registration" | "totp_login";
     phone?: string | null;
     lastUpdateDateUnix?: number | null;
@@ -119,6 +119,16 @@ export type TeamSettings = {
   duoSecretKey?: string;
   recoveryEnabled?: boolean;
   ssoEnabled?: boolean;
+  ssoSolution?:
+    | "confidential-saml"
+    | "self-hosted-saml"
+    | "sso-connector"
+    | null;
+  provisioningSolution?:
+    | "confidential-scim"
+    | "self-hosted-scim"
+    | "adsync"
+    | null;
   ssoServiceProviderUrl?: string | null;
   ssoIdpMetadata?: string | null;
   ssoIdpEntrypoint?: string | null;

@@ -75,13 +75,18 @@ export function createQueryContractsFromConnectors<
 ) {
   const queryNames = Object.keys(queriesConnector);
   const liveQueryNames = Object.keys(liveQueriesConnector);
-  return [...queryNames, ...liveQueryNames].reduce(
-    (contract, queryName) => ({
+  const queryNameToQuery = (queryName: string, useCache?: boolean) =>
+    [queryName, defineQuery({ scope: UseCaseScope.Device, useCache })] as const;
+  return [
+    ...queryNames.map((queryName) => queryNameToQuery(queryName)),
+    ...liveQueryNames.map((liveQueryName) =>
+      queryNameToQuery(liveQueryName, true)
+    ),
+  ].reduce(
+    (contract, [queryName, query]) => ({
       ...contract,
       [`${queryName[0].toUpperCase().concat(queryName.substring(1))}Query`]:
-        defineQuery({
-          scope: UseCaseScope.Device,
-        }),
+        query,
     }),
     {} as QueriesContractFromConnectors<
       TQueriesConnectorDeclaration,

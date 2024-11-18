@@ -8,7 +8,6 @@ import {
 import {
   CreateCredentialRequest,
   CreateCredentialResult,
-  CredentialCategoryDetailView,
   CredentialDataQuery,
   CredentialDetailView,
   CredentialItemView,
@@ -27,10 +26,6 @@ export const credentialsCommandsSlots = {
 };
 export const credentialsQueriesSlots = {
   getCredential: slot<string, CredentialDetailView>(),
-  getCredentialCategories: slot<
-    void,
-    ListResults<CredentialCategoryDetailView>
-  >(),
   getCredentials: slot<CredentialDataQuery, ListResults<CredentialItemView>>(),
   getCredentialsByDomain: slot<
     CredentialsByDomainDataQuery,

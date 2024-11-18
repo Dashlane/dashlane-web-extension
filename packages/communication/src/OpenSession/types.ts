@@ -540,6 +540,7 @@ export const SpaceTiers = Object.freeze({
   Free: "free",
   Starter: "starter",
   Standard: "standard",
+  BusinessPlus: "businessplus",
 });
 export type SpaceTier = ValuesType<typeof SpaceTiers>;
 export enum SpaceStatus {

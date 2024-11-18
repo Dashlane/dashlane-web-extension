@@ -1,4 +1,8 @@
-import { WebAuthnPrivateKey } from "../../DataModel";
+import {
+  WebAuthnCloudCipheringKey,
+  WebAuthnKeyAlgorithm,
+  WebAuthnPrivateKey,
+} from "../../DataModel";
 import { DataModelDetailView, DataModelItemView, DataQuery } from "../types";
 export type PasskeyFilterField =
   | "id"
@@ -15,32 +19,41 @@ export interface PasskeyBaseModel {
   counter: number;
   credentialId: string;
   keyAlgorithm: number;
-  privateKey: WebAuthnPrivateKey;
   rpId: string;
   rpName: string;
   userDisplayName: string;
   userHandle: string;
+}
+export interface CloudPasskeyModel
+  extends PasskeyBaseModel,
+    CustomizableFieldsInPasskey {
+  keyAlgorithm: WebAuthnKeyAlgorithm.CloudPasskey;
+  cloudCipheringKey: WebAuthnCloudCipheringKey;
+}
+export interface LegacyPasskeyModel
+  extends PasskeyBaseModel,
+    CustomizableFieldsInPasskey {
+  keyAlgorithm: WebAuthnKeyAlgorithm.ES256;
+  privateKey: WebAuthnPrivateKey;
 }
 export interface CustomizableFieldsInPasskey {
   itemName?: string;
   note?: string;
   spaceId: string;
 }
-export interface AllFieldsPasskey
-  extends PasskeyBaseModel,
-    CustomizableFieldsInPasskey {}
+export type AllFieldsPasskey = CloudPasskeyModel | LegacyPasskeyModel;
 export type PasskeyAddModel = AllFieldsPasskey;
 export type PasskeyUpdateModel = AllFieldsPasskey;
-export interface PasskeyDetailView
-  extends DataModelDetailView,
-    AllFieldsPasskey {}
-export interface PasskeyItemView extends DataModelItemView, AllFieldsPasskey {}
+export type PasskeyDetailView = DataModelDetailView & AllFieldsPasskey;
+export type PasskeyItemView = DataModelItemView & AllFieldsPasskey;
 export enum DeletePasskeyErrorCode {
   NOT_AUTHORIZED,
   NOT_FOUND,
   INTERNAL_ERROR,
 }
-export type AddPasskeyRequest = PasskeyAddModel;
+export type AddPasskeyRequest = {
+  id?: string;
+} & PasskeyAddModel;
 export type UpdatePasskeyRequest = {
   id: string;
 } & Partial<PasskeyUpdateModel>;

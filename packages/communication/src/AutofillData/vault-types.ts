@@ -2,8 +2,7 @@ import {
   VaultAutofillViewInterfaces,
   VaultSourceType,
 } from "@dashlane/autofill-contracts";
-import { CredentialWithCategory } from "../data-management";
-import { DataModelType } from "../DataModel";
+import { Credential, DataModelType } from "../DataModel";
 export type VaultAutofillView =
   VaultAutofillViewInterfaces[keyof VaultAutofillViewInterfaces];
 export const vaultSourceTypeToDataModelTypeMap: Record<
@@ -20,7 +19,6 @@ export const vaultSourceTypeToDataModelTypeMap: Record<
   [VaultSourceType.GeneratedPassword]: DataModelType.KWGeneratedPassword,
   [VaultSourceType.IdCard]: DataModelType.KWIDCard,
   [VaultSourceType.Identity]: DataModelType.KWIdentity,
-  [VaultSourceType.NoteCategory]: DataModelType.KWSecureNoteCategory,
   [VaultSourceType.Note]: DataModelType.KWSecureNote,
   [VaultSourceType.Passkey]: DataModelType.KWPasskey,
   [VaultSourceType.Passport]: DataModelType.KWPassport,
@@ -30,7 +28,7 @@ export const vaultSourceTypeToDataModelTypeMap: Record<
   [VaultSourceType.SocialSecurityId]: DataModelType.KWSocialSecurityStatement,
   [VaultSourceType.Secret]: DataModelType.KWSecret,
 };
-export type CredentialWithCategoryAndDomain = {
-  credential: CredentialWithCategory;
+export type CredentialWithDomain = {
+  credential: Credential;
   domain: string;
 };
