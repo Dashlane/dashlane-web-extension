@@ -2,17 +2,22 @@ import {
   startAutofillEngine,
   startDispatcher,
   WebExtensionApiManager,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/server";
+} from "@dashlane/autofill-engine/server";
 import { logDebug } from "../../logs/console/logger";
-import { SyncTaskDependencies } from "../tasks.types";
 import { initStateStorage } from "./init-autofill-engine-state-storage";
+import { AutofillCarbonConnectors } from "../../communication/connectors.types";
+import { AppDefinition } from "@dashlane/application-extension-definition";
+import { AppModules, ClientsOf } from "@dashlane/framework-contracts";
 export function initAutofillEngine({
   connectors: {
     autofillEngineCarbonConnector,
     autofillEngineLegacyCarbonConnector,
   },
   appClient,
-}: SyncTaskDependencies): void {
+}: {
+  connectors: AutofillCarbonConnectors;
+  appClient: Promise<ClientsOf<AppModules<AppDefinition>>>;
+}): void {
   const stateStorage = initStateStorage();
   const browserApi = new WebExtensionApiManager().getBrowserApi();
   const messageLogger = (message: string, details: Record<string, unknown>) => {

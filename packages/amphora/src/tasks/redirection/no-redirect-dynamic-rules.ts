@@ -1,6 +1,6 @@
 import { RuleWithoutId } from "./types";
-const NO_REDIRECT_FILTER = "*****";
-const CDN_NO_REDIRECT_FILTER = "*****";
+const NO_REDIRECT_FILTER = "__REDACTED__";
+const CDN_NO_REDIRECT_FILTER = "__REDACTED__";
 export function buildNoRedirectDynamicRules(priority: number): RuleWithoutId[] {
   return [
     {

@@ -1,26 +1,26 @@
 import { TiresiasBackground } from "@dashlane/tiresias/background";
-import { logDebug, logInfo } from "../../logs/console/logger";
-import { TaskDependencies } from "../tasks.types";
+import { CarbonApiEvents } from "@dashlane/communication";
+import { AppModules, ClientsOf } from "@dashlane/framework-contracts";
+import { AppDefinition } from "@dashlane/application-extension-definition";
+import { tiresiasLogger } from "./tiresias-logger";
 export function messageLogger(
   message: string,
   details: Record<string, unknown>
 ): void {
-  logDebug({
-    message,
-    details,
-    indentDetails: true,
-    tags: ["Tiresias"],
-  });
+  tiresiasLogger.debug(message, details);
 }
+let _tiresiasBackgroundRef: TiresiasBackground | null = null;
 export function initTiresias({
   connectors: { tiresiasBackgroundToCarbonConnector },
   appClient,
-}: TaskDependencies): void {
-  logInfo({
-    message: "Creation of Tiresias background process",
-    tags: ["amphora", "initBackground", "initTiresias"],
-  });
-  new TiresiasBackground({
+}: {
+  connectors: {
+    tiresiasBackgroundToCarbonConnector: CarbonApiEvents;
+  };
+  appClient: ClientsOf<AppModules<AppDefinition>>;
+}): void {
+  tiresiasLogger.info("Creation of Tiresias background process");
+  _tiresiasBackgroundRef = new TiresiasBackground({
     messageLogger,
     carbonConnectorApi: tiresiasBackgroundToCarbonConnector,
     grapheneClient: appClient,

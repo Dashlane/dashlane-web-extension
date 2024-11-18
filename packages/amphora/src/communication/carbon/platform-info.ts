@@ -7,6 +7,7 @@ export async function getPlatformInfo(): Promise<PlatformInfo> {
   return {
     platformName: "server_standalone",
     appVersion: runtimeGetManifest().version,
+    versionName: runtimeGetManifest().version_name,
     browser: browser.getBrowserName(),
     browserVersion: browser.getBrowserVersion(),
     country: browser.getBrowserCountry(),

@@ -1,4 +1,4 @@
 export const webservicesApiKeys = {
-  appAccess: "*****",
-  appSecret: "*****",
+  appAccess: "__REDACTED__",
+  appSecret: "__REDACTED__",
 };

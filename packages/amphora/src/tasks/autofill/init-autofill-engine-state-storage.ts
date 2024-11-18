@@ -7,7 +7,7 @@ import {
 import {
   AutofillEngineState,
   AutofillEngineStateStorage,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/server";
+} from "@dashlane/autofill-engine/server";
 import { AutofillEngineState as AutofillEngineStateType } from "./init-autofill-engine.types";
 class InMemoryStateStorage implements AutofillEngineStateStorage {
   public getState(key: string): Promise<AutofillEngineState> {

@@ -1,4 +1,4 @@
-import { logError } from "../../logs/console/logger";
+import { logger } from "../../logs/app-logger";
 import { ARGON2_JS_WRAPPER_FOR_WASM, ARGON2_WASM } from "./constants";
 export function initArgonForServiceWorker(): void {
   try {
@@ -13,10 +13,8 @@ export function initArgonForServiceWorker(): void {
     };
     importScripts(ARGON2_JS_WRAPPER_FOR_WASM);
   } catch (error) {
-    logError({
-      details: { error },
-      message: "Error when importing ARGON2_JS_WRAPPER_FOR_WASM script",
-      tags: ["amphora", "initBackground", "initArgonForServiceWorker"],
+    logger.error("Error when importing ARGON2_JS_WRAPPER_FOR_WASM script", {
+      error,
     });
     throw error;
   }

@@ -1,4 +1,4 @@
-import { logError } from "../../logs/console/logger";
+import { logger } from "../../logs/app-logger";
 import { ARGON2_WASM } from "./constants";
 export function initArgon(): void {
   try {
@@ -8,10 +8,8 @@ export function initArgon(): void {
       return new Uint8Array(binaryContent);
     };
   } catch (error) {
-    logError({
-      details: { error },
-      message: "Failed to assign to self.loadArgon2WasmBinary",
-      tags: ["amphora", "initBackground", "initArgon"],
+    logger.error("Failed to assign to self.loadArgon2WasmBinary", {
+      error,
     });
     throw error;
   }

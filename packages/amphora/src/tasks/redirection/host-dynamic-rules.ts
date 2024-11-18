@@ -1,7 +1,7 @@
 import { RuleWithoutId } from "./types";
-const APP_REGEX_FILTER = "*****";
-const CONSOLE_REGEX_FILTER = "*****";
-export const NITRO_REGEX_FILTER = "*****";
+const APP_REGEX_FILTER = "__REDACTED__";
+const CONSOLE_REGEX_FILTER = "__REDACTED__";
+export const NITRO_REGEX_FILTER = "__REDACTED__";
 export function buildHostDynamicRules(
   extensionHost: string,
   scheme: string,

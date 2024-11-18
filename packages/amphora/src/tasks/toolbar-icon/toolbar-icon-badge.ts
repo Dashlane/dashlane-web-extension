@@ -4,7 +4,7 @@ import {
 } from "@dashlane/webextensions-apis";
 import { ApplicationBuildType } from "@dashlane/communication";
 import { getApplicationBuildType } from "../../communication/carbon/get-application-build-type";
-import { logWarn } from "../../logs/console/logger";
+import { logger } from "../../logs/app-logger";
 interface Badge {
   text: string;
   color: string;
@@ -28,10 +28,8 @@ export async function initToolbarIconBadge(): Promise<void> {
       void actionSetBadgeBackgroundColor({ color: badge.color });
     }
   } catch (error) {
-    logWarn({
-      details: { error },
-      message: "Error on initialization of icon toolbar icon badge",
-      tags: ["amphora", "initBackground", "initToolbarIconBadge"],
+    logger.warn("Error on initialization of icon toolbar icon badge", {
+      error,
     });
   }
 }

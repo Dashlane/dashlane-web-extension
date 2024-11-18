@@ -19,7 +19,7 @@ export function buildAntiPhishingDynamicRules(
         },
       },
       condition: {
-        regexFilter: `*****${escapedDomain}.*$`,
+        regexFilter: `__REDACTED__${escapedDomain}.*$`,
         resourceTypes: [
           "main_frame" as chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
         ],

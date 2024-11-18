@@ -1,7 +1,8 @@
 import { merge } from "rxjs";
 import { filter, map } from "rxjs/operators";
-import { BufferedEventStream, Listener } from "@dashlane/framework-infra";
 import {
+  BufferedEventStream,
+  Listener,
   UncaughtErrorEvent,
   UncaughtErrorSource,
 } from "@dashlane/framework-application";
@@ -44,8 +45,8 @@ function preventDefaultHandling<TEvent extends Event>(event: TEvent) {
 }
 function initUncaughtExceptions$(context: Window) {
   let lowLevelListener: (event: ErrorEvent) => void;
-  return new BufferedEventStream<ErrorEvent, Window>(
-    {
+  return new BufferedEventStream<ErrorEvent, Window>({
+    source: {
       addListener: (listener: Listener<Window>) => {
         lowLevelListener = (event: ErrorEvent) => {
           preventDefaultHandling(event);
@@ -57,16 +58,16 @@ function initUncaughtExceptions$(context: Window) {
         context.removeEventListener("error", lowLevelListener);
       },
     },
-    (err: unknown): err is ErrorEvent => true
-  ).events$.pipe(
+    filter: (err: unknown): err is ErrorEvent => true,
+  }).events$.pipe(
     map(([event]) => event),
     map(mapErrorEventToUncaughtErrorEvent)
   );
 }
 function initUnhandledPromiseRejections$(context: Window) {
   let lowLevelListener: (event: PromiseRejectionEvent) => void;
-  return new BufferedEventStream<PromiseRejectionEvent>(
-    {
+  return new BufferedEventStream<PromiseRejectionEvent>({
+    source: {
       addListener: (listener: Listener<Window>) => {
         lowLevelListener = (event: PromiseRejectionEvent) => {
           preventDefaultHandling(event);
@@ -78,8 +79,8 @@ function initUnhandledPromiseRejections$(context: Window) {
         context.removeEventListener("unhandledrejection", lowLevelListener);
       },
     },
-    (event: unknown): event is PromiseRejectionEvent => true
-  ).events$.pipe(
+    filter: (event: unknown): event is PromiseRejectionEvent => true,
+  }).events$.pipe(
     map(([event]) => event),
     filter(isPromiseRejectionNotSilenced),
     map(mapPromiseRejectionEventToUncaughtErrorEvent)

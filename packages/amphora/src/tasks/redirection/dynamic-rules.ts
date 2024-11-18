@@ -8,8 +8,8 @@ import { addRulesIds, getHost, getScheme } from "./helpers";
 import { buildHostDynamicRules } from "./host-dynamic-rules";
 import { buildAntiPhishingDynamicRules } from "./anti-phishing-dynamic-rules";
 import { buildNoRedirectDynamicRules } from "./no-redirect-dynamic-rules";
-import { logInfo } from "../../logs/console/logger";
 import { CarbonApiEvents } from "@dashlane/communication";
+import { logger } from "../../logs/app-logger";
 async function getPreviousRulesIds(): Promise<number[]> {
   const previousRules = await declarativeNetRequestGetDynamicRules();
   return previousRules.map(
@@ -58,11 +58,9 @@ export function initRedirection(
   void replaceAllDynamicRules([]);
   extensionToCarbonApiConnector.livePhishingURLList.on(
     (antiPhishingDomainsList: Set<string>) => {
-      logInfo({
-        message:
-          "Execute on carbon event antiPhishing change from carbon endpoint: livePhishingURLList",
-        tags: ["amphora", "initBackground", "initRedirection"],
-      });
+      logger.info(
+        `'Execute on carbon event antiPhishing change from carbon endpoint: livePhishingURLList'`
+      );
       const antiPhishingDomains = Array.from(antiPhishingDomainsList);
       void replaceAllDynamicRules(antiPhishingDomains);
     }

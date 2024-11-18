@@ -8,10 +8,12 @@ import {
   ChangeMasterPasswordModule,
   LocalDataKeyEncryptionCodec,
   SessionModule,
+  SessionServerApiCredentialsRepository,
   VaultAccessModule,
   WebExtensionSessionConfig,
 } from "@dashlane/session-core";
 import {
+  ImportOrchestratorModule,
   PasswordLimitModule,
   SecureFilesModule,
   VaultItemsCrudModule,
@@ -36,6 +38,9 @@ import {
   CryptographyModule,
   FeatureFlipsModule,
   IconsModule,
+  KillSwitchModule,
+  LoggingNodeWsAdaptersModule,
+  NodeWsLogProcessor,
   ObfuscationKeyEncryptionCodec,
   PlatformInfoModule,
   RemoteFileUpdateDecipheringService,
@@ -46,9 +51,13 @@ import {
   SoftwareLogsExceptionSinkModule,
   WebServicesModule,
 } from "@dashlane/framework-dashlane-application";
-import { EnclaveModule } from "@dashlane/framework-dashlane-application/enclave";
+import {
+  EnclaveApiSettings,
+  EnclaveModule,
+} from "@dashlane/framework-dashlane-application/enclave";
 import {
   AccountCreationModule,
+  AccountManagementModule,
   AccountReferralModule,
   DeleteOrResetAccountModule,
   SubscriptionCodeModule,
@@ -63,8 +72,6 @@ import {
   encryptAes256,
   encryptRsaOaep,
   ExtensionCronSource,
-  ExtensionLocalStorageInfrastructure,
-  ExtensionManagedStorageInfrastructure,
   FileDownloadExtensionEmitterChannelFactory,
   FileUploadListenerBackgroundPage,
   FileUploadListenerServiceWorker,
@@ -73,7 +80,6 @@ import {
   getRandomValues,
   HttpFetchBackend,
   isMv3Environment,
-  JsonExtensionResourceFetcher,
   MV3ServiceWorkerExtender,
   signHmacSha,
   signRsassaPkcs1,
@@ -81,6 +87,11 @@ import {
   verifyHmacSha,
   verifyRsassaPkcs1,
 } from "@dashlane/framework-infra";
+import { JsonExtensionResourceFetcher } from "@dashlane/framework-infra/assets";
+import {
+  ExtensionLocalStorageInfrastructure,
+  ExtensionManagedStorageInfrastructure,
+} from "@dashlane/framework-infra/storage";
 import { makeWebExtensionBackgroundStoreInfrastructure } from "@dashlane/framework-infra/state";
 import { CarbonReadyHandler } from "./start-application-modules-types";
 import {
@@ -95,7 +106,6 @@ import { AccountRecoveryKeyModule } from "@dashlane/account-recovery-core";
 import {
   AuthenticationFlowModule,
   AuthenticationModule,
-  AuthenticationWebServicesRepository,
   DeviceRegistrationModule,
   DeviceTransferModule,
   IdentityVerificationFlowModule,
@@ -109,6 +119,7 @@ import {
   AutofillSecurityModule,
   AutofillSettingsModule,
   AutofillTrackingModule,
+  CloudPasskeyModule,
   LinkedWebsitesModule,
 } from "@dashlane/autofill-core";
 import { OverridesModule } from "@dashlane/analysis-core";
@@ -121,13 +132,11 @@ import { NudgesModule } from "@dashlane/risk-mitigation-core";
 import { PermissionsModule } from "@dashlane/access-rights-core";
 import {
   ConfidentialSSOModule,
-  EnclaveApiSettings,
   EnclaveCloudflareHeaders,
-  EnclaveProxyModule,
-  EnclaveSdkModule,
   isEnclaveEnvironment,
   ScimModule,
 } from "@dashlane/sso-scim-core";
+import { TeamEnclaveModule } from "@dashlane/enclave-core";
 import { WebExtensionEnclaveLoginContext } from "@dashlane/sso-scim-infra";
 import { webservicesApiKeys } from "../server-sdk-api-keys";
 import {
@@ -158,6 +167,7 @@ import {
 import { B2CPlansModule } from "@dashlane/plans-core";
 import { getCloudflareKeys } from "../carbon/server-api-keys";
 import { ExtensionUncaughtErrorSource } from "../../logs/exceptions/extension-uncaught-error-source";
+import { logger } from "../../logs/app-logger";
 const uncaughtErrorSource = new ExtensionUncaughtErrorSource(self);
 const BROWSER_CRON_SOURCE = new ExtensionCronSource();
 const clientListener = new BrowserPortListener("graphene-background-port");
@@ -172,18 +182,22 @@ const cloudflareKeys = getCloudflareKeys();
 const storeInfra: StoreInfrastructureFactory =
   makeWebExtensionBackgroundStoreInfrastructure();
 export async function startApplicationModules(): Promise<CarbonReadyHandler> {
+  logger.debug(`Starting application modules`);
   const carbonInfrastructure = new CarbonLegacyInfrastructure();
   const isMv3 = isMv3Environment();
   const app = await startApplicationNode({
+    externalLoggers: [logger],
     appDefinition,
     channels: {},
     channelsListener: clientListener,
     currentNode: "background",
+    diagnosticsLogProcessor: provideClass(NodeWsLogProcessor),
     exceptionLogging: {
       sink: provideClass(SoftwareLogsExceptionSink),
       uncaughtErrorSource: provideValue(uncaughtErrorSource),
     },
     implementations: {
+      cloudPasskey: CloudPasskeyModule,
       accountCreation: AccountCreationModule,
       deleteOrResetAccount: DeleteOrResetAccountModule,
       subscriptionCode: SubscriptionCodeModule,
@@ -209,6 +223,7 @@ export async function startApplicationModules(): Promise<CarbonReadyHandler> {
       },
       deviceTransfer: DeviceTransferModule,
       activityLogs: ActivityLogsModule,
+      accountManagement: AccountManagementModule,
       loggedOutMonitoring: LoggedOutMonitoringModule,
       identityVerificationFlow: IdentityVerificationFlowModule,
       autofillSettings: AutofillSettingsModule,
@@ -217,18 +232,7 @@ export async function startApplicationModules(): Promise<CarbonReadyHandler> {
       autofillSecurity: AutofillSecurityModule,
       autofillNotifications: AutofillNotificationsModule,
       linkedWebsites: LinkedWebsitesModule,
-      enclaveSdkApi: {
-        module: EnclaveSdkModule,
-        configurations: {
-          enclaveApiSettings: provideValue(
-            new EnclaveApiSettings(
-              nitroCloudflareHeaders,
-              SSO_ENCLAVE_API_ADDRESS,
-              nitroEnvironment
-            )
-          ),
-        },
-      },
+      teamEnclave: TeamEnclaveModule,
       confidentialSSOApi: {
         module: ConfidentialSSOModule,
         configurations: {
@@ -246,6 +250,7 @@ export async function startApplicationModules(): Promise<CarbonReadyHandler> {
         },
       },
       sync: SyncModule,
+      importOrchestrator: ImportOrchestratorModule,
       vaultReport: VaultReportModule,
       vaultItemsCrud: VaultItemsCrudModule,
       vaultSearch: VaultSearchModule,
@@ -299,7 +304,7 @@ export async function startApplicationModules(): Promise<CarbonReadyHandler> {
               }
             : {}),
         },
-        provideClass(AuthenticationWebServicesRepository)
+        provideClass(SessionServerApiCredentialsRepository)
       ),
       platformInfo: PlatformInfoModule,
       authentication: AuthenticationModule,
@@ -322,6 +327,7 @@ export async function startApplicationModules(): Promise<CarbonReadyHandler> {
             : provideClass(FileUploadListenerBackgroundPage),
         },
       },
+      killSwitch: KillSwitchModule,
     },
     otherModules: [
       ...(isMv3
@@ -332,6 +338,7 @@ export async function startApplicationModules(): Promise<CarbonReadyHandler> {
           ]
         : []),
       SoftwareLogsExceptionSinkModule.configure({}),
+      LoggingNodeWsAdaptersModule,
       HttpModule.configure(provideValue(new HttpFetchBackend())),
       RemoteFileUpdateModule.configure(
         provideClass(RemoteFileUpdateService),
@@ -359,19 +366,16 @@ export async function startApplicationModules(): Promise<CarbonReadyHandler> {
           })
         )
       ),
-      EnclaveProxyModule.configure(
-        {
-          appAccessKey: webservicesApiKeys.appAccess,
-          appSecretKey: webservicesApiKeys.appSecret,
-        },
-        nitroCloudflareHeaders,
-        nitroEnvironment
-      ),
       EnclaveModule.configure(
         provideValue(
           new EnclaveApiSettings(
+            {
+              appAccessKey: webservicesApiKeys.appAccess,
+              appSecretKey: webservicesApiKeys.appSecret,
+            },
             nitroCloudflareHeaders,
             SSO_ENCLAVE_API_ADDRESS,
+            DASHLANE_API_ADDRESS,
             nitroEnvironment
           )
         )
@@ -381,7 +385,9 @@ export async function startApplicationModules(): Promise<CarbonReadyHandler> {
     jsonFetcher: new JsonExtensionResourceFetcher(),
     cronSource: BROWSER_CRON_SOURCE,
     keyValueStorageInfrastructure: new ExtensionLocalStorageInfrastructure(),
-    managedStorageInfrastructure: new ExtensionManagedStorageInfrastructure(),
+    managedStorageInfrastructure: new ExtensionManagedStorageInfrastructure(
+      logger
+    ),
     defaultDeviceStorageEncryptionCodec: provideClass(
       ObfuscationKeyEncryptionCodec
     ),
@@ -391,13 +397,16 @@ export async function startApplicationModules(): Promise<CarbonReadyHandler> {
   });
   return {
     app,
-    signalCarbonReady: ({ storeService }, apiEvents, leelooEvents) => {
+    signalCarbonReady: (coreServices, apiEvents, leelooEvents) => {
       carbonInfrastructure.ready({
         apiEvents,
-        state$: storeService.getState$(),
         leelooEvents,
         leelooEventsCommands: leelooEvents,
+        coreServices,
       });
+    },
+    signalCarbonInitFailed: (error) => {
+      carbonInfrastructure.initFailed(error);
     },
   };
 }

@@ -8,8 +8,9 @@ import { App } from "@dashlane/framework-application";
 export interface CarbonReadyHandler {
   app: App<AppDefinition>;
   signalCarbonReady: (
-    services: CoreServices,
+    coreServices: CoreServices,
     events: CarbonApiEvents,
     leelooEvents: typeof CarbonLeelooConnector
   ) => void;
+  signalCarbonInitFailed: (error: unknown) => void;
 }

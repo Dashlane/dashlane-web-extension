@@ -1,27 +1,29 @@
-import { webservicesApiKeys } from '../server-sdk-api-keys';
+import { webservicesApiKeys } from "../server-sdk-api-keys";
 const styxDevApiKeys = {
-    styxAccess: '*****',
-    styxSecret: '*****',
+  styxAccess: "__REDACTED__",
+  styxSecret: "__REDACTED__",
 };
 const styxProdApiKeys = {
-    styxAccess: '*****',
-    styxSecret: '*****',
+  styxAccess: "__REDACTED__",
+  styxSecret: "__REDACTED__",
 };
-const styxApiKeys = ***** ? styxProdApiKeys : styxDevApiKeys;
-export const getCloudflareKeys = (): {
-    cloudflareAccess: string;
-    cloudflareSecret: string;
-} | undefined => {
-    if (!USE_CLOUDFLARE_HEADERS) {
-        return undefined;
+const styxApiKeys = __REDACTED__ ? styxProdApiKeys : styxDevApiKeys;
+export const getCloudflareKeys = ():
+  | {
+      cloudflareAccess: string;
+      cloudflareSecret: string;
     }
-    return {
-        cloudflareAccess: CLOUDFLARE_ACCESS_KEY,
-        cloudflareSecret: CLOUDFLARE_SECRET_KEY,
-    };
+  | undefined => {
+  if (!USE_CLOUDFLARE_HEADERS) {
+    return undefined;
+  }
+  return {
+    cloudflareAccess: CLOUDFLARE_ACCESS_KEY,
+    cloudflareSecret: CLOUDFLARE_SECRET_KEY,
+  };
 };
 export const serverApiKeys = {
-    ...webservicesApiKeys,
-    ...styxApiKeys,
-    ...(getCloudflareKeys() ?? {}),
+  ...webservicesApiKeys,
+  ...styxApiKeys,
+  ...(getCloudflareKeys() ?? {}),
 };

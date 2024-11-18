@@ -6,12 +6,12 @@ import {
 } from "@dashlane/webextensions-apis";
 import { APP_BASE_URL, CONSOLE_BASE_URL } from "../../constants/dashlane";
 import { buildRedirectUrl } from "./build-redirect-url";
-const CDN_NO_REDIRECT_REGEX = new RegExp("*****");
+const CDN_NO_REDIRECT_REGEX = new RegExp("__REDACTED__");
 const WEBAPP_REDIRECTION_PATTERNS = [
   `${APP_BASE_URL}/*`,
   `${CONSOLE_BASE_URL}/*`,
 ];
-const NITRO_SAML_CALLBACK_URLS = ["*****", "*****"];
+const NITRO_SAML_CALLBACK_URLS = ["__REDACTED__", "__REDACTED__"];
 const MAIN_FRAME = "main_frame";
 const SUB_FRAME = "sub_frame";
 function noRedirect(url: string): boolean {

@@ -1,4 +1,4 @@
-import { AutofillEngineState as ServerAutofillEngineState } from "@dashlane/autofill-engine/dist/autofill-engine/src/server";
+import { AutofillEngineState as ServerAutofillEngineState } from "@dashlane/autofill-engine/server";
 import {
   CarbonApiEvents,
   CarbonMaverickConnector,

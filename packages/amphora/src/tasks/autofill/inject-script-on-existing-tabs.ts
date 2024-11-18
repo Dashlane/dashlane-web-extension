@@ -3,7 +3,7 @@ import {
   storageLocalGet,
   tabsQuery,
 } from "@dashlane/webextensions-apis";
-import { logError } from "../../logs/console/logger";
+import { logger } from "../../logs/app-logger";
 const INJECTED_FILES_PATHS = [
   "/content/injectedts/vendors.js",
   "/content/contentScripts/kwift.CHROME.js",
@@ -16,7 +16,7 @@ export async function getTabsAndInjectScript(): Promise<void> {
     );
     if (isFeatureEnabled[INJECT_SCRIPT_ON_START_OPTIONS_KEY]) {
       const tabs = await tabsQuery({
-        url: ["*****", "*****"],
+        url: ["__REDACTED__", "__REDACTED__"],
       });
       tabs.forEach(({ id: tabId }: chrome.tabs.Tab) => {
         if (!tabId) {
@@ -29,11 +29,7 @@ export async function getTabsAndInjectScript(): Promise<void> {
       });
     }
   } catch (error) {
-    logError({
-      message: "Failed to inject script on existing tabs",
-      details: { error },
-      tags: ["amphora", "initBackground", "getTabsAndInjectScript"],
-    });
+    logger.error("Failed to inject script on existing tabs", { error });
     throw error;
   }
 }

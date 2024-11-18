@@ -1,8 +1,10 @@
 import { tabsCreate } from "@dashlane/webextensions-apis";
-import { WebOnboardingModeEvent } from "@dashlane/communication";
+import {
+  CarbonApiEvents,
+  WebOnboardingModeEvent,
+} from "@dashlane/communication";
 import { cookieRemoveByDomain } from "@dashlane/framework-infra/spi";
 import { ExtensionCarbonConnector } from "../../communication/connectors.types";
-import { TaskDependencies } from "../tasks.types";
 async function openOnboardingSite(
   carbonLegacyConnector: ExtensionCarbonConnector,
   webOnboardingMode: WebOnboardingModeEvent
@@ -19,13 +21,21 @@ async function openOnboardingSite(
 }
 export function initOnboarding({
   connectors: {
-    extensionToCarbonApiConnector: carbonApiConnector,
-    extensionToCarbonLegacyConnector: carbonLegacyConnector,
+    extensionToCarbonApiConnector,
+    extensionToCarbonLegacyConnector,
   },
-}: TaskDependencies): void {
-  carbonApiConnector.liveWebOnboardingMode.on(
+}: {
+  connectors: {
+    extensionToCarbonApiConnector: CarbonApiEvents;
+    extensionToCarbonLegacyConnector: ExtensionCarbonConnector;
+  };
+}): void {
+  extensionToCarbonApiConnector.liveWebOnboardingMode.on(
     (webOnboardingMode: WebOnboardingModeEvent) => {
-      void openOnboardingSite(carbonLegacyConnector, webOnboardingMode);
+      void openOnboardingSite(
+        extensionToCarbonLegacyConnector,
+        webOnboardingMode
+      );
     }
   );
 }

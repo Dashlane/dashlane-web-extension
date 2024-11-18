@@ -1,48 +1,22 @@
 import { cookiesGetAll } from "@dashlane/webextensions-apis";
 import { UserFirstLaunchEvent, Web } from "@dashlane/hermes";
-import { isErrorLike, makeException } from "../../logs/exceptions/make";
-import { ExceptionCode } from "../../logs/exceptions/error.types";
-import { sendExceptionLog } from "../../logs/exceptions/send";
-import { TaskDependencies } from "../../tasks/tasks.types";
 import { DashlaneCookie } from "./log-first-launch.types";
-import { logError, logWarn } from "../../logs/console/logger";
+import { CarbonApiEvents } from "@dashlane/communication";
+import { logger } from "../../logs/app-logger";
 async function getDashlaneCookie(): Promise<Partial<DashlaneCookie>> {
   const cookie = await cookiesGetAll({
-    domain: "*****",
+    domain: "__REDACTED__",
     name: "userFunnelCookie",
   }).catch((error) => {
-    logError({
-      details: { error },
-      message: "Error while getting dashlane cookies",
-      tags: [
-        "amphora",
-        "initBackground",
-        "logFirstLaunch",
-        "getDashlaneCookie",
-      ],
-    });
-    throw error;
+    logger.error("Error while getting dashlane cookies", { error });
+    return [] as Array<chrome.cookies.Cookie>;
   });
   if (cookie[0]) {
     const cookieValue = decodeURIComponent(cookie[0].value);
     try {
       return JSON.parse(cookieValue);
     } catch (error) {
-      const { WARNING } = ExceptionCode;
-      const defaultError = {
-        message: "Error parsing userFunnelCookie",
-      };
-      const checkedError = isErrorLike(error) ? error : defaultError;
-      const exceptionWarning = makeException({
-        ...checkedError,
-        level: WARNING,
-      });
-      sendExceptionLog(exceptionWarning);
-      logWarn({
-        details: { error },
-        message: "Error parsing userFunnelCookie",
-        tags: ["amphora", "initBackground"],
-      });
+      logger.error("Error parsing userFunnelCookie", { error });
     }
   }
   return {};
@@ -51,8 +25,12 @@ function formatCookieDataValue(data?: string) {
   return data !== "" ? data : undefined;
 }
 export async function logFirstLaunch({
-  connectors: { extensionToCarbonApiConnector: carbonApiConnector },
-}: TaskDependencies): Promise<void> {
+  connectors: { extensionToCarbonApiConnector },
+}: {
+  connectors: {
+    extensionToCarbonApiConnector: CarbonApiEvents;
+  };
+}): Promise<void> {
   const cookieData = await getDashlaneCookie();
   const attributionProperties: Web =
     Object.keys(cookieData).length === 0
@@ -93,7 +71,7 @@ export async function logFirstLaunch({
           ),
           utm_last_click_visit_timestamp: cookieData.last_click_visitTimestamp,
         };
-  void carbonApiConnector.logEvent({
+  void extensionToCarbonApiConnector.logEvent({
     event: new UserFirstLaunchEvent({
       web: attributionProperties,
     }),

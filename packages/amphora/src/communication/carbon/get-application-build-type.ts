@@ -1,6 +1,7 @@
 import { runtimeGetURL } from "@dashlane/webextensions-apis";
 import { ApplicationBuildType } from "@dashlane/communication";
 import { RuntimeConfig } from "./runtime-config.types";
+import { logger } from "../../logs/app-logger";
 const RUNTIME_CONFIG_FILENAME = "runtime-config.json";
 function getBuildTypeFromFile(
   runtimeConfigJson: Record<string, unknown>
@@ -19,11 +20,11 @@ function getBuildTypeFromFile(
   ];
 }
 const getRuntimeConfig = async (): Promise<RuntimeConfig> => {
-  const runtimeConfigUrl = runtimeGetURL(RUNTIME_CONFIG_FILENAME);
-  if (!runtimeConfigUrl) {
-    throw new Error("Could not build path to runtime-config.json");
-  }
   try {
+    const runtimeConfigUrl = runtimeGetURL(RUNTIME_CONFIG_FILENAME);
+    if (!runtimeConfigUrl) {
+      throw new Error("Could not build path to runtime-config.json");
+    }
     const response = await fetch(runtimeConfigUrl);
     const runtimeConfigJson = (await response.json()) as Record<
       string,
@@ -33,8 +34,14 @@ const getRuntimeConfig = async (): Promise<RuntimeConfig> => {
       buildType: getBuildTypeFromFile(runtimeConfigJson),
     };
     return runtimeConfig;
-  } catch {
-    throw new Error("Unable to read buildType from runtime-config.json");
+  } catch (error) {
+    logger.error("Unable to read buildType from runtime-config.json", {
+      error,
+    });
+    const defaultRuntimeConfig: RuntimeConfig = {
+      buildType: ApplicationBuildType.__REDACTED__,
+    };
+    return defaultRuntimeConfig;
   }
 };
 export const getApplicationBuildType =

@@ -4,7 +4,7 @@ import { getPlatformInfo } from "./platform-info";
 import { serverApiKeys } from "./server-api-keys";
 import { StartParams } from "./start.types";
 import { config as carbonConfig } from "./carbon-config";
-import { logVerbose } from "../../logs/console/logger";
+import { logger } from "../../logs/app-logger";
 export async function startCarbon({
   apiConnector,
   debugConnector,
@@ -17,10 +17,7 @@ export async function startCarbon({
   sessionStorage,
   app,
 }: StartParams): Promise<CoreServices> {
-  logVerbose({
-    message: "Carbon initialization started",
-    tags: ["initCarbon"],
-  });
+  logger.debug(`Carbon initialization started`);
   const platformInfo = await getPlatformInfo();
   const coreServices = await init({
     connectors: {
@@ -47,9 +44,6 @@ export async function startCarbon({
     },
     createClients: app.createClient,
   });
-  logVerbose({
-    message: "Carbon initialization finished",
-    tags: ["initCarbon"],
-  });
+  logger.debug(`Carbon initialization done`);
   return coreServices;
 }

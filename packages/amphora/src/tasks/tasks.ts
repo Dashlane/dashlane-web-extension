@@ -1,47 +1,64 @@
-import { logError, logInfo } from "../logs/console/logger";
-import { SyncTask, Task, TaskAppPromise, TaskConnectors } from "./tasks.types";
-export function makeRunTasksBeforeAppClientReady(
-  connectors: TaskConnectors,
-  appClient: TaskAppPromise
-) {
-  return function runTasksBeforeAppClientReady(
-    tasks: SyncTask[],
-    args?: unknown
-  ): void {
-    try {
-      tasks.forEach((task) => {
-        task({ appClient, connectors }, args);
-        logInfo({
-          message: `${task.name} done`,
-          tags: ["amphora", "initBackground", "runTasksBeforeAppClientReady"],
+import { logger } from "../logs/app-logger";
+import { DEFAULT_ASYNC_INIT_TIMEOUT_MS, promiseWithTimeout } from "./utils";
+export type TaskFn<A, C> = ({
+  appClient,
+  connectors,
+}: {
+  appClient: A;
+  connectors: C;
+}) => void;
+type Task<A, C> = {
+  name: string;
+  fn: TaskFn<A, C>;
+};
+const runInitTask = (name: string, taskFn: () => void | Promise<void>) => {
+  taskFn();
+  logger.info(`Executing task "${name}"`);
+};
+export function makeExtensionInitTasksRunner<A, C>(params: {
+  appClient: Promise<A>;
+  connectors: C;
+}) {
+  return {
+    withAppClientReady(tasks: Array<Task<A, C>>): void {
+      void params.appClient.then((appClient) => {
+        tasks.forEach(({ name, fn }) => {
+          const promise = Promise.resolve().then(() =>
+            runInitTask(name, () => {
+              fn({ appClient, connectors: params.connectors });
+            })
+          );
+          void promiseWithTimeout(
+            promise,
+            DEFAULT_ASYNC_INIT_TIMEOUT_MS,
+            () =>
+              new Error(
+                `Initialization Task ${name} timed out (${DEFAULT_ASYNC_INIT_TIMEOUT_MS}ms)`
+              )
+          )
+            .then(() => {
+              logger.info(`${name} task completed`);
+            })
+            .catch((error) => {
+              logger.error(`Initialization Task ${name} failed`, {
+                error: error instanceof Error ? error.message : String(error),
+              });
+              throw error;
+            });
         });
       });
-    } catch (error) {
-      logError({
-        details: { error },
-        message: "Error on the making of runTasksBeforeAppClientReady",
-        tags: ["amphora", "initBackground", "makeRunTasksBeforeAppClientReady"],
-      });
-      throw error;
-    }
-  };
-}
-export function makeRunTasksAfterAppClientReady(
-  connectors: TaskConnectors,
-  appClientPromise: TaskAppPromise
-) {
-  return function runTasksAfterAppClientReady(
-    tasks: Task[],
-    args?: unknown
-  ): void {
-    void appClientPromise.then((appClient) => {
+    },
+    withAppClientPromise(tasks: Array<Task<Promise<A>, C>>): void {
       tasks.forEach((task) => {
-        task({ appClient, connectors }, args);
-        logInfo({
-          message: `${task.name} done`,
-          tags: ["amphora", "initBackground", "runTasksAfterAppClientReady"],
-        });
+        try {
+          runInitTask(task.name, () => task.fn(params));
+        } catch (error) {
+          logger.error(`Error while running task; "${task.name}"`, {
+            error: error instanceof Error ? error.message : String(error),
+          });
+          throw error;
+        }
       });
-    });
+    },
   };
 }

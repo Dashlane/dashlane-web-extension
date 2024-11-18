@@ -6,8 +6,8 @@ import {
 import { ParsedURL } from "@dashlane/url-parser";
 import { buildRedirectUrl } from "./build-redirect-url";
 import { encodeAntiPhishingToken } from "./helpers";
-import { logInfo } from "../../logs/console/logger";
 import { CarbonApiEvents } from "@dashlane/communication";
+import { logger } from "../../logs/app-logger";
 export function makeAntiPhishingRedirectUrl(
   extensionUrl: string,
   phishingUrl: string
@@ -59,15 +59,9 @@ export function initAntiphishingRedirectionFallback(
 ): void {
   extensionToCarbonApiConnector.livePhishingURLList.on(
     (newDomainList: Set<string>) => {
-      logInfo({
-        message:
-          "Execute on carbon event antiPhishing change from carbon endpoint: livePhishingURLList",
-        tags: [
-          "amphora",
-          "initBackground",
-          "initAntiphishingRedirectionFallback",
-        ],
-      });
+      logger.info(
+        "Execute on carbon event antiPhishing change from carbon endpoint: livePhishingURLList"
+      );
       addAntiPhishingRedirectionPatterns(newDomainList);
     }
   );
