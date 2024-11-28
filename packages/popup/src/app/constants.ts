@@ -1,1 +1,1 @@
-export const TOAST_PORTAL_ID = 'toast-portal';
+export const TOAST_PORTAL_ID = "toast-portal";

@@ -1,3 +1,3 @@
 export const formatExtensionVersion = (version: string) => {
-    return version.split('-')[0];
+  return version.split("-")[0];
 };

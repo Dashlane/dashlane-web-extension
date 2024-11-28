@@ -1,5 +1,5 @@
-import { useContext } from 'react';
-import { VaultItemDetailViewContext } from 'src/app/vault/detail-views/vault-item-detail-view-provider';
+import { useContext } from "react";
+import { VaultItemDetailViewContext } from "./vault-item-detail-view-provider";
 export const useVaultItemDetailView = () => {
-    return useContext(VaultItemDetailViewContext);
+  return useContext(VaultItemDetailViewContext);
 };

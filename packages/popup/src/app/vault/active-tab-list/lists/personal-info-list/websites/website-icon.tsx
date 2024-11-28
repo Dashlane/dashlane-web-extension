@@ -1,3 +1,3 @@
-import React from 'react';
-import { ListItemIcon } from '../../common/list-item-icon';
-export const WebsiteIcon = () => <ListItemIcon iconName="WebOutlined"/>;
+import React from "react";
+import { ListItemIcon } from "../../common/list-item-icon";
+export const WebsiteIcon = () => <ListItemIcon iconName="WebOutlined" />;

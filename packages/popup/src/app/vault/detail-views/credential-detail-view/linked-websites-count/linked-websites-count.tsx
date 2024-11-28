@@ -1,19 +1,31 @@
-import * as React from 'react';
-import { ChevronRightIcon, colors, jsx } from '@dashlane/ui-components';
-import styles from './styles.css';
+import * as React from "react";
+import { jsx, LinkButton, Paragraph } from "@dashlane/design-system";
 interface Props {
-    linkedWebsitesTitle: string;
-    value: string;
-    onClick: () => void;
+  linkedWebsitesTitle: string;
+  value: string;
+  onClick: () => void;
 }
-const LinkedWebsitesCount: React.FunctionComponent<Props> = ({ linkedWebsitesTitle, value, onClick, }) => {
-    return (<button className={styles.container} onClick={onClick} sx={{ color: 'ds.text.neutral.standard' }}>
-      <p aria-label={linkedWebsitesTitle} className={styles.value}>
+export const LinkedWebsitesCount: React.FunctionComponent<Props> = ({
+  linkedWebsitesTitle,
+  value,
+  onClick,
+}) => {
+  return (
+    <LinkButton
+      mood="neutral"
+      onClick={onClick}
+      sx={{
+        width: "100%",
+        zIndex: 0,
+        justifyContent: "center",
+      }}
+    >
+      <Paragraph
+        aria-label={linkedWebsitesTitle}
+        textStyle="ds.body.standard.strong"
+      >
         {value}
-      </p>
-      <div className={styles.action}>
-        <ChevronRightIcon size={12} hoverColor={colors.dashGreen01}/>
-      </div>
-    </button>);
+      </Paragraph>
+    </LinkButton>
+  );
 };
-export default React.memo(LinkedWebsitesCount);

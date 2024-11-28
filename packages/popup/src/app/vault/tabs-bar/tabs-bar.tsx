@@ -1,107 +1,90 @@
-import { FocusEvent, forwardRef, Ref, useImperativeHandle, useRef, useState, } from 'react';
-import { colors, FlexContainer, HorizontalNavButton, HorizontalNavMenu, jsx, ThemeUIStyleObject, } from '@dashlane/ui-components';
-import useTranslate from 'libs/i18n/useTranslate';
-import { isElementInViewport } from 'libs/isElementInViewport';
-import { TabList, TabName } from './tabs-data';
-import { LeftChevron } from './left-chevron';
-import { RightChevron } from './right-chevron';
-import { scrollViewportToNextChild } from './scroll-helpers';
-import { useActiveTabInfoContext } from './active-tab-info-context';
+import { forwardRef } from "react";
+import { jsx, TabConfiguration, Tabs } from "@dashlane/design-system";
+import { PageView } from "@dashlane/hermes";
+import useTranslate from "../../../libs/i18n/useTranslate";
+import { logPageView } from "../../../libs/logs/logEvent";
+import {
+  TabName,
+  useActiveVaultTypeTabContext,
+} from "./active-vault-type-tab-context";
 const I18N_KEYS = {
-    PREVIOUS: 'tab/all_items/tab_bar/previous',
-    NEXT: 'tab/all_items/tab_bar/next',
-};
-const DEFAULT_CHEVRON_WIDTH = '29px';
-const SX_STYLES: {
-    [key: string]: ThemeUIStyleObject;
-} = {
-    TabBarStyle: {
-        minHeight: '56px',
-        flexWrap: 'nowrap',
-        flexDirection: 'row',
-        overflowY: 'scroll',
-        scrollbarWidth: 'none',
-        '::-webkit-scrollbar': {
-            width: 0,
-            height: 0,
-        },
-        padding: '0 4px',
-        display: 'flex',
-        flex: 1,
-        alignItems: 'center',
-        margin: '0 12px',
-    },
-    ButtonStyle: {
-        whiteSpace: 'nowrap',
-        textTransform: 'none',
-        '&:hover, &:focus': {
-            backgroundColor: colors.dashGreen05,
-        },
-        '&:focus': {
-            outlineOffset: '3px',
-        },
-    },
-    ButtonSelectedStyle: {
-        backgroundColor: colors.midGreen05,
-        fontWeight: 'light',
-    },
-    ChevronStyle: {
-        width: DEFAULT_CHEVRON_WIDTH,
-        cursor: 'pointer',
-        ':hover': {
-            background: colors.dashGreen05,
-            color: colors.midGreen00,
-        },
-    },
+  PREVIOUS: "tab/all_items/tab_bar/previous",
+  NEXT: "tab/all_items/tab_bar/next",
+  CREDENTIALS: "tab/all_items/tab_bar/credentials",
+  IDS: "tab/all_items/tab_bar/ids",
+  PAYMENTS: "tab/all_items/tab_bar/payments",
+  PERSONAL_INFO: "tab/all_items/tab_bar/personal_info",
+  SECURE_NOTES: "tab/all_items/tab_bar/secure_notes",
 };
 type Props = {};
 export interface TabsBarHandle {
-    focus: () => void;
+  focus: () => void;
 }
-const TabsBarComponent = (_props: Props, ref: Ref<TabsBarHandle>) => {
-    const [showLeftButton, setShowLeftButton] = useState(false);
-    const [showRightButton, setShowRightButton] = useState(true);
-    const { activeTabInfo, setActiveTabInfo } = useActiveTabInfoContext();
-    const { translate } = useTranslate();
-    const tabsListRef = useRef<HTMLUListElement>(null);
-    const credentialsTabRef = useRef<HTMLButtonElement>(null);
-    useImperativeHandle(ref, () => ({
-        focus: () => {
-            credentialsTabRef.current?.focus();
+const TabsBarComponent = () => {
+  const { setActiveTabName } = useActiveVaultTypeTabContext();
+  const { translate } = useTranslate();
+  const tabs: TabConfiguration[] = [
+    {
+      id: "tab-credentials",
+      contentId: "content-credentials",
+      title: translate(I18N_KEYS.CREDENTIALS),
+      onSelect: () => {
+        logPageView(PageView.ItemCredentialList);
+        setActiveTabName(TabName.Passwords);
+      },
+    },
+    {
+      id: "tab-payments",
+      contentId: "content-payments",
+      title: translate(I18N_KEYS.PAYMENTS),
+      onSelect: () => {
+        logPageView(PageView.ItemPaymentList);
+        setActiveTabName(TabName.Payments);
+      },
+    },
+    {
+      id: "tab-secure-notes",
+      contentId: "content-secure-notes",
+      title: translate(I18N_KEYS.SECURE_NOTES),
+      onSelect: () => {
+        logPageView(PageView.ItemSecureNoteList);
+        setActiveTabName(TabName.Notes);
+      },
+    },
+    {
+      id: "tab-personal-info",
+      contentId: "content-personal-info",
+      title: translate(I18N_KEYS.PERSONAL_INFO),
+      onSelect: () => {
+        logPageView(PageView.ItemPersonalInfoList);
+        setActiveTabName(TabName.PersonalInfo);
+      },
+    },
+    {
+      id: "tab-ids",
+      contentId: "content-ids",
+      title: translate(I18N_KEYS.IDS),
+      onSelect: () => {
+        logPageView(PageView.ItemIdList);
+        setActiveTabName(TabName.Ids);
+      },
+    },
+  ];
+  return (
+    <div
+      sx={{
+        display: "flex",
+        padding: "0 4px",
+        margin: "0 4px",
+        "* > button": {
+          minWidth: "fit-content",
         },
-    }));
-    const updateNavButtonsVisibility = () => {
-        if (tabsListRef.current) {
-            const childList = [...tabsListRef.current.children];
-            setShowLeftButton(!isElementInViewport(childList[0]));
-            setShowRightButton(!isElementInViewport(childList[childList.length - 1]));
-        }
-    };
-    const scrollToNextTab = (direction: 'right' | 'left') => {
-        if (tabsListRef.current) {
-            scrollViewportToNextChild(tabsListRef.current, direction);
-        }
-    };
-    const handleTabFocus = (event: FocusEvent<HTMLElement>) => {
-        event.target.scrollIntoView();
-    };
-    return (<FlexContainer data-testid="popup_tabs_bar" onScroll={updateNavButtonsVisibility}>
-      {showLeftButton ? (<button type="button" onClick={scrollToNextTab.bind(null, 'left')} sx={SX_STYLES.ChevronStyle} title={translate(I18N_KEYS.PREVIOUS)}>
-          <LeftChevron />
-        </button>) : null}
-      <HorizontalNavMenu sx={SX_STYLES.TabBarStyle} ref={tabsListRef}>
-        {TabList.map((tabInfo) => (<HorizontalNavButton key={tabInfo.nameKey} label={translate(tabInfo.nameKey)} size="small" onClick={() => setActiveTabInfo(tabInfo)} onFocus={handleTabFocus} sx={{
-                ...SX_STYLES.ButtonStyle,
-                ...(activeTabInfo.name === tabInfo.name
-                    ? SX_STYLES.ButtonSelectedStyle
-                    : {}),
-            }} selected={activeTabInfo
-                ? activeTabInfo.name === tabInfo.name
-                : tabInfo.name === TabName.Passwords}/>))}
-      </HorizontalNavMenu>
-      {showRightButton ? (<button type="button" onClick={scrollToNextTab.bind(null, 'right')} sx={SX_STYLES.ChevronStyle} title={translate(I18N_KEYS.NEXT)}>
-          <RightChevron />
-        </button>) : null}
-    </FlexContainer>);
+      }}
+      data-testid="popup_tabs_bar"
+      data-tabs
+    >
+      <Tabs tabs={tabs} />
+    </div>
+  );
 };
 export const TabsBar = forwardRef<TabsBarHandle, Props>(TabsBarComponent);

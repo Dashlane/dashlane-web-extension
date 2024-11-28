@@ -1,5 +1,5 @@
-import { CredentialSearchOrder } from '@dashlane/communication';
+import { CredentialSearchOrder } from "@dashlane/communication";
 export interface ISearchOrderProps {
-    order: CredentialSearchOrder;
-    onOrderChangeHandler: (newOrder: CredentialSearchOrder) => void;
+  order: CredentialSearchOrder;
+  onOrderChangeHandler: (newOrder: CredentialSearchOrder) => void;
 }

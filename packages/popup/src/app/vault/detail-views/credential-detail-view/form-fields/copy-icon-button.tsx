@@ -1,17 +1,42 @@
-import * as React from 'react';
-import { CopyIcon } from '@dashlane/ui-components';
-import { IconButtonWithTooltip } from 'src/components/icon-button-with-tooltip/icon-button-with-tooltip';
+import * as React from "react";
+import { Button } from "@dashlane/design-system";
+import { useIsUserFrozen } from "../../../../../libs/hooks/use-is-user-frozen";
 interface CopyIconButtonProps {
-    text: string;
-    copyAction: (event: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>) => void;
-    disabled?: boolean;
+  text: string;
+  copyAction: (
+    event:
+      | React.MouseEvent<HTMLButtonElement>
+      | React.KeyboardEvent<HTMLButtonElement>
+  ) => void;
+  disabled?: boolean;
 }
-const CopyIconButtonComponent: React.FC<CopyIconButtonProps> = ({ copyAction, text, disabled = false, }) => {
-    return (<IconButtonWithTooltip tooltipContent={text} tooltipMaxWidth={162} onClick={(event) => {
-            if (event.detail !== 0) {
-                event.currentTarget.blur();
-            }
-            copyAction(event);
-        }} disabled={disabled} icon={<CopyIcon title={text}/>}/>);
+const CopyIconButtonComponent: React.FC<CopyIconButtonProps> = ({
+  copyAction,
+  text,
+  disabled = false,
+}) => {
+  const { isUserFrozen } = useIsUserFrozen();
+  if (isUserFrozen) {
+    return null;
+  }
+  return (
+    <Button
+      key="copy"
+      title={text}
+      aria-label={text}
+      tooltip={text}
+      disabled={disabled}
+      icon="ActionCopyOutlined"
+      intensity="supershy"
+      layout="iconOnly"
+      onClick={(
+        event:
+          | React.MouseEvent<HTMLButtonElement>
+          | React.KeyboardEvent<HTMLButtonElement>
+      ) => {
+        copyAction(event);
+      }}
+    />
+  );
 };
 export const CopyIconButton = React.memo(CopyIconButtonComponent);

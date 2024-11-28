@@ -1,1 +1,1 @@
-export { SuggestedItemsList } from './suggested-items-list';
+export { SuggestedItemsList } from "./suggested-items-list";

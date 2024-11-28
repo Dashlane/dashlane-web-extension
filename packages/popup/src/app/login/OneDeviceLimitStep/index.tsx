@@ -1,1 +1,1 @@
-export * from 'app/login/OneDeviceLimitStep/one-device-limit-step';
+export * from "./one-device-limit-step";

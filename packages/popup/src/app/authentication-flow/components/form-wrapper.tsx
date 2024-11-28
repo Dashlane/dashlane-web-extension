@@ -1,11 +1,15 @@
-import * as React from 'react';
-import { jsx } from '@dashlane/design-system';
-import { FlexContainer } from '@dashlane/ui-components';
+import * as React from "react";
+import { Flex, jsx } from "@dashlane/design-system";
 interface Props {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
-export const FormWrapper = ({ children }: Props) => (<FlexContainer flexDirection="column" sx={{
-        flexGrow: '1',
-    }}>
+export const FormWrapper = ({ children }: Props) => (
+  <Flex
+    flexDirection="column"
+    sx={{
+      flexGrow: "1",
+    }}
+  >
     {children}
-  </FlexContainer>);
+  </Flex>
+);

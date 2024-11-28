@@ -1,1 +1,1 @@
-export * from 'app/login/InitialSyncProgressStep/initial-sync-progress-step';
+export * from "./initial-sync-progress-step";
