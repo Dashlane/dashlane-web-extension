@@ -1,1 +1,1 @@
-export { useBulkDeletion } from './hooks/use-bulk-deletion';
+export { useBulkDeletion } from "./hooks/use-bulk-deletion";

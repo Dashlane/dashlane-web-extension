@@ -1,16 +1,42 @@
-import { HTMLAttributes, ReactNode } from 'react';
-import classnames from 'classnames';
-import { GridContainer, jsx } from '@dashlane/ui-components';
-import styles from './styles.css';
+import { HTMLAttributes, ReactNode } from "react";
 interface Props extends HTMLAttributes<HTMLElement> {
-    startWidgets?: () => ReactNode;
-    endWidget?: ReactNode;
+  startWidgets?: ReactNode;
+  endWidget?: ReactNode;
 }
-export const Header = ({ startWidgets, endWidget, className, ...rest }: Props) => {
-    return (<header className={classnames(styles.root, className)} {...rest}>
-      <GridContainer gridAutoFlow="column" gap="8px" sx={{ height: '100%', alignItems: 'center' }}>
-        {startWidgets ? startWidgets() : null}
-      </GridContainer>
-      {endWidget ? <div className={styles.endWidget}>{endWidget}</div> : null}
-    </header>);
+export const Header = ({ startWidgets, endWidget, ...rest }: Props) => {
+  return (
+    <header
+      sx={{
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: "100%",
+        padding: "16px 0",
+        position: "relative",
+        zIndex: "2",
+      }}
+      {...rest}
+    >
+      <div
+        sx={{
+          display: "flex",
+          gap: "8px",
+        }}
+      >
+        {startWidgets}
+      </div>
+      {endWidget ? (
+        <div
+          sx={{
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          {endWidget}
+        </div>
+      ) : null}
+    </header>
+  );
 };

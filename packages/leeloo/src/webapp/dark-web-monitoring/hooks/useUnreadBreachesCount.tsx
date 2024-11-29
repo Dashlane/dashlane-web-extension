@@ -1,11 +1,11 @@
-import { breachesApi } from '@dashlane/password-security-contracts';
-import { useCachedModuleQuery } from '@dashlane/framework-react';
+import { breachesApi } from "@dashlane/password-security-contracts";
+import { useModuleQuery } from "@dashlane/framework-react";
 export interface UseUnreadBreachesCount {
-    count: number | null;
+  count: number | null;
 }
 export const useUnreadBreachesCount = (): UseUnreadBreachesCount => {
-    const { data } = useCachedModuleQuery(breachesApi, 'unreadBreachesCount');
-    return {
-        count: data?.count ?? null,
-    };
+  const { data } = useModuleQuery(breachesApi, "unreadBreachesCount");
+  return {
+    count: data?.count ?? null,
+  };
 };

@@ -1,1 +1,1 @@
-export { VaultRowItemCollectionsList } from './vault-row-item-collections-list';
+export { VaultRowItemCollectionsList } from "./vault-row-item-collections-list";

@@ -1,36 +1,68 @@
-import { HTMLAttributes, ReactNode } from 'react';
-import { Icon, jsx } from '@dashlane/design-system';
-import { DropdownElement, DropdownMenu, FlexContainer, } from '@dashlane/ui-components';
-import { Header } from './header';
-import { VaultHeaderButton } from './vault-header-button';
-interface Props extends HTMLAttributes<HTMLDivElement> {
-    buttonLabel: string;
-    menuItemContents: ReactNode;
-    endWidget: ReactNode;
+import { HTMLAttributes, ReactNode, useState } from "react";
+import {
+  DropdownContent,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTriggerButton,
+  IconName,
+} from "@dashlane/design-system";
+import { Header } from "./header";
+export interface MenuItems {
+  icon?: IconName;
+  label: string;
+  onClick: () => void;
 }
-interface PropsDropdownElement {
-    icon?: ReactNode;
-    label: string;
-    onClick: () => void;
-}
-const ButtonIconWrapper = ({ children }: {
-    children: ReactNode;
-}) => (<span sx={{ mr: '8px' }}>{children}</span>);
-export const DropdownItem = ({ icon, label, onClick, }: PropsDropdownElement) => {
-    return (<DropdownElement fullWidth onClick={onClick} key={label}>
-      <FlexContainer flexDirection="row" flexWrap="nowrap">
-        {icon ? <ButtonIconWrapper>{icon}</ButtonIconWrapper> : null}
-        {label}
-      </FlexContainer>
-    </DropdownElement>);
+export const HeaderDropdown = ({
+  menuItems,
+  buttonLabel,
+}: {
+  menuItems: MenuItems[];
+  buttonLabel: string;
+}) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  return (
+    <DropdownMenu
+      align="start"
+      isOpen={isDropdownOpen}
+      onOpenChange={() => setIsDropdownOpen(!isDropdownOpen)}
+    >
+      <DropdownTriggerButton
+        aria-label={buttonLabel}
+        icon="ActionAddOutlined"
+        layout="iconLeading"
+      >
+        {buttonLabel}
+      </DropdownTriggerButton>
+      <DropdownContent>
+        {menuItems.map((item: MenuItems) => (
+          <DropdownItem
+            key={item.label}
+            label={item.label}
+            leadingIcon={item.icon}
+            onSelect={() => {
+              setIsDropdownOpen(false);
+              item.onClick();
+            }}
+          />
+        ))}
+      </DropdownContent>
+    </DropdownMenu>
+  );
 };
-export const VaultHeaderWithDropdown = ({ buttonLabel, endWidget, menuItemContents, ...rest }: Props) => {
-    const addNewItemWidget = () => (<div sx={{ position: 'relative' }}>
-      <DropdownMenu placement="bottom-start" sx={{ minWidth: '168px' }} offset={[0, 4]} content={menuItemContents}>
-        <VaultHeaderButton icon={<Icon name="ActionAddOutlined"/>} isPrimary>
-          {buttonLabel}
-        </VaultHeaderButton>
-      </DropdownMenu>
-    </div>);
-    return (<Header startWidgets={addNewItemWidget} endWidget={endWidget} {...rest}/>);
+interface Props extends HTMLAttributes<HTMLDivElement> {
+  endWidget: ReactNode;
+  dropdown: ReactNode;
+}
+export const VaultHeaderWithDropdown = ({
+  endWidget,
+  dropdown,
+  ...rest
+}: Props) => {
+  return (
+    <Header
+      startWidgets={<div sx={{ position: "relative" }}>{dropdown}</div>}
+      endWidget={endWidget}
+      {...rest}
+    />
+  );
 };

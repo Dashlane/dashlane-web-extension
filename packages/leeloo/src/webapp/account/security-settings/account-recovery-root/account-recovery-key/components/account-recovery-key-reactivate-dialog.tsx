@@ -1,45 +1,79 @@
-import { useState } from 'react';
-import classnames from 'classnames';
-import { Button, jsx } from '@dashlane/design-system';
-import { Dialog, DialogBody, DialogFooter, DialogTitle, Heading, KeyIcon, Paragraph, } from '@dashlane/ui-components';
-import useTranslate from 'libs/i18n/useTranslate';
-import { allIgnoreClickOutsideClassName } from 'webapp/variables';
-import { AccountRecoveryKeyActivationContainer } from '../containers/account-recovery-key-activation-container';
+import { Dialog, Flex, Paragraph, useColorMode } from "@dashlane/design-system";
+import EnableArkAgainIllustrationDark from "@dashlane/design-system/assets/illustrations/additional-protection-2FA@2x-dark.webp";
+import EnableArkAgainIllustrationLight from "@dashlane/design-system/assets/illustrations/additional-protection-2FA@2x-light.webp";
+import useTranslate from "../../../../../../libs/i18n/useTranslate";
+import { allIgnoreClickOutsideClassName } from "../../../../../../webapp/variables";
 interface Props {
-    onClose: () => void;
-    onGoToRecoveryKeySettings: () => void;
+  onClose: () => void;
+  onGoToSecuritySettings: () => void;
 }
 const I18N_KEYS = {
-    BUTTON_CLOSE_DIALOG: '_common_dialog_dismiss_button',
-    TITLE: 'webapp_account_recovery_key_reactivation_title',
-    DESCRIPTION: 'webapp_account_recovery_key_reactivation_description',
-    CANCEL_BUTTON: '_common_action_cancel',
-    GO_TO_SETTINGS_BUTTON: 'webapp_account_recovery_key_reactivation_cta',
+  BUTTON_CLOSE_DIALOG: "_common_dialog_dismiss_button",
+  TITLE: "webapp_account_recovery_key_reactivation_pin_title",
+  DESCRIPTION: "webapp_account_recovery_key_reactivation_pin_description",
+  CANCEL_BUTTON: "_common_action_cancel",
+  GO_TO_SETTINGS_BUTTON: "webapp_account_recovery_key_reactivation_pin_cta",
 };
-export const AccountRecoveryKeyReactivateDialog = ({ onClose, onGoToRecoveryKeySettings, }: Props) => {
-    const { translate } = useTranslate();
-    const [isRecoveryKeyActivationFlowOpen, setIsRecoveryKeyActivationFlowOpen] = useState(false);
-    const goToRecoveryKeySettings = () => {
-        onGoToRecoveryKeySettings();
-        setIsRecoveryKeyActivationFlowOpen(true);
-    };
-    return isRecoveryKeyActivationFlowOpen ? (<AccountRecoveryKeyActivationContainer onClose={onClose}/>) : (<Dialog isOpen modalContentClassName={classnames(allIgnoreClickOutsideClassName)} disableOutsideClickClose disableScrolling disableUserInputTrap disableEscapeKeyClose closeIconName={translate(I18N_KEYS.BUTTON_CLOSE_DIALOG)} onClose={onClose}>
-      <KeyIcon size={77} color="ds.text.brand.quiet" sx={{ margin: '10px 0 30px 0' }}/>
-      <DialogTitle>
-        <Heading size="small" color="ds.text.neutral.catchy" sx={{ marginBottom: '16px' }}>
+export const AccountRecoveryKeyReactivateDialog = ({
+  onClose,
+  onGoToSecuritySettings,
+}: Props) => {
+  const { translate } = useTranslate();
+  const [colorMode] = useColorMode();
+  const illustrationSource =
+    colorMode === "dark"
+      ? EnableArkAgainIllustrationDark
+      : EnableArkAgainIllustrationLight;
+  return (
+    <Dialog
+      dialogClassName={allIgnoreClickOutsideClassName}
+      isOpen
+      isMandatory
+      disableScrolling
+      closeActionLabel={translate(I18N_KEYS.BUTTON_CLOSE_DIALOG)}
+      onClose={onClose}
+      actions={{
+        primary: {
+          children: translate(I18N_KEYS.GO_TO_SETTINGS_BUTTON),
+          autoFocus: true,
+          onClick: () => {
+            onGoToSecuritySettings();
+            onClose();
+          },
+        },
+        secondary: {
+          children: translate(I18N_KEYS.CANCEL_BUTTON),
+          onClick: onClose,
+        },
+      }}
+    >
+      <Flex>
+        <Flex
+          flexDirection="column"
+          alignContent={"center"}
+          sx={{
+            width: "100%",
+            bg: "ds.background.alternate",
+            marginBottom: "32px",
+          }}
+        >
+          <img
+            src={illustrationSource}
+            alt=""
+            width={360}
+            height={240}
+            sx={{ padding: "24px" }}
+          />
+        </Flex>
+        <Paragraph
+          textStyle="ds.title.section.medium"
+          sx={{ marginBottom: "8px" }}
+          as="h2"
+        >
           {translate(I18N_KEYS.TITLE)}
-        </Heading>
-      </DialogTitle>
-      <DialogBody>
+        </Paragraph>
         <Paragraph>{translate(I18N_KEYS.DESCRIPTION)}</Paragraph>
-      </DialogBody>
-      <DialogFooter>
-        <Button intensity="quiet" mood="neutral" sx={{ marginRight: '8px' }} onClick={onClose}>
-          {translate(I18N_KEYS.CANCEL_BUTTON)}
-        </Button>
-        <Button mood="brand" onClick={goToRecoveryKeySettings}>
-          {translate(I18N_KEYS.GO_TO_SETTINGS_BUTTON)}
-        </Button>
-      </DialogFooter>
-    </Dialog>);
+      </Flex>
+    </Dialog>
+  );
 };

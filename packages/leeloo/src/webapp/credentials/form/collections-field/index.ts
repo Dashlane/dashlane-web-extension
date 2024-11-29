@@ -1,1 +1,1 @@
-export { CollectionsField } from './collections-field';
+export { CollectionsField } from "./collections-field";

@@ -1,1 +1,1 @@
-export { CredentialsView } from './credentials-view';
+export { CredentialsView } from "./credentials-view";

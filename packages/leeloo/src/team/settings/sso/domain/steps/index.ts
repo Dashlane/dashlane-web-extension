@@ -1,6 +1,6 @@
-export { RegisterDomain } from 'team/settings/sso/domain/steps/register';
-export { DeactivateDomain } from 'team/settings/sso/domain/steps/deactivate';
-export { VerifyDomain } from 'team/settings/sso/domain/steps/verify';
-export { SuccessfulDomain } from 'team/settings/sso/domain/steps/success';
-export { VerifyConfirmDialog } from 'team/settings/sso/domain/steps/verify-confirm-dialog';
-export { VerifyFailedDialog } from 'team/settings/sso/domain/steps/verify-failed-dialog';
+export { RegisterDomain } from "./register";
+export { DeactivateDomain } from "./deactivate";
+export { VerifyDomain } from "./verify";
+export { SuccessfulDomain } from "./success";
+export { VerifyConfirmDialog } from "./verify-confirm-dialog";
+export { VerifyFailedDialog } from "./verify-failed-dialog";

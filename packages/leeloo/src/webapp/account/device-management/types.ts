@@ -1,8 +1,5 @@
-import * as communication from '@dashlane/communication';
-import { Lee } from 'lee';
+import * as communication from "@dashlane/communication";
 export interface DeviceManagementProps {
-    devices: DeviceInfo[];
-    onNavigateOut: () => void;
-    lee: Lee;
+  onNavigateOut: () => void;
 }
 export type DeviceInfo = communication.DeviceInfo;

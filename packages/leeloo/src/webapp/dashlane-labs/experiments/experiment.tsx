@@ -1,38 +1,85 @@
-import { Badge, Heading, jsx, Paragraph, Toggle, } from '@dashlane/design-system';
-import { getExperimentData } from './experiment-data';
-import { FlexContainer, Link } from '@dashlane/ui-components';
-import { openUrl } from 'libs/external-urls';
+import { Fragment, useState } from "react";
+import {
+  Flex,
+  Heading,
+  Paragraph,
+  Toggle,
+  useToast,
+} from "@dashlane/design-system";
+import { Lab } from "@dashlane/framework-contracts";
+import { useLabs } from "../hooks/use-labs";
 interface ExperimentProps {
-    id: string;
-    value: boolean;
+  lab: Lab;
 }
-export const Experiment = ({ id, value }: ExperimentProps) => {
-    const { name, supportLink, description, isNew } = getExperimentData(id);
-    const toggleName = (<Heading as="h3" textStyle="ds.title.block.medium" color="ds.text.neutral.catchy">
-      {name}
-      {isNew ? (<Badge sx={{ display: 'inline-block', marginLeft: '8px' }} mood="brand" intensity="quiet" label="New"/>) : null}
-    </Heading>);
-    const toggleDescription = (<Paragraph color="ds.text.neutral.standard">
-      {description || 'No description available for this feature.'}
-    </Paragraph>);
-    const onClickHandler = () => {
-        if (supportLink) {
-            openUrl(supportLink);
+export const Experiment = ({ lab }: ExperimentProps) => {
+  const [active, setActive] = useState<boolean>(lab.isActivated);
+  const { toggleLab } = useLabs();
+  const { showToast } = useToast();
+  const description = lab.displayDescription.split("\n");
+  const onClickHandler = () => {
+    const previousState = active;
+    const nextState = !active;
+    setActive(nextState);
+    void toggleLab({
+      id: lab.featureName,
+      isActivated: nextState,
+    })
+      .then(() => {
+        showToast({
+          mood: nextState ? "brand" : "danger",
+          description: `"${lab.displayName}" has been turned ${
+            nextState ? "ON" : "OFF"
+          }`,
+        });
+      })
+      .catch(() => {
+        setActive(previousState);
+        showToast({
+          mood: "danger",
+          description: `An error occurred while turning ${
+            nextState ? "ON" : "OFF"
+          } "${lab.displayName}"`,
+        });
+      });
+  };
+  return (
+    <Flex
+      sx={{
+        padding: "8px 0",
+      }}
+    >
+      <Toggle
+        label={
+          <Heading
+            as="h3"
+            textStyle="ds.title.block.medium"
+            color="ds.text.neutral.catchy"
+          >
+            {lab.displayName}
+          </Heading>
         }
-    };
-    return (<FlexContainer sx={{
-            padding: '8px 0',
-        }}>
-      <Toggle label={toggleName} description={toggleDescription} checked={value} readOnly sx={{ width: '100%', wordBreak: 'break-all' }}/>
-      
-      {supportLink ? (<Link color="ds.text.brand.quiet" onClick={onClickHandler} sx={{ marginTop: '4px' }}>
-          Learn more
-        </Link>) : null}
-      <div sx={{
-            backgroundColor: 'ds.border.neutral.quiet.idle',
-            width: '100%',
-            height: '1px',
-            marginTop: '16px',
-        }}/>
-    </FlexContainer>);
+        description={
+          <Paragraph color="ds.text.neutral.standard">
+            {description.map((line, index) => (
+              <Fragment key={index}>
+                {line}
+                {index < description.length - 1 ? <br /> : null}
+              </Fragment>
+            ))}
+          </Paragraph>
+        }
+        checked={active}
+        onClick={onClickHandler}
+        sx={{ width: "100%" }}
+      />
+      <div
+        sx={{
+          backgroundColor: "ds.border.neutral.quiet.idle",
+          width: "100%",
+          height: "1px",
+          marginTop: "16px",
+        }}
+      />
+    </Flex>
+  );
 };

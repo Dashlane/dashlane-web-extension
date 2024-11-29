@@ -1,5 +1,6 @@
 export enum ActivePanel {
-    Root,
-    Invoices,
-    ChangeContactEmail
+  Root,
+  Invoices,
+  ChangeContactEmail,
+  ChangeLoginEmail,
 }

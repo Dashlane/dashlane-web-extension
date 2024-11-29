@@ -1,74 +1,127 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import useTranslate from 'libs/i18n/useTranslate';
-import { carbonConnector } from 'libs/carbon/connector';
-import { getExtensionId } from 'libs/extension';
-import { hasWebAuthnPlatformAuthenticator, isRoamingCredential, } from 'webapp/webauthn/helpers/browserWebAuthnAuthentication';
-import { startAttestation } from 'webapp/webauthn/helpers/credential';
-import { AccountSubPanel } from 'webapp/account/account-subpanel/account-subpanel';
-import { LoginMethods } from './login-methods/login-methods';
-import { useWebAuthn, useWebAuthnAuthentication } from 'webapp/webauthn';
+import React, { useCallback, useEffect, useState } from "react";
+import useTranslate from "../../../../libs/i18n/useTranslate";
+import { carbonConnector } from "../../../../libs/carbon/connector";
+import { getExtensionId } from "../../../../libs/extension";
+import {
+  hasWebAuthnPlatformAuthenticator,
+  isRoamingCredential,
+} from "../../../webauthn/helpers/browserWebAuthnAuthentication";
+import { startAttestation } from "../../../webauthn/helpers/credential";
+import { AccountSubPanel } from "../../account-subpanel/account-subpanel";
+import { LoginMethods } from "./login-methods/login-methods";
+import { useWebAuthn, useWebAuthnAuthentication } from "../../../webauthn";
+import { useProtectedItemsUnlocker } from "../../../unlock-items";
+import { LockedItemType } from "../../../unlock-items/types";
 export interface Props {
-    onNavigateOut: () => void;
-    onDialogStateChanged?: (isDialogOpened: boolean) => void;
+  onNavigateOut: () => void;
+  onDialogStateChanged?: (isDialogOpened: boolean) => void;
 }
 const I18N_KEYS = {
-    NO_PLATFORM_HEADING: 'webapp_account_security_settings_passwordless_noplatform_title',
-    ALL_AUTHENTICATORS_HEADING: 'webapp_account_security_settings_passwordless_all_authenticators_title',
+  NO_PLATFORM_HEADING:
+    "webapp_account_security_settings_passwordless_noplatform_title",
+  ALL_AUTHENTICATORS_HEADING:
+    "webapp_account_security_settings_passwordless_all_authenticators_title",
 };
-export const WebAuthnRoot = ({ onNavigateOut, onDialogStateChanged, }: Props) => {
-    const { translate } = useTranslate();
-    const { authenticators, optedIn } = useWebAuthnAuthentication();
-    const { openWebAuthnRemoveLastAuthenticatorDialog, onRemoveWebAuthnAuthenticator, } = useWebAuthn({ onDialogStateChanged });
-    const [userHasWebAuthnPlatformAuthenticator, setUserHasWebAuthnPlatformAuthenticator,] = useState(false);
-    useEffect(() => {
-        if (userHasWebAuthnPlatformAuthenticator) {
-            return;
-        }
-        const hasAuthenticator = async () => {
-            const userHasAuthenticator = await hasWebAuthnPlatformAuthenticator();
-            setUserHasWebAuthnPlatformAuthenticator(userHasAuthenticator);
-        };
-        hasAuthenticator();
-    }, [userHasWebAuthnPlatformAuthenticator]);
-    const onClickTriggerWebAuthnAuthenticator = async (): Promise<void> => {
-        const relyingPartyId = getExtensionId();
-        if (!relyingPartyId) {
-            throw new Error('WebAuthn attestation cannot be completed as extension Id is missing');
-        }
-        const result = await carbonConnector.initRegisterWebAuthnAuthenticator({
-            relyingPartyId,
-        });
-        if (result.success) {
-            const credential = await startAttestation(result.response.publicKeyOptions);
-            const isRoaming = isRoamingCredential();
-            await carbonConnector.registerWebAuthnAuthenticator({
-                credential,
-                isRoaming,
-            });
-        }
+export const WebAuthnRoot = ({
+  onNavigateOut,
+  onDialogStateChanged,
+}: Props) => {
+  const { translate } = useTranslate();
+  const { authenticators, optedIn } = useWebAuthnAuthentication();
+  const {
+    openWebAuthnRemoveLastAuthenticatorDialog,
+    onRemoveWebAuthnAuthenticator,
+  } = useWebAuthn({ onDialogStateChanged });
+  const { areProtectedItemsUnlocked, openProtectedItemsUnlocker } =
+    useProtectedItemsUnlocker();
+  const [
+    userHasWebAuthnPlatformAuthenticator,
+    setUserHasWebAuthnPlatformAuthenticator,
+  ] = useState(false);
+  useEffect(() => {
+    if (userHasWebAuthnPlatformAuthenticator) {
+      return;
+    }
+    const hasAuthenticator = async () => {
+      const userHasAuthenticator = await hasWebAuthnPlatformAuthenticator();
+      setUserHasWebAuthnPlatformAuthenticator(userHasAuthenticator);
     };
-    const handleRemoveWebAuthnAuthenticator = useCallback((credentialId: string): void => {
-        const authenticator = authenticators?.find((element) => element.credentialId === credentialId);
-        if (authenticator) {
-            const isLastAuthenticator = authenticators?.length === 1 && optedIn;
-            const isRoaming = Boolean(authenticator?.isRoaming);
-            if (isLastAuthenticator) {
-                openWebAuthnRemoveLastAuthenticatorDialog(credentialId, isRoaming);
-            }
-            else {
-                onRemoveWebAuthnAuthenticator(credentialId, isRoaming);
-            }
+    hasAuthenticator();
+  }, [userHasWebAuthnPlatformAuthenticator]);
+  const triggerWebAuthnAuthenticator = async (): Promise<void> => {
+    const relyingPartyId = getExtensionId();
+    if (!relyingPartyId) {
+      throw new Error(
+        "WebAuthn attestation cannot be completed as extension Id is missing"
+      );
+    }
+    const result = await carbonConnector.initRegisterWebAuthnAuthenticator({
+      relyingPartyId,
+    });
+    if (result.success) {
+      const credential = await startAttestation(
+        result.response.publicKeyOptions
+      );
+      const isRoaming = isRoamingCredential();
+      await carbonConnector.registerWebAuthnAuthenticator({
+        credential,
+        isRoaming,
+      });
+    }
+  };
+  const onClickTriggerWebAuthnAuthenticator = async (): Promise<void> => {
+    if (areProtectedItemsUnlocked) {
+      await triggerWebAuthnAuthenticator();
+    } else {
+      openProtectedItemsUnlocker({
+        itemType: LockedItemType.SecuritySettings,
+        successCallback: async () => await triggerWebAuthnAuthenticator(),
+        cancelCallback: () => {
+          onDialogStateChanged?.(false);
+        },
+      });
+    }
+  };
+  const handleRemoveWebAuthnAuthenticator = useCallback(
+    (credentialId: string): void => {
+      const authenticator = authenticators?.find(
+        (element) => element.credentialId === credentialId
+      );
+      if (authenticator) {
+        const isLastAuthenticator = authenticators?.length === 1 && optedIn;
+        const isRoaming = Boolean(authenticator?.isRoaming);
+        if (isLastAuthenticator) {
+          openWebAuthnRemoveLastAuthenticatorDialog(credentialId, isRoaming);
+        } else {
+          onRemoveWebAuthnAuthenticator(credentialId, isRoaming);
         }
-    }, [
-        optedIn,
-        authenticators,
-        onRemoveWebAuthnAuthenticator,
-        openWebAuthnRemoveLastAuthenticatorDialog,
-    ]);
-    const panelHeading = userHasWebAuthnPlatformAuthenticator
-        ? I18N_KEYS.ALL_AUTHENTICATORS_HEADING
-        : I18N_KEYS.NO_PLATFORM_HEADING;
-    return (<AccountSubPanel headingText={translate(panelHeading)} onNavigateOut={onNavigateOut}>
-      <LoginMethods userHasWebAuthnPlatformAuthenticator={userHasWebAuthnPlatformAuthenticator} onClickTriggerWebAuthnAuthenticator={onClickTriggerWebAuthnAuthenticator} authenticators={authenticators} onRemoveWebAuthnAuthenticator={handleRemoveWebAuthnAuthenticator}/>
-    </AccountSubPanel>);
+      }
+    },
+    [
+      optedIn,
+      authenticators,
+      onRemoveWebAuthnAuthenticator,
+      openWebAuthnRemoveLastAuthenticatorDialog,
+    ]
+  );
+  const panelHeading = userHasWebAuthnPlatformAuthenticator
+    ? I18N_KEYS.ALL_AUTHENTICATORS_HEADING
+    : I18N_KEYS.NO_PLATFORM_HEADING;
+  return (
+    <AccountSubPanel
+      headingText={translate(panelHeading)}
+      onNavigateOut={onNavigateOut}
+    >
+      <LoginMethods
+        userHasWebAuthnPlatformAuthenticator={
+          userHasWebAuthnPlatformAuthenticator
+        }
+        onClickTriggerWebAuthnAuthenticator={
+          onClickTriggerWebAuthnAuthenticator
+        }
+        authenticators={authenticators}
+        onRemoveWebAuthnAuthenticator={handleRemoveWebAuthnAuthenticator}
+      />
+    </AccountSubPanel>
+  );
 };

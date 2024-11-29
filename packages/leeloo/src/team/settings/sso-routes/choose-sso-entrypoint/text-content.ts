@@ -1,81 +1,116 @@
-import { InfoList, InfoListItemType } from './sso-option-card';
+import { FeatureCardDescriberProps } from "../../components/feature-card";
+import { InfoList } from "./sso-option-card";
 export const I18N_VALUES = {
-    PAGE_TITLE: 'Choose your single sign-on (SSO) configuration',
-    RESET_DESCRIPTION: 'Use this button to reset the SSO configuration in case of error',
+  PAGE_TITLE: "Choose your single sign-on (SSO) configuration",
+  CHOOSE_SSO_OPTION_DESCRIPTION: "choose_sso_screen_paragraph_sso_description",
+  CHOOSE_SSO_LEARN_MORE_LINK: "choose_sso_screen_link_lean_more",
+  NITRO_EDIT_BUTTON: "tac_settings_choose_sso_confidential_card_button_edit",
+  NITRO_SETUP_BUTTON: "tac_settings_choose_sso_confidential_card_button_setup",
+  SELF_HOSTED_EDIT_BUTTON:
+    "tac_settings_choose_sso_self_hosted_card_button_edit",
+  SELF_HOSTED_SETUP_BUTTON:
+    "tac_settings_choose_sso_self_hosted_card_button_setup",
+  SSO_CONNECTOR_EDIT_BUTTON:
+    "tac_settings_choose_sso_sso_connector_card_button_edit",
 };
-export const DEFINE_ES_URL = '*****';
-export const START_INFO_URL = '*****';
+export const DEFINE_ES_URL = "__REDACTED__";
+export const START_INFO_URL = "__REDACTED__";
 export type SsoCardValues = {
-    TITLE: string;
-    CTA: string;
-    CONTINUE_CTA: string;
-    INFO_LIST: InfoList;
+  TITLE: string;
+  CTA: string;
+  CONTINUE_CTA: string;
+  INFO_LIST: InfoList;
 };
-export const SELF_HOSTED_SSO_VALUES: SsoCardValues = {
-    TITLE: 'Self-hosted SSO',
-    CTA: 'Set up self-hosted SSO',
-    CONTINUE_CTA: 'Continue setup',
-    INFO_LIST: [
-        {
-            text: 'Zero-knowledge security architecture',
-            type: InfoListItemType.Pro,
-        },
-        {
-            text: 'Simplified set-up',
-            subtext: 'You’ll need to host and manage the encryption service yourself',
-            type: InfoListItemType.Con,
-        },
-        {
-            text: 'Verify multiple domains',
-            type: InfoListItemType.Pro,
-        },
-        {
-            text: 'Supports SCIM directory sync',
-            type: InfoListItemType.Pro,
-        },
-    ],
-};
-export const getConfidentialSSOValues = (): SsoCardValues => ({
-    TITLE: 'Confidential SSO',
-    CTA: 'Set up Confidential SSO',
-    CONTINUE_CTA: 'Continue setup',
-    INFO_LIST: [
-        {
-            text: 'Zero-knowledge security architecture',
-            type: InfoListItemType.Pro,
-        },
-        {
-            text: 'Simplified set-up',
-            subtext: 'The secure encryption service is hosted on the cloud for you',
-            type: InfoListItemType.Pro,
-        },
-        {
-            text: 'Verify multiple domains',
-            type: InfoListItemType.Pro,
-        },
-        {
-            text: 'Supports SCIM directory sync',
-            type: InfoListItemType.Pro,
-        },
-    ],
-});
-export const SIDE_CARDS_VALUES = [
+export const LEARN_MORE_LINK = "__REDACTED__";
+export const selfHostedSSO: FeatureCardDescriberProps = {
+  title: "tac_settings_choose_sso_card_self_hosted_title",
+  redirectUrl: "self-hosted-sso",
+  supportedFeatures: [
     {
-        heading: 'What is an encryption service?',
-        description: 'To maintain a zero-knowledge architecture when integrated with SSO or SCIM provisioning, Dashlane requires an additional layer of security we refer to as an encryption service.',
-        linkText: 'Learn more',
-        linkHref: DEFINE_ES_URL,
+      title: "tac_settings_sso_self_hosted_card_zero_knowledge",
+      description: "",
+      isSupported: true,
+      iconName: "FeedbackSuccessOutlined",
     },
     {
-        heading: 'What do I need to start?',
-        listIntro: 'To set up SSO, you’ll need',
-        list: [
-            'Access to your identity provider (IdP) and public DNS provider accounts',
-            'A list of members to add to your SSO application',
-            'IdP metadata',
-            'Email domain',
-        ],
-        linkText: 'Learn more',
-        linkHref: START_INFO_URL,
+      title: "tac_settings_sso_self_hosted_card_simplified_setup",
+      description:
+        "tac_settings_sso_self_hosted_card_not_simplified_setup_description",
+      isSupported: false,
+      iconName: "FeedbackFailOutlined",
     },
-];
+    {
+      title: "tac_settings_sso_self_hosted_card_verified_domain",
+      description: "",
+      isSupported: true,
+      iconName: "FeedbackSuccessOutlined",
+    },
+    {
+      title: "tac_settings_sso_self_hosted_card_scim_support",
+      description: "",
+      isSupported: true,
+      iconName: "FeedbackSuccessOutlined",
+    },
+  ],
+};
+export const nitroSSO: FeatureCardDescriberProps = {
+  title: "tac_settings_choose_sso_card_nitro_title",
+  redirectUrl: "confidential-sso",
+  supportedFeatures: [
+    {
+      title: "tac_settings_sso_self_hosted_card_zero_knowledge",
+      description: "",
+      isSupported: true,
+      iconName: "FeedbackSuccessOutlined",
+    },
+    {
+      title: "tac_settings_sso_self_hosted_card_simplified_setup",
+      description: "tac_settings_sso_nitro_card_simplified_setup_description",
+      isSupported: true,
+      iconName: "FeedbackSuccessOutlined",
+    },
+    {
+      title: "tac_settings_sso_self_hosted_card_verified_domain",
+      description: "",
+      isSupported: true,
+      iconName: "FeedbackSuccessOutlined",
+    },
+    {
+      title: "tac_settings_sso_self_hosted_card_scim_support",
+      description: "",
+      isSupported: true,
+      iconName: "FeedbackSuccessOutlined",
+    },
+  ],
+};
+export const ssoConnectorFeatureCard: FeatureCardDescriberProps = {
+  title: "tac_settings_choose_sso_card_sso_connector_title",
+  redirectUrl: "sso-connector",
+  supportedFeatures: [
+    {
+      title: "tac_settings_sso_self_hosted_card_zero_knowledge",
+      description: "",
+      isSupported: true,
+      iconName: "FeedbackSuccessOutlined",
+    },
+    {
+      title: "tac_settings_sso_self_hosted_card_simplified_setup",
+      description:
+        "tac_settings_sso_self_hosted_card_not_simplified_setup_description",
+      isSupported: false,
+      iconName: "FeedbackFailOutlined",
+    },
+    {
+      title: "tac_settings_sso_self_hosted_card_verified_domain",
+      description: "",
+      isSupported: false,
+      iconName: "FeedbackFailOutlined",
+    },
+    {
+      title: "tac_settings_sso_self_hosted_card_scim_support",
+      description: "",
+      isSupported: false,
+      iconName: "FeedbackFailOutlined",
+    },
+  ],
+};

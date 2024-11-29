@@ -1,20 +1,45 @@
-import React, { createContext, ReactNode, useContext } from 'react';
-import { useCompromisedCredentialsAtRisk } from '../hooks/use-compromised-credentials';
-import { useCredentialsContext } from './credentials-context';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+} from "react";
+import { useCompromisedCredentialsAtRisk } from "../hooks/use-compromised-credentials";
+import { useCredentialsContext } from "./credentials-context";
 interface UpdateContext {
-    isCredentialCompromised: (id: string) => boolean;
+  isCredentialCompromised: (id: string) => boolean;
 }
-const CompromisedCredentialsContext = createContext<UpdateContext>({} as UpdateContext);
+const CompromisedCredentialsContext = createContext<UpdateContext>(
+  {} as UpdateContext
+);
 interface Provider {
-    children: ReactNode;
+  children: ReactNode;
 }
 const CompromisedCredentialsProvider = ({ children }: Provider) => {
-    const { credentials } = useCredentialsContext();
-    const compromisedCredentials = useCompromisedCredentialsAtRisk(credentials.map((credential) => credential.id));
-    const isCredentialCompromised = (id: string) => compromisedCredentials.some((item) => item === id);
-    return (<CompromisedCredentialsContext.Provider value={{ isCredentialCompromised }}>
+  const { credentialIds } = useCredentialsContext();
+  const compromisedCredentials = useCompromisedCredentialsAtRisk(credentialIds);
+  const compromisedCredentialsSet = useMemo(
+    () => new Set(compromisedCredentials),
+    [compromisedCredentials]
+  );
+  const isCredentialCompromised = useCallback(
+    (id: string) => compromisedCredentialsSet.has(id),
+    [compromisedCredentialsSet]
+  );
+  return (
+    <CompromisedCredentialsContext.Provider value={{ isCredentialCompromised }}>
       {children}
-    </CompromisedCredentialsContext.Provider>);
+    </CompromisedCredentialsContext.Provider>
+  );
 };
-const useCompromisedCredentialsContext = () => useContext(CompromisedCredentialsContext);
+const useCompromisedCredentialsContext = (): UpdateContext => {
+  const context = useContext(CompromisedCredentialsContext);
+  if (!context) {
+    throw new Error(
+      "useCompromisedCredentialsContext must be used within a CompromisedCredentialsProvider"
+    );
+  }
+  return context;
+};
 export { CompromisedCredentialsProvider, useCompromisedCredentialsContext };
