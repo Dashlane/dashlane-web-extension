@@ -1,1 +1,1 @@
-export { SharedAccess } from './shared-access';
+export { SharedAccess } from "./shared-access";

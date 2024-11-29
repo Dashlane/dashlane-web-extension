@@ -1,5 +1,5 @@
-import { carbonConnector } from 'libs/carbon/connector';
+import { carbonConnector } from "../../../../libs/carbon/connector";
 export const refreshU2FDevices = async () => {
-    const result = await carbonConnector.refreshU2FDevicesList();
-    return result;
+  const result = await carbonConnector.refreshU2FDevicesList();
+  return result;
 };

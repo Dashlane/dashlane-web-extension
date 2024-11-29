@@ -1,1 +1,1 @@
-export { activateVpnAccount } from './activate-vpn-account';
+export { activateVpnAccount } from "./activate-vpn-account";

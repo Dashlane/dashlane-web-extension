@@ -1,128 +1,243 @@
-import { CredentialDetailView, CredentialItemView, NoteItemView, UserGroupDownload, } from '@dashlane/communication';
-import { useFeatureFlips, useModuleQuery } from '@dashlane/framework-react';
-import { SharedCollectionRole, sharingItemsApi, } from '@dashlane/sharing-contracts';
-import { Checkbox, FlexContainer, jsx, mergeSx, ThemeUIStyleObject, Thumbnail, } from '@dashlane/ui-components';
-import { Secret, SecureNote } from '@dashlane/vault-contracts';
-import { getBackgroundColor } from 'libs/dashlane-style/credential-info/getBackgroundColor';
-import { DetailedItem, DetailedItemParams, } from 'libs/dashlane-style/detailed-item';
-import { NoteIcon } from 'webapp/note-icon';
-import { isItemACredential, isItemANote, } from 'webapp/sharing-center/shared/items-list/util';
-import { CollectionSharingRoles } from './recipients/sharing-collection-recipients';
-import { SharingInviteItemSelect } from './sharing-invite-item-select';
-import searchIcon from './svg/search.svg';
-import SecuredIcon from './svg/secured-misc.svg?inline';
-import SharedIcon from './svg/shared-status-misc.svg?inline';
-interface ItemProps extends DetailedItemParams {
-    checked: boolean;
-    id?: string;
-    item?: SecureNote | CredentialItemView | NoteItemView | Secret | UserGroupDownload;
-    freeLimitReached?: boolean;
-    onCheck?: (checked: boolean) => void;
-    onRolesChanged?: (roles: CollectionSharingRoles[]) => void;
-    roles?: CollectionSharingRoles[];
-    style?: React.CSSProperties;
-    canShareCollection?: boolean;
-    isStarterAdmin?: boolean;
+import { ChangeEvent, memo } from "react";
+import { Checkbox, Flex, Icon } from "@dashlane/design-system";
+import { useModuleQuery } from "@dashlane/framework-react";
+import {
+  Permission,
+  SharedCollectionRole,
+  sharingItemsApi,
+} from "@dashlane/sharing-contracts";
+import { mergeSx, ThemeUIStyleObject } from "@dashlane/ui-components";
+import { ParsedURL } from "@dashlane/url-parser";
+import { NoteColors } from "@dashlane/vault-contracts";
+import { Avatar } from "../../libs/dashlane-style/avatar/avatar";
+import { CredentialThumbnail } from "../../libs/dashlane-style/credential-info/credential-thumbnail";
+import { CredentialInfoSize } from "../../libs/dashlane-style/credential-info/credential-info";
+import { DetailedItem } from "../../libs/dashlane-style/detailed-item";
+import useTranslate from "../../libs/i18n/useTranslate";
+import UserGroupLogo from "../../libs/dashlane-style/user-group-logo";
+import { NoteIcon } from "../note-icon";
+import { CollectionSharingRoles } from "../sharing-collection/sharing-collection-recipients";
+import { SharingInviteItemSelect } from "./sharing-invite-item-select";
+import searchIcon from "./svg/search.svg";
+import SecuredIcon from "./svg/secured-misc.svg?inline";
+import SharedIcon from "./svg/shared-status-misc.svg?inline";
+import {
+  SelectableItemType,
+  useMultiselectUpdateContext,
+} from "../list-view/multi-select/multi-select-context";
+interface ItemProps {
+  checked: boolean;
+  id: string;
+  freeLimitReached?: boolean;
+  onRolesChanged?: (roles: CollectionSharingRoles[]) => void;
+  roles?: CollectionSharingRoles[];
+  style?: React.CSSProperties;
+  canShareCollection?: boolean;
+  isStarterAdmin?: boolean;
+  isSecured?: boolean;
+  autoProtected?: boolean;
+  hasAttachments?: boolean;
+  text?: string;
+  title: string;
+  type: SelectableItemType;
+  onSelectItem: (
+    itemId: string,
+    type: SelectableItemType,
+    event: ChangeEvent,
+    getType?: (item: { id?: string; groupId?: string }) => SelectableItemType
+  ) => void;
+  url?: string;
+  logoColor?: NoteColors;
+  getType?: (item: { id?: string; groupId?: string }) => SelectableItemType;
 }
-export const SHARING_INVITE_CONTENT_HEIGHT = 'calc(100vh - 68px - 108px - 80px)';
+export const SHARING_INVITE_CONTENT_HEIGHT =
+  "calc(100vh - 68px - 108px - 80px)";
+const ITEM_HEIGHT = 56;
+const AVATAR_SIZE = ITEM_HEIGHT - 20;
 export const itemSx: ThemeUIStyleObject = {
-    alignItems: 'center',
-    borderBottomWidth: '1px',
-    borderBottomStyle: 'solid',
-    borderBottomColor: 'ds.border.neutral.quiet.idle',
-    display: 'flex',
-    justifyContent: 'space-between',
-    minHeight: '56px',
-    position: 'relative',
-    backgroundColor: 'ds.background.default',
-    ':last-of-type': {
-        borderBottom: 'none',
-    },
+  alignItems: "center",
+  borderBottomWidth: "1px",
+  borderBottomStyle: "solid",
+  borderBottomColor: "ds.border.neutral.quiet.idle",
+  display: "flex",
+  justifyContent: "space-between",
+  minHeight: "56px",
+  position: "relative",
+  backgroundColor: "ds.background.default",
+  ":last-of-type": {
+    borderBottom: "none",
+  },
+  gap: "8px",
 };
 const disabledItemSx: ThemeUIStyleObject = {
-    opacity: 0.5,
-    cursor: 'auto',
+  opacity: 0.5,
+  cursor: "auto",
 };
-const EDITOR_MANAGER_FEATURE_FLIP_DEV = 'sharingVault_web_Collection_Editor_Manager_dev';
-const EDITOR_MANAGER_FEATURE_FLIP_PROD = 'sharingVault_web_Collection_Editor_Manager_prod';
-export const ItemNotFound = ({ text }: {
-    text: string;
-}) => {
-    return (<FlexContainer justifyContent="space-around" alignItems="center" sx={{
-            height: '100%',
-            minHeight: '347px',
-        }}>
-      <FlexContainer justifyContent="space-around" alignItems="center" flexDirection="column" sx={{
-            maxWidth: '400px',
-        }}>
-        <img src={searchIcon}/>
-        <span sx={{
-            color: 'ds.text.neutral.quiet',
-            marginTop: '20px',
-            lineHeight: '20px',
-            textAlign: 'center',
-        }}>
+export const ItemNotFound = ({ text }: { text: string }) => {
+  return (
+    <Flex
+      justifyContent="space-around"
+      alignItems="center"
+      sx={{
+        height: "100%",
+        minHeight: "347px",
+      }}
+    >
+      <Flex
+        justifyContent="space-around"
+        alignItems="center"
+        flexDirection="column"
+        sx={{
+          maxWidth: "400px",
+        }}
+      >
+        <img src={searchIcon} />
+        <span
+          sx={{
+            color: "ds.text.neutral.quiet",
+            marginTop: "20px",
+            lineHeight: "20px",
+            textAlign: "center",
+          }}
+        >
           {text}
         </span>
-      </FlexContainer>
-    </FlexContainer>);
+      </Flex>
+    </Flex>
+  );
 };
-export function getCredentialLogo(itemContent: CredentialItemView | CredentialDetailView) {
-    const { title, domainIcon } = itemContent;
-    const iconSource = domainIcon?.urls['46x30@2x'] ?? undefined;
-    const backgroundColor = getBackgroundColor({
-        backgroundColor: domainIcon?.backgroundColor,
-        mainColor: domainIcon?.mainColor,
-        iconSource,
-    });
-    return (<Thumbnail size="small" text={title} iconSource={iconSource} backgroundColor={backgroundColor}/>);
-}
-export function getNoteLogo(itemContent: SecureNote) {
-    return <NoteIcon noteType={itemContent.color}/>;
+export function getCredentialLogo(itemName: string, URL?: string) {
+  return (
+    <CredentialThumbnail
+      size={CredentialInfoSize.SMALL}
+      title={itemName}
+      domain={new ParsedURL(URL).getRootDomain()}
+      nativeIcon={undefined}
+    />
+  );
 }
 const titleIconSx = {
-    marginLeft: '4px',
-    path: {
-        fill: 'ds.text.neutral.quiet',
-    },
+  marginLeft: "4px",
+  path: {
+    fill: "ds.text.neutral.quiet",
+  },
 };
-export const getTitleLogo = (isShared: boolean, isSecured: boolean): React.ReactNode => (<span sx={{ display: 'flex', alignItems: 'center' }}>
-    {isShared && <SharedIcon sx={titleIconSx}/>}
-    {isSecured && <SecuredIcon sx={titleIconSx}/>}
-  </span>);
-export const Item = (props: ItemProps) => {
-    const { id, checked, roles, onCheck, onRolesChanged, style, item, freeLimitReached, canShareCollection, isStarterAdmin, ...itemContentParams } = props;
-    const retrievedFeatureFlips = useFeatureFlips();
-    const isEditorManagerRoleEnabled = Boolean(retrievedFeatureFlips.data?.[EDITOR_MANAGER_FEATURE_FLIP_DEV] ||
-        retrievedFeatureFlips.data?.[EDITOR_MANAGER_FEATURE_FLIP_PROD]);
-    const { data: sharingData } = useModuleQuery(sharingItemsApi, 'getSharingStatusForItem', {
-        itemId: item && (isItemANote(item) || isItemACredential(item))
-            ? (item?.id as string)
-            : '',
-    });
-    const isSecured = !!item &&
-        (isItemANote(item)
-            ? item?.isSecured
-            : isItemACredential(item)
-                ? item?.autoProtected
-                : false);
-    const titleLogo = getTitleLogo(sharingData?.isShared ?? false, isSecured);
-    const disabled = canShareCollection === false ||
-        (!!item &&
-            (isItemANote(item) || isItemACredential(item)
-                ? freeLimitReached && !checked && !sharingData?.isShared
-                : false));
-    const handleCheck = (evt: React.ChangeEvent<HTMLInputElement>) => {
-        onCheck?.(evt.currentTarget.checked);
-        if (id && roles && onRolesChanged) {
-            const updatedRoles = [...roles];
-            updatedRoles.push({ id, role: SharedCollectionRole.Editor });
-            onRolesChanged(updatedRoles);
+export const getTitleLogo = (
+  isShared: boolean,
+  isSecured: boolean,
+  hasAttachments?: boolean
+): React.ReactNode => (
+  <span sx={{ display: "flex", alignItems: "center" }}>
+    {isShared && <SharedIcon sx={titleIconSx} />}
+    {isSecured && <SecuredIcon sx={titleIconSx} />}
+    {hasAttachments && <Icon name="AttachmentOutlined" sx={titleIconSx} />}
+  </span>
+);
+const Item = (props: ItemProps) => {
+  const {
+    checked,
+    id,
+    onRolesChanged,
+    roles,
+    style,
+    freeLimitReached,
+    canShareCollection,
+    isStarterAdmin,
+    isSecured,
+    autoProtected,
+    hasAttachments,
+    text,
+    title,
+    type,
+    url,
+    logoColor,
+    onSelectItem,
+    getType,
+  } = props;
+  const { data: sharingData } = useModuleQuery(
+    sharingItemsApi,
+    "getPermissionForItem",
+    {
+      itemId: id ?? "",
+    }
+  );
+  const { translate } = useTranslate();
+  const { toggleSelectedItems } = useMultiselectUpdateContext();
+  const isShared = !!sharingData?.permission;
+  const titleLogo = getTitleLogo(
+    isShared ?? false,
+    !!isSecured || !!autoProtected
+  );
+  const disabled =
+    canShareCollection === false ||
+    (!!id && freeLimitReached && !checked && !isShared) ||
+    sharingData?.permission === Permission.Limited;
+  if (checked && disabled) {
+    toggleSelectedItems(new Set([id]), type);
+    return null;
+  }
+  const handleCheck = (event: ChangeEvent) => {
+    onSelectItem(id, type, event, getType);
+    if (roles && onRolesChanged) {
+      const updatedRoles = [...roles];
+      updatedRoles.push({ id, role: SharedCollectionRole.Editor });
+      onRolesChanged(updatedRoles);
+    }
+  };
+  const getLogo = () => {
+    switch (type) {
+      case "credentials":
+        return getCredentialLogo(title, url);
+      case "notes":
+        return <NoteIcon noteType={logoColor ?? ""} />;
+      case "secrets":
+        return (
+          <Icon name="ItemSecretOutlined" color="ds.text.neutral.standard" />
+        );
+      case "users":
+        return <Avatar email={id} size={AVATAR_SIZE} />;
+      case "groups":
+        return <UserGroupLogo />;
+    }
+  };
+  const shouldRenderSharingInviteItemSelect =
+    checked && roles && onRolesChanged && id;
+  if (hasAttachments) {
+    return null;
+  }
+  return (
+    <li
+      sx={disabled ? mergeSx([itemSx, disabledItemSx]) : itemSx}
+      style={style}
+    >
+      <Checkbox
+        checked={checked}
+        disabled={disabled}
+        onChange={handleCheck}
+        aria-label={translate("webapp_sharing_invite_aria_label_checkbox", {
+          name: title,
+        })}
+        tooltip={
+          sharingData?.permission === Permission.Limited &&
+          translate("webapp_sharing_invite_limited_rights_tooltip")
         }
-    };
-    const shouldRenderSharingInviteItemSelect = checked && isEditorManagerRoleEnabled && roles && onRolesChanged && id;
-    return (<li sx={disabled ? mergeSx([itemSx, disabledItemSx]) : itemSx} style={style}>
-      <Checkbox checked={checked} disabled={disabled} onChange={handleCheck} label={<DetailedItem {...itemContentParams} titleLogo={titleLogo}/>}/>
-      {shouldRenderSharingInviteItemSelect && (<SharingInviteItemSelect id={id} roles={roles} onRolesChanged={onRolesChanged} isStarterAdmin={isStarterAdmin}/>)}
-    </li>);
+      />
+      <DetailedItem
+        title={title}
+        logo={getLogo()}
+        titleLogo={titleLogo}
+        text={text}
+        disabled={disabled}
+      />
+      {shouldRenderSharingInviteItemSelect && (
+        <SharingInviteItemSelect
+          id={id}
+          roles={roles}
+          onRolesChanged={onRolesChanged}
+          isStarterAdmin={isStarterAdmin}
+        />
+      )}
+    </li>
+  );
 };
+export const ShareInviteItem = memo(Item);

@@ -1,11 +1,12 @@
-import { CarbonQueryResult, useCarbonEndpoint, } from '@dashlane/carbon-api-consumers';
-import { UserGroupView } from '@dashlane/communication';
-import { carbonConnector } from 'libs/carbon/connector';
-export function useUserGroup(groupId: string): CarbonQueryResult<UserGroupView | undefined> {
-    return useCarbonEndpoint({
-        queryConfig: {
-            query: carbonConnector.getUserGroup,
-            queryParam: groupId,
-        },
-    }, []);
+import { useModuleQuery } from "@dashlane/framework-react";
+import { sharingRecipientsApi } from "@dashlane/sharing-contracts";
+export function useUserGroup(groupId: string) {
+  const sharingUserGroup = useModuleQuery(
+    sharingRecipientsApi,
+    "getSharingGroupById",
+    {
+      id: groupId,
+    }
+  );
+  return sharingUserGroup;
 }

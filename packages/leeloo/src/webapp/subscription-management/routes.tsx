@@ -1,6 +1,5 @@
-import * as React from 'react';
-import { CustomRoute, RoutesProps } from 'libs/router';
-import { SubscriptionPage } from 'webapp/subscription-management/subscription-page';
+import { CustomRoute, RoutesProps } from "../../libs/router";
+import { SubscriptionPageWrapper } from "./subscription-page/subscription-page-wrapper";
 export const SubscriptionManagementRoutes = ({ path }: RoutesProps) => {
-    return <CustomRoute path={path} component={SubscriptionPage}/>;
+  return <CustomRoute path={path} component={SubscriptionPageWrapper} />;
 };

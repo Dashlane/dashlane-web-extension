@@ -1,5 +1,7 @@
-import { carbonConnector } from 'libs/carbon/connector';
+import { carbonConnector } from "../../../libs/carbon/connector";
 export const startTwoFactorAuthenticationEnableFlow = async () => {
-    const result = await carbonConnector.startTwoFactorAuthenticationEnableFlow(null);
-    return result;
+  const result = await carbonConnector.startTwoFactorAuthenticationEnableFlow(
+    null
+  );
+  return result;
 };

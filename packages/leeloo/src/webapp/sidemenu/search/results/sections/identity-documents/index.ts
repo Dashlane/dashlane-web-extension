@@ -1,1 +1,1 @@
-export { IdDocuments } from './id-documents';
+export { IdDocuments } from "./id-documents";

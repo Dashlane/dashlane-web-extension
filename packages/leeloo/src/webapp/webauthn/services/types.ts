@@ -1,12 +1,14 @@
-import { WebAuthnCallType } from '@dashlane/communication';
+import { WebAuthnCallType } from "@dashlane/communication";
 export interface EnableWebAuthnAuthenticationSuccess {
-    success: true;
-    data: {
-        isRoaming?: boolean;
-        authenticationType: WebAuthnCallType;
-    };
+  success: true;
+  data: {
+    isRoaming?: boolean;
+    authenticationType: WebAuthnCallType;
+  };
 }
 export interface EnableWebAuthnAuthenticationFailure {
-    success: false;
+  success: false;
 }
-export declare type EnableWebAuthnAuthenticationResult = EnableWebAuthnAuthenticationSuccess | EnableWebAuthnAuthenticationFailure;
+export declare type EnableWebAuthnAuthenticationResult =
+  | EnableWebAuthnAuthenticationSuccess
+  | EnableWebAuthnAuthenticationFailure;

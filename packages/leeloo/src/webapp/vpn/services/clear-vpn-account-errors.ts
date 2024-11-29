@@ -1,4 +1,4 @@
-import { carbonConnector } from 'libs/carbon/connector';
+import { carbonConnector } from "../../../libs/carbon/connector";
 export const clearVpnAccountErrors = async () => {
-    return await carbonConnector.clearVpnAccountErrors();
+  return await carbonConnector.clearVpnAccountErrors();
 };

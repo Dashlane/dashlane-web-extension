@@ -1,34 +1,24 @@
-import { CarbonQueryResult, useCarbonEndpoint, } from '@dashlane/carbon-api-consumers';
-import { FilterCriterium, GetUserGroupMembersRequest, ListResults, SortDirection, UserGroupMembersFilterField, UserGroupMemberView, } from '@dashlane/communication';
-import { carbonConnector } from 'libs/carbon/connector';
-export function useUserGroupMembers(groupId: string, searchValue: string, sortDirection: SortDirection = 'ascend'): CarbonQueryResult<ListResults<UserGroupMemberView>> {
-    const filterCriteria: FilterCriterium<UserGroupMembersFilterField>[] = [];
-    if (searchValue !== '') {
-        filterCriteria.push({
-            type: 'matches',
-            value: searchValue,
-        });
+import { DataStatus, useModuleQuery } from "@dashlane/framework-react";
+import { sharingRecipientsApi } from "@dashlane/sharing-contracts";
+import { normalizeString } from "../../../libs/normalize-string";
+export function useUserGroupMembers(
+  groupId: string,
+  searchValue: string
+): string[] {
+  const sharingUserGroup = useModuleQuery(
+    sharingRecipientsApi,
+    "getSharingGroupById",
+    {
+      id: groupId,
     }
-    const queryParam: GetUserGroupMembersRequest = {
-        groupId,
-        dataQuery: {
-            sortToken: {
-                sortCriteria: [
-                    {
-                        field: 'id',
-                        direction: sortDirection,
-                    },
-                ],
-                uniqField: 'id',
-            },
-            filterToken: { filterCriteria },
-        },
-    };
-    const userGroupMembers: CarbonQueryResult<ListResults<UserGroupMemberView>> = useCarbonEndpoint({
-        queryConfig: {
-            query: carbonConnector.getUserGroupMembers,
-            queryParam: queryParam,
-        },
-    }, [sortDirection, searchValue]);
-    return userGroupMembers;
+  );
+  if (sharingUserGroup.status !== DataStatus.Success) {
+    return [];
+  }
+  const users = sharingUserGroup.data.users;
+  const searchString = normalizeString(searchValue);
+  const filteredUsers = users.filter((user) =>
+    user.toLowerCase().includes(searchString)
+  );
+  return filteredUsers;
 }

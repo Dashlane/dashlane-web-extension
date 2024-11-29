@@ -1,28 +1,50 @@
-import * as React from 'react';
-import { Link } from 'libs/router';
-import classNames from 'classnames';
-import { PaymentCard } from '@dashlane/vault-contracts';
-import PaymentCardIcon from 'webapp/payment-card-icon';
-import { editPanelIgnoreClickOutsideClassName } from 'webapp/variables';
-import { getDisplayedCardNumber } from 'webapp/payments/payment-cards/utils';
-import styles from './styles.css';
+import * as React from "react";
+import { Link } from "../../../../libs/router";
+import classNames from "classnames";
+import { PaymentCard } from "@dashlane/vault-contracts";
+import PaymentCardIcon from "../../../payment-card-icon";
+import { editPanelIgnoreClickOutsideClassName } from "../../../variables";
+import { getDisplayedCardNumber } from "../../../payments/payment-cards/utils";
+import styles from "./styles.css";
 interface PaymentCardSearchItemProps {
-    paymentCard: PaymentCard;
-    getRoute: (id: string) => string;
-    style?: React.CSSProperties;
-    onSelectPaymentCard: () => void;
+  paymentCard: PaymentCard;
+  getRoute: (id: string) => string;
+  style?: React.CSSProperties;
+  onSelectPaymentCard: () => void;
 }
-const preventDragAndDrop = (e: React.DragEvent<HTMLElement>) => e.preventDefault();
-export const PaymentCardSearchItem = ({ paymentCard, onSelectPaymentCard, getRoute, style, }: PaymentCardSearchItemProps) => {
-    const { color, id, cardNumber, itemName } = paymentCard;
-    const displayCardNumber = getDisplayedCardNumber(cardNumber);
-    return (<div className={styles.container} style={style}>
-      <div className={classNames(styles.item, editPanelIgnoreClickOutsideClassName)}>
-        <Link onClick={() => {
+const preventDragAndDrop = (e: React.DragEvent<HTMLElement>) =>
+  e.preventDefault();
+export const PaymentCardSearchItem = ({
+  paymentCard,
+  onSelectPaymentCard,
+  getRoute,
+  style,
+}: PaymentCardSearchItemProps) => {
+  const { color, id, cardNumber, itemName } = paymentCard;
+  const displayCardNumber = getDisplayedCardNumber(cardNumber);
+  return (
+    <div className={styles.container} style={style}>
+      <div
+        className={classNames(
+          styles.item,
+          editPanelIgnoreClickOutsideClassName
+        )}
+      >
+        <Link
+          onClick={() => {
             onSelectPaymentCard();
-        }} to={getRoute(id)} className={styles.link} onDragStart={preventDragAndDrop} onDrop={preventDragAndDrop}>
+          }}
+          to={getRoute(id)}
+          className={styles.link}
+          onDragStart={preventDragAndDrop}
+          onDrop={preventDragAndDrop}
+        >
           <div className={styles.logoCell}>
-            <PaymentCardIcon iconSize="small" paymentCardColor={color} className={styles.icon}/>
+            <PaymentCardIcon
+              iconSize="small"
+              paymentCardColor={color}
+              className={styles.icon}
+            />
           </div>
           <div className={styles.info}>
             <div className={styles.title}>{itemName}</div>
@@ -30,5 +52,6 @@ export const PaymentCardSearchItem = ({ paymentCard, onSelectPaymentCard, getRou
           </div>
         </Link>
       </div>
-    </div>);
+    </div>
+  );
 };

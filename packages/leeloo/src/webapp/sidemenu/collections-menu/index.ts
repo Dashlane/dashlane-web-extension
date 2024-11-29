@@ -1,1 +1,1 @@
-export { CollectionsMenu } from './collections-menu';
+export { CollectionsMenu } from "./collections-menu";

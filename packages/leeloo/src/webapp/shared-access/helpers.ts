@@ -1,10 +1,14 @@
-import { Recipient } from '@dashlane/communication';
-import { RecipientTypes, SharedAccessMember, } from '@dashlane/sharing-contracts';
-export const memberToRecipient = (member: SharedAccessMember): Recipient => member.recipientType === RecipientTypes.Group ||
-    member.recipientType === RecipientTypes.Collection
+import {
+  Recipient,
+  RecipientTypes,
+  SharedAccessMember,
+} from "@dashlane/sharing-contracts";
+export const memberToRecipient = (member: SharedAccessMember): Recipient =>
+  member.recipientType === RecipientTypes.Group ||
+  member.recipientType === RecipientTypes.Collection
     ? {
-        type: 'userGroup',
+        type: RecipientTypes.Group,
         groupId: member.recipientId,
         name: member.recipientName,
-    }
-    : { type: 'user', alias: member.recipientId };
+      }
+    : { type: RecipientTypes.User, alias: member.recipientId };

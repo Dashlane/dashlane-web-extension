@@ -1,1 +1,1 @@
-export { CollectionMenuItem } from './collection-menu-item';
+export { CollectionMenuItem } from "./collection-menu-item";
