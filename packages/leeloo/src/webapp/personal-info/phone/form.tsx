@@ -1,54 +1,157 @@
-import React from 'react';
-import { find, head, propEq } from 'ramda';
-import { jsx } from '@dashlane/design-system';
-import { Country, Phone, PhoneType } from '@dashlane/vault-contracts';
-import DetailField from 'libs/dashlane-style/detail-field';
-import DetailSelect, { Option as DetailSelectOption, } from 'libs/dashlane-style/select-field/detail';
-import { TrialDiscontinuedDialogContext } from 'libs/trial/trialDiscontinuationDialogContext';
-import GenericForm, { isNotEmpty } from 'webapp/personal-data/edit/form/common';
-import styles from 'webapp/personal-data/edit/form/styles.css';
-import { SpaceSelect, spaceSelectFormLabelSx, } from 'webapp/space-select/space-select';
-import { getCallingCodeOption, getCountryCallingCodeOptions, getPhoneTypeOptions, } from './services';
-import sharedStyles from 'libs/dashlane-style/select-field/sharedStyle.css';
-export interface PhoneTypeOption extends DetailSelectOption {
-    value: PhoneType;
+import { find, head, propEq } from "ramda";
+import { Country, Phone, PhoneType } from "@dashlane/vault-contracts";
+import {
+  Flex,
+  SelectField,
+  SelectOption,
+  TextField,
+} from "@dashlane/design-system";
+import { FrozenStateDialogContext } from "../../../libs/frozen-state/frozen-state-dialog-context";
+import GenericForm, { isNotEmpty } from "../../personal-data/edit/form/common";
+import {
+  SpaceSelect,
+  spaceSelectFormLabelSx,
+} from "../../space-select/space-select";
+import {
+  getCallingCodeOption,
+  getCountryCallingCodeOptions,
+  getPhoneTypeOptions,
+} from "./services";
+import { ContentCard } from "../../panel/standard/content-card";
+export interface PhoneTypeOption {
+  label: string;
+  value: PhoneType;
 }
-export interface CallingCodeOption extends DetailSelectOption {
-    value: Country;
+export interface CallingCodeOption {
+  selectedLabel?: string;
+  label: string;
+  value: Country;
 }
-export type PhoneFormEditableValues = Pick<Phone, 'localeFormat' | 'phoneNumber' | 'itemName' | 'type' | 'spaceId'>;
+export type PhoneFormEditableValues = Pick<
+  Phone,
+  "localeFormat" | "phoneNumber" | "itemName" | "type" | "spaceId"
+>;
 export class PhoneForm extends GenericForm<PhoneFormEditableValues> {
-    static contextType = TrialDiscontinuedDialogContext;
-    public isFormValid(): boolean {
-        return this.validateValues({
-            phoneNumber: isNotEmpty,
-        });
-    }
-    public render() {
-        const { lee } = this.props;
-        const _ = lee.translate.namespace('webapp_personal_info_edition_phone_');
-        const { shouldShowTrialDiscontinuedDialog: isDisabled } = this.context;
-        const phoneTypeOptions: PhoneTypeOption[] = getPhoneTypeOptions(lee.translate);
-        const currentTypeOption: PhoneTypeOption = find<PhoneTypeOption>(propEq('value', this.state.values.type), phoneTypeOptions) ?? head(phoneTypeOptions);
-        const callingCodes = lee.globalState.webapp.callingCodes || {};
-        const countryCallingCodeOptions = getCountryCallingCodeOptions(lee.translate, callingCodes);
-        const currentCallingCodeOption = getCallingCodeOption(lee.translate, callingCodes)(this.state.values.localeFormat);
-        return (<>
-        <div className={styles.container}>
-          <label className={sharedStyles.label} sx={{ color: 'ds.text.neutral.catchy' }} title={_('number_label')}>
-            {_('number_label')}
-          </label>
+  static contextType = FrozenStateDialogContext;
+  public isFormValid(): boolean {
+    return this.validateValues({
+      phoneNumber: isNotEmpty,
+    });
+  }
+  public render() {
+    const { lee } = this.props;
+    const _ = lee.translate.namespace("webapp_personal_info_edition_phone_");
+    const { shouldShowFrozenStateDialog: isDisabled } = this.context;
+    const phoneTypeOptions: PhoneTypeOption[] = getPhoneTypeOptions(
+      lee.translate
+    );
+    const currentTypeOption: PhoneTypeOption =
+      find<PhoneTypeOption>(
+        propEq("value", this.state.values.type),
+        phoneTypeOptions
+      ) ?? head(phoneTypeOptions);
+    const countryCallingCodeOptions = getCountryCallingCodeOptions(
+      lee.translate
+    );
+    const currentCallingCodeOption = getCallingCodeOption(lee.translate)(
+      this.state.values.localeFormat
+    );
+    return (
+      <div sx={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <ContentCard
+          title={_("content_card_details_label")}
+          additionalSx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+          }}
+        >
+          <Flex sx={{ gap: "8px" }}>
+            <SelectField
+              label="Country code"
+              placeholder={currentCallingCodeOption.label}
+              data-name="localeFormat"
+              value={currentCallingCodeOption.value}
+              onChange={(value: string) =>
+                this.handleChange(value, "localeFormat")
+              }
+              readOnly={!!isDisabled}
+              sx={{ minWidth: "145px" }}
+            >
+              {countryCallingCodeOptions.map((countryCallingCodeOption) => {
+                return (
+                  <SelectOption
+                    key={countryCallingCodeOption.value}
+                    value={countryCallingCodeOption.value}
+                    displayValue={
+                      countryCallingCodeOption.selectedLabel ??
+                      countryCallingCodeOption.label
+                    }
+                  >
+                    {countryCallingCodeOption.label}
+                  </SelectOption>
+                );
+              })}
+            </SelectField>
 
-          <DetailSelect placeholder={currentCallingCodeOption.label} dataName="localeFormat" options={countryCallingCodeOptions} defaultOption={currentCallingCodeOption} onChange={this.handleChange} disabled={!!isDisabled}/>
+            <TextField
+              required
+              label={_("number_label")}
+              placeholder={_("placeholder_no_number")}
+              data-name="phoneNumber"
+              value={this.state.values.phoneNumber}
+              error={this.state.errors.phoneNumber}
+              onChange={this.handleChange}
+              readOnly={!!isDisabled}
+            />
+          </Flex>
 
-          <DetailField type="text" placeholder={_('placeholder_no_number')} dataName="phoneNumber" value={this.state.values.phoneNumber} error={this.state.errors.phoneNumber} onChange={this.handleChange} disabled={!!isDisabled}/>
-        </div>
+          <SelectField
+            label={_("type_label")}
+            placeholder={currentTypeOption.label}
+            value={currentTypeOption.value}
+            data-name="type"
+            onChange={(value: string) => this.handleChange(value, "type")}
+            readOnly={!!isDisabled}
+          >
+            {phoneTypeOptions.map((phoneTypeOption) => {
+              return (
+                <SelectOption
+                  key={phoneTypeOption.value}
+                  value={phoneTypeOption.value}
+                >
+                  {phoneTypeOption.label}
+                </SelectOption>
+              );
+            })}
+          </SelectField>
+        </ContentCard>
 
-        <DetailField type="text" label={_('phonename_label')} placeholder={_('placeholder_no_phonename')} dataName="itemName" value={this.state.values.itemName} onChange={this.handleChange} disabled={!!isDisabled}/>
-
-        <DetailSelect label={_('type_label')} placeholder={currentTypeOption.label} dataName="type" options={phoneTypeOptions} defaultOption={currentTypeOption} onChange={this.handleChange} disabled={!!isDisabled}/>
-
-        <SpaceSelect labelSx={spaceSelectFormLabelSx} spaceId={this.state.values.spaceId ?? ''} onChange={(newSpaceId) => this.handleChange(newSpaceId, 'spaceId')} disabled={!!isDisabled}/>
-      </>);
-    }
+        <ContentCard
+          title={_("content_card_organization_label")}
+          additionalSx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+          }}
+        >
+          <TextField
+            label={_("phonename_label")}
+            placeholder={_("placeholder_no_phonename")}
+            data-name="itemName"
+            value={this.state.values.itemName}
+            onChange={this.handleChange}
+            readOnly={!!isDisabled}
+          />
+          <SpaceSelect
+            isUsingNewDesign
+            labelSx={spaceSelectFormLabelSx}
+            spaceId={this.state.values.spaceId ?? ""}
+            onChange={(newSpaceId) => this.handleChange(newSpaceId, "spaceId")}
+            disabled={!!isDisabled}
+          />
+        </ContentCard>
+      </div>
+    );
+  }
 }

@@ -1,1 +1,1 @@
-export { isMasterPasswordValid } from './is-master-password-valid';
+export { isMasterPasswordValid } from "./is-master-password-valid";

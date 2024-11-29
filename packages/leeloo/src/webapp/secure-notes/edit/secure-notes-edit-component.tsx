@@ -1,30 +1,32 @@
-import React, { useState } from 'react';
-import { AddSecureFileResult, GroupRecipient, ListResults, NoteCategoryDetailView, NoteDetailView, UserRecipient, } from '@dashlane/communication';
-import { PageView } from '@dashlane/hermes';
-import { VaultItemType } from '@dashlane/vault-contracts';
-import { DataStatus } from '@dashlane/framework-react';
-import { Lee } from 'lee';
-import { carbonConnector } from 'libs/carbon/connector';
-import { logPageView } from 'libs/logs/logEvent';
-import useTranslate from 'libs/i18n/useTranslate';
-import { redirect } from 'libs/router';
-import { useRouterGlobalSettingsContext } from 'libs/router/RouterGlobalSettingsProvider';
-import { useTrialDiscontinuedDialogContext } from 'libs/trial/trialDiscontinuationDialogContext';
-import { redirectBackToSharingCenterPanel } from 'webapp/sharing-center/utils';
-import { SecureNoteTabs } from 'webapp/secure-notes/edit/types';
-import { ShareActions } from 'webapp/personal-data/edit/sharing/actions';
-import { ConfirmDeleteVaultItemDialog } from 'webapp/personal-data/edit/confirm-delete-vault-item-dialog';
-import { EditPanel } from 'webapp/panel';
-import { getNoteSharing } from 'webapp/sharing-invite/helpers';
-import { SecureNotesForm } from 'webapp/secure-notes/form/secure-notes-form';
-import { withProtectedItemsUnlocker } from 'webapp/unlock-items';
-import { createEmbeddedAttachmentFromSecureFile } from 'webapp/secure-files/helpers/embedded-attachment';
-import { SecureAttachmentUploadButton } from 'webapp/secure-files/components/secure-attachment-upload-button';
-import { clearSecureFileState } from 'webapp/secure-files/services/clear-secure-file-state';
-import { useIsSecureNoteAttachmentEnabled } from 'webapp/secure-files/hooks';
-import { Header } from 'webapp/secure-notes/form/header';
-import { useSharedAccessData } from 'webapp/shared-access/hooks/use-shared-access-data';
-import { SecureNoteOptions } from '../form/secure-notes-options';
+import { useRef, useState } from 'react';
+import { AddSecureFileResult, NoteType } from '@dashlane/communication';
+import { DataStatus, useModuleCommands } from '@dashlane/framework-react';
+import { ItemType, Origin, PageView } from '@dashlane/hermes';
+import { AlertSeverity } from '@dashlane/ui-components';
+import { isFailure } from '@dashlane/framework-types';
+import { SecureNote, vaultItemsCrudApi, VaultItemType, } from '@dashlane/vault-contracts';
+import { carbonConnector } from '../../../libs/carbon/connector';
+import useTranslate from '../../../libs/i18n/useTranslate';
+import { logPageView } from '../../../libs/logs/logEvent';
+import { useFrozenState } from '../../../libs/frozen-state/frozen-state-dialog-context';
+import { useAlert } from '../../../libs/alert-notifications/use-alert';
+import { useLocation, useRouterGlobalSettingsContext, } from '../../../libs/router';
+import { EditPanel } from '../../panel';
+import { ConfirmDeleteVaultItemDialog } from '../../personal-data/edit/confirm-delete-vault-item-dialog';
+import { SecureNoteTabs } from './types';
+import { Header } from '../form/header/header';
+import { SecureNotesForm } from '../form/secure-notes-form';
+import { getNoteSharing } from '../../sharing-invite/helpers';
+import { withProtectedItemsUnlocker } from '../../unlock-items';
+import { SecureAttachmentUploadButton } from '../../secure-files/components/secure-attachment-upload-button';
+import { createEmbeddedAttachmentFromSecureFile } from '../../secure-files/helpers/embedded-attachment';
+import { clearSecureFileState } from '../../secure-files/services/clear-secure-file-state';
+import { useSharedAccessData } from '../../shared-access/hooks/use-shared-access-data';
+import { SharingButton } from '../../sharing-invite/sharing-button';
+import { FieldCollection } from '../../credentials/form/collections-field/collections-field-context';
+import { useAddNoteToCollections } from '../hooks/use-add-note-to-collection';
+import { useCollectionsContext } from '../../collections/collections-context';
+import { useSecureFileDelete } from '../../secure-files/hooks';
 const { CONTENT, DOCUMENT_STORAGE, MORE_OPTIONS, SHARED_ACCESS } = SecureNoteTabs;
 const I18N_KEYS = {
     DELETE_CONFIRM: 'webapp_secure_notes_edition_delete_confirm',
@@ -38,33 +40,34 @@ const I18N_KEYS = {
     GROUP_SHARING_SUBTITLE: 'webapp_credential_edition_group_sharing_subtitle',
     GENERIC_ERROR_TITLE: 'webapp_account_recovery_generic_error_title',
     GENERIC_ERROR_SUBTITLE: 'webapp_account_recovery_generic_error_subtitle',
+    COLLECTION_SHARING_TITLE: 'webapp_credential_edition_collection_sharing_title',
+    COLLECTION_SHARING_SUBTITLE: 'webapp_credential_edition_collection_sharing_subtitle',
 };
+interface SecureNoteOptions {
+    category: string;
+    type: NoteType;
+    spaceId: string;
+    secured: boolean;
+}
 export interface Props {
-    lee: Lee;
-    location?: {
-        pathname: string;
-        state: {
-            entity: UserRecipient | GroupRecipient;
-        };
-    };
-    match: {
-        params?: {
-            uuid?: string;
-        };
-    };
-    note: NoteDetailView;
-    noteCategories: ListResults<NoteCategoryDetailView>;
+    note: SecureNote;
     isShared: boolean;
     isAdmin: boolean;
     isSharedViaUserGroup: boolean;
     isLastAdmin: boolean;
+    onClose: () => void;
 }
 const getSharing = (id: string) => getNoteSharing(id);
-const NoteEditComponent = ({ lee, location, note, noteCategories, isShared, isAdmin, isSharedViaUserGroup, isLastAdmin, }: Props) => {
+const NoteEditComponent = ({ note, isShared, isAdmin, isSharedViaUserGroup, isLastAdmin, onClose, }: Props) => {
     const { translate } = useTranslate();
     const { routes } = useRouterGlobalSettingsContext();
-    const isSecureNoteAttachmentEnabled = useIsSecureNoteAttachmentEnabled();
-    const { shouldShowTrialDiscontinuedDialog: isDisabled } = useTrialDiscontinuedDialogContext();
+    const location = useLocation();
+    const isClosing = useRef(false);
+    const { updateVaultItem } = useModuleCommands(vaultItemsCrudApi);
+    const { showAlert } = useAlert();
+    const { shouldShowFrozenStateDialog: isDisabled } = useFrozenState();
+    const { addNoteToCollections } = useAddNoteToCollections();
+    const { allCollections } = useCollectionsContext();
     const [activeTab, setActiveTab] = useState(CONTENT);
     const [hasDataBeenModified, setHasDataBeenModified] = useState(false);
     const [secureNoteOptions] = useState<SecureNoteOptions | null>(null);
@@ -72,47 +75,62 @@ const NoteEditComponent = ({ lee, location, note, noteCategories, isShared, isAd
     const [childComponentModalOpen, setChildComponentModalOpen] = useState(false);
     const [isUpdatePending, setIsUpdatePending] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [content, setContent] = useState(() => note.content);
-    const [title, setTitle] = useState(() => note.title);
+    const [isSecured, setIsSecured] = useState(note.isSecured);
+    const [content, setContent] = useState(note.content);
+    const [title, setTitle] = useState(note.title);
+    const [color, setColor] = useState(note.color);
+    const [spaceId, setSpaceId] = useState(note.spaceId);
+    const [isSubmitDisabled, setIsSubmitDisabled] = useState(false);
+    const [collectionsToUpdate, setCollectionsToUpdate] = useState<FieldCollection[]>([]);
+    const [hasDialogsOpenedByChildren, setHasDialogsOpenedByChildren] = useState(false);
     const { data: sharedAccessData, status } = useSharedAccessData(note.id);
+    const showGenericError = () => showAlert(translate('_common_generic_error'), AlertSeverity.ERROR);
     const closeEditPanel = (): void => {
-        clearSecureFileState();
-        if (location?.state?.entity) {
-            redirectBackToSharingCenterPanel({ routes, location });
+        if (isClosing.current) {
             return;
         }
-        logPageView(PageView.ItemSecureNoteList);
-        redirect(routes.userSecureNotes);
+        isClosing.current = true;
+        clearSecureFileState();
+        if (location.pathname.includes(routes.userSecureNotes)) {
+            logPageView(PageView.ItemSecureNoteList);
+        }
+        onClose();
     };
     const handleSubmit = async (shouldClosePanel = true): Promise<void> => {
         setIsUpdatePending(true);
-        const options = secureNoteOptions ?? { spaceId: note.spaceId ?? '' };
-        await carbonConnector.updateSecureNote({
-            content: content,
-            title: title,
-            id: note.id,
-            attachments: [...note.attachments],
-            ...options,
-        });
+        const options = secureNoteOptions ?? {
+            spaceId: spaceId,
+            type: color,
+            category: note.categoryId,
+            secured: isSecured,
+        };
+        try {
+            const result = await updateVaultItem({
+                vaultItemType: VaultItemType.SecureNote,
+                content: {
+                    content,
+                    title,
+                    id: note.id,
+                    attachments: [...(note.attachments ?? [])],
+                    ...options,
+                },
+                id: note.id,
+            });
+            addNoteToCollections(note.id, collectionsToUpdate);
+            if (isFailure(result)) {
+                showGenericError();
+            }
+        }
+        catch (error) {
+            showGenericError();
+        }
         setIsUpdatePending(false);
         if (shouldClosePanel) {
             closeEditPanel();
         }
         else {
-            setIsEditing(false);
             setHasDataBeenModified(false);
         }
-    };
-    const saveSecureNoteOptions = (options: SecureNoteOptions) => {
-        const { category, spaceId, type, secured } = options;
-        carbonConnector.updateSecureNote({
-            id: note.id,
-            spaceId: spaceId ?? '',
-            type,
-            category,
-            secured,
-        });
     };
     const handleOnFileUploadStarted = () => {
         setIsUploading(true);
@@ -123,34 +141,38 @@ const NoteEditComponent = ({ lee, location, note, noteCategories, isShared, isAd
             await carbonConnector.commitSecureFile({
                 secureFileInfo: result.secureFileInfo,
             });
-            note.attachments.push(createEmbeddedAttachmentFromSecureFile(result.secureFileInfo));
+            note.attachments?.push(createEmbeddedAttachmentFromSecureFile(result.secureFileInfo));
             handleSubmit(false);
         }
     };
     const handleFileInfoDetached = (secureFileInfoId: string) => {
-        note.attachments = note.attachments.filter((a) => a.id !== secureFileInfoId);
+        note.attachments = note.attachments?.filter((a) => a.id !== secureFileInfoId);
         handleSubmit(false);
     };
     const getRecipientsCount = (): number => {
         if (!isShared) {
             return 0;
         }
-        return status === DataStatus.Success ? sharedAccessData.count : 0;
+        return status === DataStatus.Success ? sharedAccessData?.count ?? 0 : 0;
     };
     const goToSharingAccess = (): void => {
         setActiveTab(SecureNoteTabs.SHARED_ACCESS);
     };
     const onModifyData = () => setHasDataBeenModified(true);
+    const deleteSecureFile = useSecureFileDelete(ItemType.SecureNote, showGenericError);
     const onDeletionSuccess = async () => {
-        note.attachments.forEach(async (attachment) => {
+        note.attachments?.forEach(async (attachment) => {
             const { id } = attachment;
-            await carbonConnector.deleteSecureFile({ id });
+            deleteSecureFile(id);
         });
         closeEditPanel();
     };
+    const initialCollections = allCollections.filter((collection) => collection.vaultItems.some((item) => item.id === note.id));
+    const hasCollections = initialCollections.length || collectionsToUpdate.length;
+    const hasAttachment = !!note.attachments && note.attachments.length > 0;
     const displaySharedAccess = isShared;
-    const displayStorageTab = isSecureNoteAttachmentEnabled || note.attachments.length > 0;
-    const visibleTabs = [CONTENT, MORE_OPTIONS];
+    const displayStorageTab = !hasCollections;
+    const visibleTabs = [CONTENT];
     if (displaySharedAccess) {
         visibleTabs.push(SHARED_ACCESS);
     }
@@ -167,14 +189,17 @@ const NoteEditComponent = ({ lee, location, note, noteCategories, isShared, isAd
         lastAdminSubtitle: translate(I18N_KEYS.LAST_ADMIN_SUBTITLE),
         groupSharingTitle: translate(I18N_KEYS.GROUP_SHARING_TITLE),
         groupSharingSubtitle: translate(I18N_KEYS.GROUP_SHARING_SUBTITLE),
+        collectionSharingTitle: translate(I18N_KEYS.COLLECTION_SHARING_TITLE),
+        collectionSharingSubtitle: translate(I18N_KEYS.COLLECTION_SHARING_SUBTITLE),
         genericErrorTitle: I18N_KEYS.GENERIC_ERROR_TITLE,
         genericErrorSubtitle: I18N_KEYS.GENERIC_ERROR_SUBTITLE,
     };
+    const isShareable = (item: SecureNote): boolean => item && (!isShared || isAdmin) && !item.attachments?.length;
     const getSecondaryActions = () => {
         switch (activeTab) {
             case CONTENT:
                 return [
-                    <ShareActions item={note} getSharing={getSharing} key="shareaction"/>,
+                    isShareable(note) ? (<SharingButton key="shareaction" tooltipPlacement="top-start" sharing={getSharing(note.id)} text={translate('webapp_sharing_invite_share')} origin={Origin.ItemDetailView}/>) : null,
                 ];
             case DOCUMENT_STORAGE:
                 return [
@@ -185,26 +210,35 @@ const NoteEditComponent = ({ lee, location, note, noteCategories, isShared, isAd
         }
     };
     const data = {
-        attachments: note.attachments,
-        category: note.category ? note.category.id : 'noCategory',
+        attachments: note.attachments ?? [],
+        category: note.categoryId ? note.categoryId : 'noCategory',
         content: note.content,
         id: note.id,
         limitedPermissions: isShared && !isAdmin,
-        secured: note.secured,
+        secured: note.isSecured,
         spaceId: note.spaceId,
         title: note.title,
         type: note.color,
     };
+    const withOnModifyData = <T>(callback: (newValue: T) => void) => {
+        return (newValue: T) => {
+            onModifyData();
+            callback(newValue);
+        };
+    };
+    const handleSetSpaceId = withOnModifyData(setSpaceId);
+    const handleSetColor = withOnModifyData(setColor);
+    const handleSetTitle = withOnModifyData(setTitle);
+    const handleSetContent = withOnModifyData(setContent);
+    const handleSetIsSecured = withOnModifyData(setIsSecured);
     const recipientsCount = getRecipientsCount();
-    return (<EditPanel isViewingExistingItem={true} itemHasBeenEdited={hasDataBeenModified} onSubmit={() => {
+    const isItemInCollection = initialCollections.filter((collection) => collection.isShared).length > 0;
+    return (<EditPanel isViewingExistingItem={true} submitDisabled={isSubmitDisabled} itemHasBeenEdited={hasDataBeenModified} onSubmit={() => {
             handleSubmit();
-        }} submitPending={isUpdatePending} secondaryActions={getSecondaryActions()} onNavigateOut={closeEditPanel} onClickDelete={() => setDisplayConfirmDeleteDialog(true)} ignoreCloseOnEscape={displayConfirmDeleteDialog || childComponentModalOpen} isSomeDialogOpen={displayConfirmDeleteDialog} formId="edit_securenote_panel" header={<Header activeTab={activeTab} backgroundColor={data.type} displayDocumentStorage={visibleTabs.includes(DOCUMENT_STORAGE)} displaySharedAccess={visibleTabs.includes(SHARED_ACCESS)} recipientsCount={recipientsCount} setActiveTab={setActiveTab} disabled={isShared && !isAdmin} title={title} setTitle={(title) => {
-                onModifyData();
-                setTitle(title);
-            }}/>}>
-      <SecureNotesForm activeTab={activeTab} data={data} content={content} setContent={setContent} handleFileInfoDetached={handleFileInfoDetached} hasAttachment={note.attachments.length > 0} isAdmin={isAdmin} isSecureNoteAttachmentEnabled={isSecureNoteAttachmentEnabled} isShared={isShared} isUploading={isUploading} isEditing={isEditing} setIsEditing={setIsEditing} lee={lee} noteCategories={noteCategories.items} onModifyData={onModifyData} onModalDisplayStateChange={setChildComponentModalOpen} saveSecureNoteOptions={saveSecureNoteOptions}/>
+        }} isUsingNewDesign submitPending={isUpdatePending} secondaryActions={getSecondaryActions()} onNavigateOut={closeEditPanel} onClickDelete={() => setDisplayConfirmDeleteDialog(true)} ignoreCloseOnEscape={displayConfirmDeleteDialog || childComponentModalOpen} isSomeDialogOpen={displayConfirmDeleteDialog || hasDialogsOpenedByChildren} formId="edit_securenote_panel" header={<Header backgroundColor={data.type} displayDocumentStorage={visibleTabs.includes(DOCUMENT_STORAGE)} displaySharedAccess={visibleTabs.includes(SHARED_ACCESS)} displayMoreOptions={visibleTabs.includes(MORE_OPTIONS)} isSecured={isSecured} recipientsCount={recipientsCount} attachmentsCount={note?.attachments?.length ?? 0} setActiveTab={setActiveTab} disabled={isShared && !isAdmin} title={title} setTitle={handleSetTitle}/>}>
+      <SecureNotesForm activeTab={activeTab} data={data} content={content ?? ''} title={title} color={color} spaceId={spaceId} isDisabled={!!isDisabled} isSecured={isSecured} onSpaceIdChange={handleSetSpaceId} onColorChange={handleSetColor} onTitleChange={handleSetTitle} onContentChange={handleSetContent} onIsSecuredChange={handleSetIsSecured} onIsSubmitDisabled={setIsSubmitDisabled} handleFileInfoDetached={handleFileInfoDetached} hasAttachment={hasAttachment} isAdmin={isAdmin} isShared={isShared} isUploading={isUploading} onModifyData={onModifyData} onModalDisplayStateChange={setChildComponentModalOpen} onCollectionsToUpdate={setCollectionsToUpdate} setHasDialogsOpenedByChildren={setHasDialogsOpenedByChildren}/>
 
-      <ConfirmDeleteVaultItemDialog isVisible={displayConfirmDeleteDialog} itemId={note.id} closeConfirmDeleteDialog={() => setDisplayConfirmDeleteDialog(false)} goToSharingAccess={goToSharingAccess} onDeletionSuccess={onDeletionSuccess} isLastAdmin={isLastAdmin} isShared={isShared} isSharedViaUserGroup={isSharedViaUserGroup} translations={deleteTranslations} vaultItemType={VaultItemType.SecureNote}/>
+      <ConfirmDeleteVaultItemDialog isVisible={displayConfirmDeleteDialog} itemId={note.id} closeConfirmDeleteDialog={() => setDisplayConfirmDeleteDialog(false)} goToSharingAccess={goToSharingAccess} onDeletionSuccess={onDeletionSuccess} isLastAdmin={isLastAdmin} isShared={isShared} isSharedViaUserGroup={isSharedViaUserGroup} isItemInCollection={isItemInCollection} translations={deleteTranslations} vaultItemType={VaultItemType.SecureNote}/>
     </EditPanel>);
 };
 export const NoteEditPanelComponent = withProtectedItemsUnlocker(NoteEditComponent);

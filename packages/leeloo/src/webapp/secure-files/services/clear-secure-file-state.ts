@@ -1,4 +1,4 @@
-import { carbonConnector } from 'libs/carbon/connector';
+import { carbonConnector } from "../../../libs/carbon/connector";
 export const clearSecureFileState = async (downloadKey?: string) => {
-    return await carbonConnector.clearSecureFileState(downloadKey ?? '');
+  return await carbonConnector.clearSecureFileState(downloadKey ?? "");
 };

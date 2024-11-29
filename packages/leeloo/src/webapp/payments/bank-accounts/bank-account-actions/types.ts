@@ -1,8 +1,8 @@
 export enum BankAccountValue {
-    BIC = 'bic',
-    IBAN = 'iban'
+  BIC = "bic",
+  IBAN = "iban",
 }
 export enum BankAccountActionsMode {
-    LIST = 'list',
-    SEARCH = 'search'
+  LIST = "list",
+  SEARCH = "search",
 }

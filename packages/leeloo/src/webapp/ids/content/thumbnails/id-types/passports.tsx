@@ -1,4 +1,4 @@
-import { ThumbnailSize } from 'webapp/ids/types';
+import { ThumbnailSize } from "../../../types";
 export const PassportThumbnail = (size: ThumbnailSize) => {
-    return `/passports/${size}.svg`;
+  return `/passports/${size}.svg`;
 };

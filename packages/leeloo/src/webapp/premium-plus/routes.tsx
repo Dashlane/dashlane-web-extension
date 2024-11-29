@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { CustomRoute, RoutesProps } from 'libs/router';
-import { PremiumPlus } from './premium-plus';
+import * as React from "react";
+import { CustomRoute, RoutesProps } from "../../libs/router";
+import { PremiumPlus } from "./premium-plus";
 export const PremiumPlusRoutes = ({ path }: RoutesProps) => {
-    return <CustomRoute path={path} component={PremiumPlus}/>;
+  return <CustomRoute path={path} component={PremiumPlus} />;
 };

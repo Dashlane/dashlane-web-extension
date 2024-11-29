@@ -1,20 +1,11 @@
-import { Diff } from 'utility-types';
-import { ListResults, NoteCategoryDetailView } from '@dashlane/communication';
-import { carbonConnector } from 'libs/carbon/connector';
-import { connect, Selector } from 'libs/carbonApiConsumer';
-import { remoteDataAdapter } from 'libs/remoteDataAdapter';
-import { NoteAddPanelComponent, Props } from './secure-notes-add-component';
-interface InjectedProps {
-    noteCategories: ListResults<NoteCategoryDetailView>;
-}
-type WrapperProps = Diff<Props, InjectedProps>;
-const noteCategoriesSelector: Selector<ListResults<NoteCategoryDetailView>, WrapperProps, void> = {
-    query: carbonConnector.getNoteCategories,
+import React from "react";
+import { DataStatus } from "@dashlane/framework-react";
+import { NoteAddPanelComponent } from "./secure-notes-add-component";
+import { useSpaces } from "../../../libs/carbon/hooks/useSpaces";
+export const NoteAddPanel = () => {
+  const activeSpacesResult = useSpaces();
+  if (activeSpacesResult.status !== DataStatus.Success) {
+    return null;
+  }
+  return <NoteAddPanelComponent activeSpaces={activeSpacesResult.data} />;
 };
-const selectors = {
-    noteCategories: noteCategoriesSelector,
-};
-const remoteDataConfig = {
-    strategies: selectors,
-};
-export const NoteAddPanel = connect(remoteDataAdapter<InjectedProps, Props>(NoteAddPanelComponent, remoteDataConfig), selectors);

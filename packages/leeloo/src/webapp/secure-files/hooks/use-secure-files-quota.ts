@@ -1,19 +1,12 @@
-import { DataStatus, useCarbonEndpoint } from '@dashlane/carbon-api-consumers';
-import { SecureFilesQuota } from '@dashlane/communication';
-import { carbonConnector } from 'libs/carbon/connector';
+import { DataStatus } from "@dashlane/carbon-api-consumers";
+import { useModuleQuery } from "@dashlane/framework-react";
+import { secureFilesApi, SecureFilesQuota } from "@dashlane/vault-contracts";
 export function useSecureFilesQuota(): SecureFilesQuota {
-    const secureFilesQuota = useCarbonEndpoint({
-        queryConfig: {
-            query: carbonConnector.getSecureFilesQuota,
-        },
-        liveConfig: {
-            live: carbonConnector.liveSecureFilesQuota,
-        },
-    }, []);
-    return secureFilesQuota.status === DataStatus.Success
-        ? secureFilesQuota.data
-        : {
-            max: 0,
-            remaining: 0,
-        };
+  const secureFilesQuota = useModuleQuery(secureFilesApi, "getSecureFileQuota");
+  return secureFilesQuota.status === DataStatus.Success
+    ? secureFilesQuota.data
+    : {
+        max: 0,
+        remaining: 0,
+      };
 }

@@ -1,24 +1,51 @@
-import React from 'react';
-import { useFormikContext } from 'formik';
-import { IdCardUpdateModel } from '@dashlane/communication';
-import { CopyTextField } from './CopyTextField';
+import React from "react";
+import { useFormikContext } from "formik";
+import { TextInputField } from "./TextInputField";
+import { CopyToClipboardButton } from "../../../credentials/edit/copy-to-clipboard-control";
+import { FiscalIdFormFields } from "../../types";
 interface Props {
-    name: string;
-    label: string;
-    placeholder: string;
-    disabled?: boolean;
-    handleCopy?: (success: boolean, error: Error | undefined) => void;
+  name: string;
+  label: string;
+  placeholder: string;
+  disabled?: boolean;
+  handleCopy?: (success: boolean, error: Error | undefined) => void;
 }
-const TeledeclarantNumberFieldComponent = ({ name, label, placeholder, disabled = false, handleCopy, }: Props) => {
-    const { setFieldValue, values } = useFormikContext<IdCardUpdateModel>();
-    React.useEffect(() => {
-        if (values.country !== 'FR') {
-            setFieldValue(name, '');
-        }
-    }, [name, setFieldValue, values.country]);
-    if (values.country !== 'FR') {
-        return null;
+const TeledeclarantNumberFieldComponent = ({
+  name,
+  label,
+  placeholder,
+  disabled = false,
+  handleCopy,
+}: Props) => {
+  const { setFieldValue, values } = useFormikContext<FiscalIdFormFields>();
+  React.useEffect(() => {
+    if (values.country !== "FR") {
+      setFieldValue(name, "");
     }
-    return (<CopyTextField name={name} label={label} placeholder={placeholder} handleCopy={handleCopy} disabled={disabled}/>);
+  }, [name, setFieldValue, values.country]);
+  if (values.country !== "FR") {
+    return null;
+  }
+  return (
+    <TextInputField
+      name={name}
+      label={label}
+      placeholder={placeholder}
+      actions={
+        handleCopy
+          ? [
+              <CopyToClipboardButton
+                key="copy"
+                data={values[name]}
+                onCopy={handleCopy}
+              />,
+            ]
+          : undefined
+      }
+      disabled={disabled}
+    />
+  );
 };
-export const TeledeclarantNumberField = React.memo(TeledeclarantNumberFieldComponent);
+export const TeledeclarantNumberField = React.memo(
+  TeledeclarantNumberFieldComponent
+);

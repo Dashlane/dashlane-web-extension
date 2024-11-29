@@ -1,9 +1,9 @@
-import { ThumbnailSize } from 'webapp/ids/types';
+import { ThumbnailSize } from "../../../types";
 const regionMapping = {
-    FR: 'fr',
-    UNIVERSAL: 'row',
+  FR: "fr",
+  UNIVERSAL: "row",
 };
 export const IdCardThumbnail = (size: ThumbnailSize, country: string) => {
-    const region = regionMapping[country] ?? regionMapping.UNIVERSAL;
-    return `/id-cards/${region}-${size}.svg`;
+  const region = regionMapping[country] ?? regionMapping.UNIVERSAL;
+  return `/id-cards/${region}-${size}.svg`;
 };

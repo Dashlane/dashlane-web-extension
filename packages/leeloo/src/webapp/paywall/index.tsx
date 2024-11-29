@@ -1,1 +1,6 @@
-export { PaywallManager, PaywallName, PaywalledCapability, shouldShowPaywall, } from 'webapp/paywall/manager/paywall-manager';
+export {
+  PaywallManager,
+  PaywallName,
+  PaywalledCapability,
+  shouldShowPaywall,
+} from "./manager/paywall-manager";

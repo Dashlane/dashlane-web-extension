@@ -1,64 +1,46 @@
-import React from 'react';
-import { Diff } from 'utility-types';
-import { ListResults, NoteCategoryDetailView, NoteDetailView, } from '@dashlane/communication';
-import { PageView } from '@dashlane/hermes';
-import { carbonConnector } from 'libs/carbon/connector';
-import { connect, Selector } from 'libs/carbonApiConsumer';
-import { logPageView } from 'libs/logs/logEvent';
-import { remoteDataAdapter } from 'libs/remoteDataAdapter';
-import { redirect, useRouterGlobalSettingsContext } from 'libs/router';
-import { Props } from './secure-notes-edit-component';
-import { SecureNotesEditGrapheneComponent } from './secore-notes-edit-graphene-component';
-interface InjectedProps {
-    note: NoteDetailView;
-    noteCategories: ListResults<NoteCategoryDetailView>;
+import React from "react";
+import { Redirect } from "react-router-dom";
+import { GroupRecipient, UserRecipient } from "@dashlane/communication";
+import { DataStatus, useModuleQuery } from "@dashlane/framework-react";
+import { vaultItemsCrudApi, VaultItemType } from "@dashlane/vault-contracts";
+import { useRouterGlobalSettingsContext } from "../../../libs/router";
+import { PreviousPage, previousRoute } from "../../routes";
+import { SecureNotesEditGrapheneComponent } from "./secore-notes-edit-graphene-component";
+interface State {
+  previousPage?: PreviousPage;
+  entity: UserRecipient | GroupRecipient;
 }
-type WrapperProps = Diff<Props, InjectedProps>;
-const param = (props: WrapperProps): string => {
-    if (!props.match.params) {
-        throw new Error('missing route `params`');
+interface Props {
+  match: {
+    params: {
+      uuid: string;
+    };
+  };
+  location?: {
+    pathname: string;
+    state: State;
+  };
+  onClose: () => void;
+}
+export const SecureNotesEdit = (props: Props) => {
+  const secureNoteData = useModuleQuery(vaultItemsCrudApi, "query", {
+    vaultItemTypes: [VaultItemType.SecureNote],
+    ids: [`{${props.match.params.uuid}}`],
+  });
+  const { routes } = useRouterGlobalSettingsContext();
+  if (secureNoteData.status === DataStatus.Loading) {
+    return null;
+  }
+  if (!secureNoteData.data?.secureNotesResult.items.length) {
+    if (!props.location?.state) {
+      return <Redirect to={routes.userSecureNotes} />;
     }
-    return `{${props.match.params.uuid}}`;
+    return <Redirect to={previousRoute(props.location?.state, routes)} />;
+  }
+  return (
+    <SecureNotesEditGrapheneComponent
+      {...props}
+      note={secureNoteData.data.secureNotesResult.items[0]}
+    />
+  );
 };
-const noteSelector: Selector<NoteDetailView | undefined, WrapperProps, string> = {
-    live: carbonConnector.liveNote,
-    liveParam: param,
-    query: carbonConnector.getNote,
-    queryParam: param,
-};
-const notesCategoriesSelector: Selector<ListResults<NoteCategoryDetailView>, WrapperProps, void> = {
-    query: carbonConnector.getNoteCategories,
-};
-const selectors = {
-    note: noteSelector,
-    noteCategories: notesCategoriesSelector,
-};
-const remoteDataConfig = {
-    strategies: selectors,
-};
-const NoteEditComponent = (props: Props) => {
-    const { note } = props;
-    const { routes } = useRouterGlobalSettingsContext();
-    const leaveIfItemWasDeleted = React.useCallback(() => {
-        if (!note) {
-            redirect(routes.userSecureNotes);
-            return true;
-        }
-        return false;
-    }, [note, routes.userSecureNotes]);
-    React.useEffect(() => {
-        const redirecting = leaveIfItemWasDeleted();
-        if (redirecting) {
-            return;
-        }
-        logPageView(PageView.ItemSecureNoteDetails);
-    }, [leaveIfItemWasDeleted]);
-    React.useEffect(() => {
-        leaveIfItemWasDeleted();
-    }, [leaveIfItemWasDeleted, note]);
-    if (!note) {
-        return null;
-    }
-    return <SecureNotesEditGrapheneComponent {...props}/>;
-};
-export const NoteEditPanel = connect(remoteDataAdapter<InjectedProps, Props>(NoteEditComponent, remoteDataConfig), selectors);

@@ -1,3 +1,3 @@
 export interface UniversalProps {
-    bgColor: string;
+  bgColor: string;
 }

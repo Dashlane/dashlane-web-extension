@@ -1,19 +1,34 @@
-import React from 'react';
-import { Field, FieldProps, useFormikContext } from 'formik';
-import useTranslate from 'libs/i18n/useTranslate';
-import { LocaleFormat } from 'libs/i18n/helpers';
-import { DateFieldSelect } from 'libs/dashlane-style/date-field/select';
+import React, { ChangeEvent } from "react";
+import { DateField as DSDateField } from "@dashlane/design-system";
+import { Field, FieldProps, useFormikContext } from "formik";
 interface Props {
-    name: string;
-    label: string;
-    disabled?: boolean;
+  name: string;
+  label: string;
+  calendarButtonLabel: string;
+  disabled?: boolean;
 }
-const DateFieldComponent = ({ name, label, disabled }: Props) => {
-    const { translate } = useTranslate();
-    const { setFieldValue } = useFormikContext();
-    const handleChange = (value: string) => setFieldValue(name, value === '' ? null : value);
-    return (<Field name={name}>
-      {({ field }: FieldProps) => (<DateFieldSelect value={`${field.value ?? ''}`} label={label} dateFormat="yyyy-MM-dd" onChange={handleChange} monthLabelFormatter={(value) => translate.shortDate(value, LocaleFormat.M)} yearsRange={[-100, 100]} allowEmpty disabled={disabled}/>)}
-    </Field>);
+const DateFieldComponent = ({
+  name,
+  label,
+  disabled,
+  calendarButtonLabel,
+}: Props) => {
+  const { setFieldValue } = useFormikContext();
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) =>
+    setFieldValue(name, event.target.value === "" ? null : event.target.value);
+  return (
+    <Field name={name}>
+      {({ field }: FieldProps) => (
+        <DSDateField
+          name={name}
+          value={`${field.value ?? ""}`}
+          label={label}
+          onChange={handleChange}
+          disabled={disabled}
+          calendarButtonLabel={calendarButtonLabel}
+        />
+      )}
+    </Field>
+  );
 };
 export const DateField = React.memo(DateFieldComponent);

@@ -1,16 +1,25 @@
-import * as React from 'react';
-import { Field, FieldProps } from 'formik';
-import DetailField from 'libs/dashlane-style/detail-field';
-interface Props {
-    name: string;
-    label: string;
-    placeholder: string;
-    disabled?: boolean;
-}
-const TextInputFieldComponent = ({ name, label, placeholder, disabled }: Props, ref: React.Ref<DetailField>) => {
-    return (<Field name={name}>
-      {({ field, meta }: FieldProps) => (<DetailField key={field.name} label={label} placeholder={placeholder} disabled={disabled} {...field} value={field.value} error={meta.error !== undefined} ref={ref}/>)}
-    </Field>);
+import * as React from "react";
+import { Field, FieldProps } from "formik";
+import { TextField, TextFieldProps } from "@dashlane/design-system";
+const TextInputFieldComponent = (
+  { name, ...textFieldProps }: TextFieldProps,
+  ref: React.Ref<HTMLInputElement>
+) => {
+  return (
+    <Field name={name}>
+      {({ field, meta }: FieldProps) => (
+        <TextField
+          key={field.name}
+          {...textFieldProps}
+          {...field}
+          error={meta.error !== undefined}
+          ref={ref}
+        />
+      )}
+    </Field>
+  );
 };
-const TextInputFieldRef = React.forwardRef<DetailField, Props>(TextInputFieldComponent);
+const TextInputFieldRef = React.forwardRef<HTMLInputElement, TextFieldProps>(
+  TextInputFieldComponent
+);
 export const TextInputField = React.memo(TextInputFieldRef);

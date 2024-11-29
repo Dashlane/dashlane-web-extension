@@ -1,2 +1,2 @@
-export type AddType = 'secrets';
-export type TrackingSubaction = 'secrets';
+export type AddType = "secrets";
+export type TrackingSubaction = "secrets";

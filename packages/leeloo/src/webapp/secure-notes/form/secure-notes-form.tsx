@@ -1,81 +1,107 @@
-import { Fragment } from 'react';
-import { pick } from 'ramda';
-import { InfoBox, jsx } from '@dashlane/ui-components';
-import { NoteCategoryDetailView, NoteType } from '@dashlane/communication';
-import { FEATURE_FLIPS_WITHOUT_MODULE } from '@dashlane/framework-dashlane-application';
-import { Lee } from 'lee';
-import { useHasFeatureEnabled } from 'libs/carbon/hooks/useHasFeature';
-import useTranslate from 'libs/i18n/useTranslate';
-import { useTrialDiscontinuedDialogContext } from 'libs/trial/trialDiscontinuationDialogContext';
-import { SharedAccess } from 'webapp/shared-access';
-import { SaveSecureNoteContentValues } from 'webapp/personal-data/types';
-import { SecureNoteTabs } from 'webapp/secure-notes/edit/types';
-import { SecureNoteContent } from './content';
-import { SecureNoteDocumentsForm } from './document-storage';
-import { TextMaxSizeReached } from './textMaxSizeReached';
-import { SecureNoteOptions, SecureNotesOptionsForm, } from './secure-notes-options';
-import styles from './style.css';
-const { CONTENT, DOCUMENT_STORAGE, MORE_OPTIONS, SHARED_ACCESS } = SecureNoteTabs;
+import { NoteType } from "@dashlane/communication";
+import { FEATURE_FLIPS_WITHOUT_MODULE } from "@dashlane/framework-dashlane-application";
+import { NoteColors } from "@dashlane/vault-contracts";
+import { useHasFeatureEnabled } from "../../../libs/carbon/hooks/useHasFeature";
+import { SharedAccess } from "../../shared-access";
+import { SaveSecureNoteContentValues } from "../../personal-data/types";
+import { SecureNoteTabs } from "../edit/types";
+import { SecureNoteContentForm } from "./secure-note-content-form";
+import { FieldCollection } from "../../credentials/form/collections-field/collections-field-context";
+import { EmbeddedAttachmentsForm } from "../../secure-files/components/embedded-attachments-form";
+import { ItemType } from "@dashlane/hermes";
+const { CONTENT, DOCUMENT_STORAGE, SHARED_ACCESS } = SecureNoteTabs;
 export interface Props {
-    activeTab: SecureNoteTabs;
-    data: SaveSecureNoteContentValues;
-    content: string;
-    setContent: (content: string) => void;
-    handleFileInfoDetached: (secureFileInfoId: string) => void;
-    hasAttachment: boolean;
-    isAdmin: boolean;
-    isSecureNoteAttachmentEnabled: boolean;
-    isShared: boolean;
-    isUploading: boolean;
-    isEditing: boolean;
-    setIsEditing: (isEditing: boolean) => void;
-    lee: Lee;
-    noteCategories: NoteCategoryDetailView[];
-    onModifyData: () => void;
-    onModalDisplayStateChange?: (isModalOpen: boolean) => void;
-    saveSecureNoteOptions: (options: SecureNoteOptions) => void;
+  activeTab: SecureNoteTabs;
+  data: SaveSecureNoteContentValues;
+  content: string;
+  title: string;
+  color: string;
+  spaceId: string;
+  onSpaceIdChange: (newSpaceId: string) => void;
+  onColorChange: (newColor: NoteColors) => void;
+  onTitleChange: (newTitle: string) => void;
+  onContentChange: (content: string) => void;
+  onIsSecuredChange: (newBool: boolean) => void;
+  onIsSubmitDisabled: (newBool: boolean) => void;
+  handleFileInfoDetached: (secureFileInfoId: string) => void;
+  hasAttachment: boolean;
+  isDisabled: boolean;
+  isSecured: boolean;
+  isAdmin: boolean;
+  isShared: boolean;
+  isUploading: boolean;
+  onModifyData: () => void;
+  onModalDisplayStateChange?: (isModalOpen: boolean) => void;
+  onCollectionsToUpdate: (collectionsToUpdate: FieldCollection[]) => void;
+  setHasDialogsOpenedByChildren: (isDialogOpen: boolean) => void;
 }
 export interface State {
-    headerBackground: NoteType;
-    textSize: number;
+  headerBackground: NoteType;
+  textSize: number;
 }
-export const MAX_AUTHORIZED_CHARACTERS = 10000;
-export const SecureNotesForm = ({ activeTab, data, content, setContent, handleFileInfoDetached, hasAttachment, isAdmin, isSecureNoteAttachmentEnabled, isShared, isUploading, isEditing, setIsEditing, lee, noteCategories, onModifyData, onModalDisplayStateChange, saveSecureNoteOptions, }: Props) => {
-    const { translate } = useTranslate();
-    const { shouldShowTrialDiscontinuedDialog: isDisabled } = useTrialDiscontinuedDialogContext();
-    const isDisableSecureNotesFFActive = useHasFeatureEnabled(FEATURE_FLIPS_WITHOUT_MODULE.DisableSecureNotes);
-    return (<>
-      {activeTab === CONTENT && (<>
-          <div className={styles.formContent}>
-            <SecureNoteContent content={content} setContent={(noteContent) => {
-                onModifyData();
-                setContent(noteContent);
-            }} isEditing={isEditing} setIsEditing={setIsEditing} limitedPermissions={isShared && !isAdmin} readonly={isDisabled || isDisableSecureNotesFFActive}/>
-          </div>
-          <TextMaxSizeReached maxAuthorizedSize={MAX_AUTHORIZED_CHARACTERS} currentSize={content.length}/>
-          {isSecureNoteAttachmentEnabled && (isShared || hasAttachment) && (<InfoBox severity="subtle" size="small" title={isShared
-                    ? translate('webapp_secure_notes_infobox_shared')
-                    : translate('webapp_secure_notes_infobox_has_attachments')} sx={{ margin: '0px 32px 0px 8px' }}/>)}
-        </>)}
+export const SecureNotesForm = ({
+  activeTab,
+  data,
+  content,
+  handleFileInfoDetached,
+  hasAttachment,
+  isAdmin,
+  isShared,
+  isUploading,
+  isDisabled,
+  onModifyData,
+  onModalDisplayStateChange,
+  setHasDialogsOpenedByChildren,
+  ...props
+}: Props) => {
+  const isDisableSecureNotesFFActive = useHasFeatureEnabled(
+    FEATURE_FLIPS_WITHOUT_MODULE.DisableSecureNotes
+  );
+  return (
+    <>
+      <div aria-labelledby="tab-note-detail" id="content-note-detail">
+        {activeTab === CONTENT && (
+          <SecureNoteContentForm
+            data={data}
+            content={content}
+            isNewItem={false}
+            isAdmin={isAdmin}
+            isShared={isShared}
+            isDisabled={isDisabled}
+            isDisableSecureNotesFFActive={isDisableSecureNotesFFActive}
+            hasAttachment={hasAttachment}
+            onModifyData={onModifyData}
+            setHasDialogsOpenedByChildren={setHasDialogsOpenedByChildren}
+            {...props}
+          />
+        )}
+      </div>
 
-      {activeTab === SHARED_ACCESS && (<SharedAccess isAdmin={isAdmin} id={data.id}/>)}
+      {activeTab === SHARED_ACCESS && (
+        <div aria-labelledby="tab-shared-access" id="content-shared-access">
+          <SharedAccess isAdmin={isAdmin} id={data.id} />
+        </div>
+      )}
 
-      {activeTab === DOCUMENT_STORAGE && (<SecureNoteDocumentsForm currentValues={pick(['attachments'], data)} lee={lee} signalEditedValues={onModifyData} additionalProps={{
-                handleFileInfoDetached: (secureFileInfoId: string) => {
-                    handleFileInfoDetached(secureFileInfoId);
-                },
-                onModalDisplayStateChange,
-                noteId: data.id,
-                isUploading: isUploading,
-            }}/>)}
-
-      {activeTab === MORE_OPTIONS && (<SecureNotesOptionsForm data={{
-                category: data.category,
-                spaceId: data.spaceId ?? '',
-                type: data.type,
-                secured: data.secured,
-            }} noteCategories={noteCategories} isNewItem={false} saveSecureNoteOptions={(options) => {
-                saveSecureNoteOptions(options);
-            }} disabled={!!isDisabled}/>)}
-    </>);
+      {activeTab === DOCUMENT_STORAGE && (
+        <div
+          aria-labelledby="tab-document-storage"
+          id="content-document-storage"
+        >
+          <EmbeddedAttachmentsForm
+            attachments={data.attachments}
+            additionalProps={{
+              itemId: data.id,
+              itemType: ItemType.SecureNote,
+              handleFileInfoDetached: (secureFileInfoId: string) => {
+                handleFileInfoDetached(secureFileInfoId);
+              },
+              onModalDisplayStateChange,
+              isUploading: isUploading,
+            }}
+          />
+        </div>
+      )}
+    </>
+  );
 };

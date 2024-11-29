@@ -1,4 +1,4 @@
-import { Heading, jsx, mergeSx, ThemeUIStyleObject, } from '@dashlane/design-system';
+import { Heading, mergeSx, ThemeUIStyleObject } from '@dashlane/design-system';
 import { CSSTransition } from 'react-transition-group';
 import styleTransitions from './transition.css';
 import styleVars from './variables.css';
@@ -59,8 +59,6 @@ const GridView = <T>({ data, onRenderItem, onToggleGrid, itemClassname, innerSec
                     borderColor: 'ds.border.neutral.quiet.idle',
                     cursor: 'pointer',
                     height: '60px',
-                    marginLeft: '32px',
-                    marginRight: '32px',
                     position: 'relative',
                     userSelect: 'none',
                     display: 'flex',

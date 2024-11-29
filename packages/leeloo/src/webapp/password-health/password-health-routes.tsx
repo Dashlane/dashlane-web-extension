@@ -1,6 +1,8 @@
-import * as React from 'react';
-import { CustomRoute, RoutesProps } from 'libs/router';
-import { PasswordHealth } from './password-health';
+import * as React from "react";
+import { CustomRoute, RoutesProps } from "../../libs/router";
+import { PasswordHealth } from "./password-health";
 export const PasswordHealthRoutes = ({ path }: RoutesProps) => {
-    return <CustomRoute path={path} component={PasswordHealth}/>;
+  return (
+    <CustomRoute path={[`${path}/:filter`, path]} component={PasswordHealth} />
+  );
 };

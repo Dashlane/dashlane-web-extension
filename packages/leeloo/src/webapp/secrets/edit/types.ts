@@ -1,5 +1,5 @@
 export enum SecretsTabs {
-    CONTENT,
-    MORE_OPTIONS,
-    SHARED_ACCESS
+  CONTENT,
+  SHARED_ACCESS,
+  DOCUMENT_STORAGE,
 }

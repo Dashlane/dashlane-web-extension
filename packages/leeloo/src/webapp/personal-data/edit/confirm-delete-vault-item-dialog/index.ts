@@ -1,1 +1,1 @@
-export { ConfirmDeleteVaultItemDialog } from './confirm-delete-vault-item-dialog';
+export { ConfirmDeleteVaultItemDialog } from "./confirm-delete-vault-item-dialog";

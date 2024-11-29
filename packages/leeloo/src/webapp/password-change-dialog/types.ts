@@ -1,3 +1,3 @@
 export interface DialogProps {
-    onDismiss: () => void;
+  onDismiss: () => void;
 }

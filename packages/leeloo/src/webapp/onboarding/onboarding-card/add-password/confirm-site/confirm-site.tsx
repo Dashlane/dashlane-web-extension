@@ -1,91 +1,222 @@
-import React, { useEffect } from 'react';
-import { Link } from 'libs/router';
-import { WebOnboardingLeelooStep } from '@dashlane/communication';
-import { BackIcon, colors, PasswordsIcon } from '@dashlane/ui-components';
-import useTranslate from 'libs/i18n/useTranslate';
-import SecondaryButton from 'libs/dashlane-style/buttons/modern/secondary';
-import PrimaryButton from 'libs/dashlane-style/buttons/modern/primary';
-import { useRouterGlobalSettingsContext } from 'libs/router/RouterGlobalSettingsProvider';
-import { setOnboardingMode } from '../../../services';
-import goToIcon from 'webapp/onboarding/onboarding-card/images/go-to-outlined.svg';
-import containerStyles from '../../styles.css';
-import styles from './styles.css';
-import { logPageView } from 'libs/logs/logEvent';
-import { PageView } from '@dashlane/hermes';
+import { useEffect } from "react";
+import { WebOnboardingLeelooStep } from "@dashlane/communication";
+import { Button, Icon, Paragraph } from "@dashlane/design-system";
+import { cookieRemoveByDomain } from "@dashlane/framework-infra/spi";
+import { useFeatureFlip } from "@dashlane/framework-react";
+import { PageView } from "@dashlane/hermes";
+import { AvailableFeatureFlips } from "@dashlane/onboarding-contracts";
+import { tabsCreate } from "@dashlane/webextensions-apis";
+import useTranslate from "../../../../../libs/i18n/useTranslate";
+import { logPageView } from "../../../../../libs/logs/logEvent";
+import { Link } from "../../../../../libs/router";
+import { useRouterGlobalSettingsContext } from "../../../../../libs/router/RouterGlobalSettingsProvider";
+import { CONFIRM_SITE_STYLES } from "./confirm-site.styles";
+import { setOnboardingMode } from "../../../services";
 export interface Props {
-    domainText: string;
-    loginUrlText: string;
-    setSelectedSite: (newValue: boolean) => void;
+  domainText: string;
+  loginUrlText: string;
+  setSelectedSite: (newValue: boolean) => void;
 }
-const backArrowIcon = (<BackIcon color={colors.dashGreen00} size={20} viewBox="0 2 20 20"/>);
-const passwordsIcon = (<PasswordsIcon color={colors.dashGreen02} size={20} viewBox="0 0 40 40"/>);
-export const ConfirmSite = ({ domainText, loginUrlText, setSelectedSite, }: Props) => {
-    const { translate } = useTranslate();
-    const { routes } = useRouterGlobalSettingsContext();
-    const openChosenSite = () => {
-        setOnboardingMode({
-            activeOnboardingType: 'saveWeb',
-            flowLoginCredentialOnWebSite: { domain: domainText, url: loginUrlText },
-        });
-    };
-    const goToPreviousView = () => {
-        setOnboardingMode({
-            activeOnboardingType: 'saveWeb',
-            leelooStep: WebOnboardingLeelooStep.SHOW_SAVE_SITES_DIALOG,
-        });
-        setSelectedSite(false);
-    };
-    useEffect(() => {
-        logPageView(PageView.HomeOnboardingChecklistAddFirstLogin);
-    }, []);
-    return (<>
-      <div className={containerStyles.routeContainer}>
-        <Link to={routes.userPasswordSites} className={containerStyles.arrowBtnContainer} onClick={goToPreviousView}>
-          {backArrowIcon}
-        </Link>
-        <div className={containerStyles.passwordsIcon}>{passwordsIcon}</div>
-        <h2 className={containerStyles.actionText}>
-          {translate('web_onboarding_card_add_password')}
-        </h2>
+const I18N_KEYS = {
+  WEB_ONBOARDING_CARD_ADD_PASSWORD: "web_onboarding_card_add_password",
+  WEB_ONBOARDING_CARD_TITLE: "web_onboarding_card_go_to_site_title",
+  WEB_ONBOARDING_CARD_DESCRIPTION: "web_onboarding_card_go_to_site_description",
+  WEB_ONBOARDING_CARD_STEP_ONE_PT_ONE:
+    "web_onboarding_card_go_to_site_step_1_pt_1",
+  WEB_ONBOARDING_CARD_STEP_ONE_PT_TWO:
+    "web_onboarding_card_go_to_site_step_1_pt_2_markup",
+  WEB_ONBOARDING_CARD_STEP_TWO: "web_onboarding_card_go_to_site_step_2",
+  WEB_ONBOARDING_CARD_STEP_THREE:
+    "web_onboarding_card_go_to_site_step_3_markup",
+  WEB_ONBOARDING_CARD_SECONDARY_BTN: "web_onboarding_card_go_back",
+  WEB_ONBOARDING_CARD_PRIMARY_BTN: "web_onboarding_card_go_to_site_link",
+};
+export const ConfirmSite = ({
+  domainText,
+  loginUrlText,
+  setSelectedSite,
+}: Props) => {
+  const { translate } = useTranslate();
+  const { routes } = useRouterGlobalSettingsContext();
+  const hasConfirmOnboardingSiteFF = useFeatureFlip(
+    AvailableFeatureFlips.OnboardingWebConfirmSite
+  );
+  const openChosenSite = async () => {
+    if (hasConfirmOnboardingSiteFF) {
+      try {
+        await cookieRemoveByDomain(domainText);
+        await tabsCreate({ url: loginUrlText });
+      } catch (error) {
+        console.error("Error", error);
+      }
+    }
+    setOnboardingMode({
+      activeOnboardingType: "saveWeb",
+      ...(!hasConfirmOnboardingSiteFF && {
+        flowLoginCredentialOnWebSite: {
+          domain: domainText,
+          url: loginUrlText,
+        },
+      }),
+    });
+  };
+  const goToPreviousView = () => {
+    setOnboardingMode({
+      activeOnboardingType: "saveWeb",
+      leelooStep: WebOnboardingLeelooStep.SHOW_SAVE_SITES_DIALOG,
+    });
+    setSelectedSite(false);
+  };
+  useEffect(() => {
+    logPageView(PageView.HomeOnboardingChecklistAddFirstLogin);
+  }, []);
+  return (
+    <>
+      <div
+        sx={{
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Button
+          as={Link}
+          icon="ArrowLeftOutlined"
+          intensity="supershy"
+          layout="iconOnly"
+          mood="brand"
+          size="medium"
+          to={routes.userPasswordSites}
+          onClick={goToPreviousView}
+        />
+        <div sx={{ marginLeft: "16px", display: "flex", alignItems: "center" }}>
+          <Icon
+            name="ItemLoginOutlined"
+            size="small"
+            color="ds.text.neutral.quiet"
+          />
+          <Paragraph
+            color="ds.text.neutral.quiet"
+            textStyle="ds.title.supporting.small"
+            sx={{ marginLeft: "8px", marginTop: "2px" }}
+          >
+            {translate(I18N_KEYS.WEB_ONBOARDING_CARD_ADD_PASSWORD)}
+          </Paragraph>
+        </div>
       </div>
-      <div className={containerStyles.subContainer}>
-        <h2 className={containerStyles.title}>
-          {translate('web_onboarding_card_go_to_site_title')}
-        </h2>
-        <p className={containerStyles.description}>
-          {translate('web_onboarding_card_go_to_site_description')}
-        </p>
-        <div className={styles.stepsContainer}>
-          <div className={styles.step}>
-            <div className={styles.stepIcon}>1</div>
-            <div className={styles.textContainer}>
-              <p className={styles.mainText}>
-                {translate('web_onboarding_card_go_to_site_step_1_pt_1')}
-              </p>
-              <p className={styles.subText}>
-                {translate.markup('web_onboarding_card_go_to_site_step_1_pt_2_markup')}
-              </p>
+
+      <div sx={{ padding: "2rem 3.5rem" }}>
+        <header>
+          <Paragraph
+            as="h2"
+            color="ds.text.neutral.catchy"
+            textStyle="ds.title.section.large"
+          >
+            {translate(I18N_KEYS.WEB_ONBOARDING_CARD_TITLE)}
+          </Paragraph>
+          <Paragraph
+            color="ds.text.neutral.quiet"
+            textStyle="ds.body.standard.regular"
+            sx={{ marginTop: "8px" }}
+          >
+            {translate(I18N_KEYS.WEB_ONBOARDING_CARD_DESCRIPTION)}
+          </Paragraph>
+        </header>
+
+        <ol sx={{ padding: "2.5rem 0 2rem" }}>
+          <li sx={{ ...CONFIRM_SITE_STYLES.step, alignItems: "flex-start" }}>
+            <div sx={CONFIRM_SITE_STYLES.stepMarkerContainer}>
+              <Paragraph
+                as="span"
+                color="ds.text.neutral.catchy"
+                textStyle="ds.body.standard.strong"
+              >
+                1
+              </Paragraph>
             </div>
-          </div>
-          <div className={styles.step}>
-            <div className={styles.stepIcon}>2</div>
-            <p className={styles.stepText}>
-              {translate('web_onboarding_card_go_to_site_step_2')}
-            </p>
-          </div>
-          <div className={styles.step}>
-            <div className={styles.stepIcon}>3</div>
-            <p className={styles.stepText}>
-              {translate.markup('web_onboarding_card_go_to_site_step_3_markup')}
-            </p>
-          </div>
-        </div>
-        <div className={styles.ctaContainer}>
+
+            <div sx={{ display: "flex", flexDirection: "column" }}>
+              <Paragraph
+                color="ds.text.neutral.standard"
+                textStyle="ds.body.standard.regular"
+              >
+                {translate(I18N_KEYS.WEB_ONBOARDING_CARD_STEP_ONE_PT_ONE)}
+              </Paragraph>
+              <Paragraph
+                color="ds.text.neutral.standard"
+                textStyle="ds.body.standard.strong"
+              >
+                {translate.markup(
+                  I18N_KEYS.WEB_ONBOARDING_CARD_STEP_ONE_PT_TWO
+                )}
+              </Paragraph>
+            </div>
+          </li>
+          <li sx={CONFIRM_SITE_STYLES.step}>
+            <div sx={CONFIRM_SITE_STYLES.stepMarkerContainer}>
+              <Paragraph
+                as="span"
+                color="ds.text.neutral.catchy"
+                textStyle="ds.body.standard.strong"
+              >
+                2
+              </Paragraph>
+            </div>
+            <Paragraph
+              color="ds.text.neutral.standard"
+              textStyle="ds.body.standard.regular"
+            >
+              {translate(I18N_KEYS.WEB_ONBOARDING_CARD_STEP_TWO)}
+            </Paragraph>
+          </li>
+          <li sx={CONFIRM_SITE_STYLES.step}>
+            <div sx={CONFIRM_SITE_STYLES.stepMarkerContainer}>
+              <Paragraph
+                as="span"
+                color="ds.text.neutral.catchy"
+                textStyle="ds.body.standard.strong"
+              >
+                3
+              </Paragraph>
+            </div>
+            <Paragraph
+              color="ds.text.neutral.standard"
+              textStyle="ds.body.standard.regular"
+            >
+              {translate.markup(I18N_KEYS.WEB_ONBOARDING_CARD_STEP_THREE)}
+            </Paragraph>
+          </li>
+        </ol>
+
+        <footer
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            flex: "1",
+            gap: "16px",
+          }}
+        >
           <Link to={routes.userPasswordSites}>
-            <SecondaryButton label={translate('web_onboarding_card_go_back')} marginSide="right" key="button-dismiss" onClick={goToPreviousView}/>
+            <Button
+              intensity="quiet"
+              mood="neutral"
+              size="medium"
+              onClick={goToPreviousView}
+              sx={{ minHeight: "40px" }}
+            >
+              {translate(I18N_KEYS.WEB_ONBOARDING_CARD_SECONDARY_BTN)}
+            </Button>
           </Link>
-          <PrimaryButton label={translate('web_onboarding_card_go_to_site_link')} icon={<img src={goToIcon}/>} onClick={openChosenSite}/>
-        </div>
+          <Button
+            icon="ActionOpenExternalLinkOutlined"
+            layout="iconTrailing"
+            mood="brand"
+            size="medium"
+            onClick={openChosenSite}
+          >
+            {translate(I18N_KEYS.WEB_ONBOARDING_CARD_PRIMARY_BTN)}
+          </Button>
+        </footer>
       </div>
-    </>);
+    </>
+  );
 };
