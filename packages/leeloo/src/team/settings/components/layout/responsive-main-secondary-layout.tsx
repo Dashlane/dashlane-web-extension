@@ -1,25 +1,61 @@
-import { ComponentProps, ElementType, ReactNode } from 'react';
-import { GridChild, GridContainer, jsx, PropsOf, } from '@dashlane/ui-components';
-interface ResponsiveGridWithSideCardProps<M extends ReactNode & ElementType, S extends ReactNode & ElementType> extends PropsOf<typeof GridContainer> {
-    mainContent: M;
-    mainProps?: ComponentProps<M>;
-    secondaryContent: S;
-    secondaryProps?: ComponentProps<S>;
-    fullWidth?: boolean;
+import { ReactNode } from "react";
+import { GridChild, GridContainer, PropsOf } from "@dashlane/ui-components";
+interface ResponsiveGridWithSideCardProps
+  extends PropsOf<typeof GridContainer> {
+  mainContent: ReactNode;
+  secondaryContent: ReactNode;
+  secondaryContentWrapDirection?: "top" | "bottom";
+  fullWidth?: boolean;
+  reducedVerticalPadding?: boolean;
+  secondaryContentWidth?: string;
 }
-const mainContentSizeHandler = (fullWidth: boolean) => !fullWidth ? '800px' : 'auto';
-export const ResponsiveMainSecondaryLayout = <M extends ElementType, S extends ElementType>({ mainContent: MainContent, mainProps, secondaryContent: SecondaryContent, secondaryProps, fullWidth, ...rest }: ResponsiveGridWithSideCardProps<M, S>) => (<GridContainer gap="32px" gridTemplateAreas={["'top' 'bottom'", "'top' 'bottom'", "'left right'"]} gridTemplateColumns={[
-        null,
-        null,
-        `minmax(auto, ${mainContentSizeHandler(fullWidth ?? false)}) 256px`,
-    ]} gridTemplateRows={['auto auto', 'auto auto', 'auto']} alignContent="flex-start" sx={{
-        py: '32px',
-        px: '42px',
-    }} {...rest}>
-    <GridChild alignSelf="flex-start" gridArea={['top', 'top', 'right']}>
-      <SecondaryContent {...secondaryProps}/>
+const mainContentSizeHandler = (fullWidth: boolean) =>
+  !fullWidth ? "800px" : "auto";
+export const ResponsiveMainSecondaryLayout = ({
+  mainContent,
+  secondaryContent,
+  secondaryContentWrapDirection = "top",
+  fullWidth,
+  reducedVerticalPadding,
+  secondaryContentWidth,
+  ...rest
+}: ResponsiveGridWithSideCardProps) => (
+  <GridContainer
+    gap="32px"
+    gridTemplateAreas={["'top' 'bottom'", "'top' 'bottom'", "'left right'"]}
+    gridTemplateColumns={[
+      null,
+      null,
+      `minmax(auto, ${mainContentSizeHandler(fullWidth ?? false)}) ${
+        secondaryContentWidth ?? "256px"
+      }`,
+    ]}
+    gridTemplateRows={["auto auto", "auto auto", "auto"]}
+    alignContent="flex-start"
+    sx={{
+      py: reducedVerticalPadding ? "16px" : "32px",
+      px: "42px",
+    }}
+    {...rest}
+  >
+    <GridChild
+      alignSelf="flex-start"
+      gridArea={
+        secondaryContentWrapDirection === "top"
+          ? ["top", "top", "right"]
+          : ["bottom", "bottom", "right"]
+      }
+    >
+      {secondaryContent}
     </GridChild>
-    <GridChild gridArea={['bottom', 'bottom', 'left']}>
-      <MainContent {...mainProps}/>
+    <GridChild
+      gridArea={
+        secondaryContentWrapDirection === "top"
+          ? ["bottom", "bottom", "left"]
+          : ["top", "top", "left"]
+      }
+    >
+      {mainContent}
     </GridChild>
-  </GridContainer>);
+  </GridContainer>
+);

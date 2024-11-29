@@ -1,75 +1,214 @@
-import * as React from 'react';
-import { colors, FlexChild, FlexContainer, InfoCircleIcon, jsx, LoadingIcon, Paragraph, Tooltip, } from '@dashlane/ui-components';
-import { SpinnerInput } from 'libs/dashlane-style/spinner-input/spinner-input';
-import useTranslate from 'libs/i18n/useTranslate';
-import { Offer } from '@dashlane/team-admin-contracts';
-import { HorizontalRule } from 'team/change-plan/components/HorizontalRule';
-import { UseMidCycleTierUpgradeOutput } from 'team/change-plan/hooks/useMidCycleTierUpgrade';
-import { Row } from 'team/change-plan/components/row';
-import { useBillingCountry } from 'team/helpers/useBillingCountry';
+import { useEffect } from "react";
+import {
+  Flex,
+  Icon,
+  IndeterminateLoader,
+  Paragraph,
+} from "@dashlane/design-system";
+import { Offer, SpaceTier } from "@dashlane/team-admin-contracts";
+import { SpinnerInput } from "../../../../libs/dashlane-style/spinner-input/spinner-input";
+import useTranslate from "../../../../libs/i18n/useTranslate";
+import { HorizontalRule } from "../../components/HorizontalRule";
+import { UseMidCycleTierUpgradeOutput } from "../../hooks/useMidCycleTierUpgrade";
+import { Row } from "../../components/row";
+import { useBillingCountry } from "../../../helpers/useBillingCountry";
+import { AmountFeedback } from "./amount-feedback";
 interface OrderSummaryBodyProps {
-    currency: string | undefined;
-    costData: UseMidCycleTierUpgradeOutput['costData'];
-    isProratedDiscountLoading: boolean;
-    isTaxLoading: boolean;
-    selectedOffer?: Offer;
-    setAdditionalSeats: (newAdditionalSeats: number) => void;
+  costData: UseMidCycleTierUpgradeOutput["costData"];
+  currency: string | undefined;
+  currentSpaceTier: SpaceTier;
+  isProratedDiscountLoading: boolean;
+  isTaxLoading: boolean;
+  isAmountAllowed: boolean;
+  selectedOffer?: Offer;
+  setSelectedSeatsQty: (newSelectedSeatsQty: number) => void;
+  signalAmountValidHandler: (info: boolean) => void;
 }
-export const OrderSummaryBody = ({ currency, costData, isProratedDiscountLoading, isTaxLoading, selectedOffer, setAdditionalSeats, }: OrderSummaryBodyProps) => {
-    const { translate } = useTranslate();
-    const { loading, billingCountry } = useBillingCountry();
-    if (loading) {
-        return <LoadingIcon color={colors.midGreen00}/>;
-    }
-    const taxCopy = billingCountry === 'US'
-        ? 'team_account_teamplan_changeplan_order_summary_tax'
-        : 'team_account_teamplan_vat';
-    return (<React.Fragment>
-      {selectedOffer && currency ? (<React.Fragment>
-          <Row label={<Paragraph bold size="medium">
-                {translate('team_account_teamplan_changeplan_order_summary_seats_total', {
+const MINIMUM_SEAT_PURCHASE_QTY = 2;
+const DEFAULT_SEATS_STARTER = 10;
+export const OrderSummaryBody = ({
+  costData,
+  currency,
+  currentSpaceTier,
+  isProratedDiscountLoading,
+  isAmountAllowed,
+  isTaxLoading,
+  selectedOffer,
+  setSelectedSeatsQty,
+  signalAmountValidHandler,
+}: OrderSummaryBodyProps) => {
+  const { translate } = useTranslate();
+  const { loading, billingCountry } = useBillingCountry();
+  const spinnerInputDefaultValue =
+    currentSpaceTier === SpaceTier.Starter
+      ? DEFAULT_SEATS_STARTER
+      : costData.currentSeats;
+  useEffect(() => {
+    setSelectedSeatsQty(spinnerInputDefaultValue);
+  }, [spinnerInputDefaultValue]);
+  if (loading) {
+    return <IndeterminateLoader />;
+  }
+  const spinnerInputMinValue =
+    currentSpaceTier === SpaceTier.Starter ||
+    currentSpaceTier === SpaceTier.Standard
+      ? costData.currentActiveSeats > MINIMUM_SEAT_PURCHASE_QTY
+        ? costData.currentActiveSeats
+        : MINIMUM_SEAT_PURCHASE_QTY
+      : costData.currentSeats;
+  const taxCopy =
+    billingCountry === "US"
+      ? "team_account_teamplan_changeplan_order_summary_tax"
+      : "team_account_teamplan_vat";
+  const showMinimumSeatInfo =
+    costData.totalSeats === costData.currentActiveSeats || !isAmountAllowed;
+  return (
+    <>
+      {selectedOffer && currency ? (
+        <>
+          <Row
+            label={
+              <Paragraph textStyle="ds.body.standard.strong">
+                {translate(
+                  "team_account_teamplan_changeplan_order_summary_seats_total",
+                  {
                     totalSeats: costData.totalSeats,
-                })}
-              </Paragraph>} value={<FlexChild sx={{ width: '146px' }}>
-                <SpinnerInput id="test" inputWidth="66px" label="" minValue={0} onChange={setAdditionalSeats} defaultValue={0}/>
-              </FlexChild>}/>
-          <Row label={<Paragraph bold size="small">
-                {translate('team_account_teamplan_changeplan_order_summary_seats_upgraded', {
-                    upgradedSeats: costData.currentSeats,
-                })}
-              </Paragraph>} value={<Paragraph bold size="small">
+                  }
+                )}
+              </Paragraph>
+            }
+            value={
+              <div sx={{ width: "146px" }}>
+                <SpinnerInput
+                  id="test"
+                  inputWidth="66px"
+                  label=""
+                  ariaLabel={translate(
+                    "team_account_teamplan_upgrade_premium_number_of_seats_free_to_paid"
+                  )}
+                  minValue={spinnerInputMinValue}
+                  onChange={setSelectedSeatsQty}
+                  signalAmountValidHandler={signalAmountValidHandler}
+                  defaultValue={spinnerInputDefaultValue}
+                />
+              </div>
+            }
+          />
+          {showMinimumSeatInfo ? (
+            <AmountFeedback
+              isAmountAllowed={isAmountAllowed}
+              absoluteMinimum={MINIMUM_SEAT_PURCHASE_QTY}
+              relativeMinimum={spinnerInputMinValue}
+            />
+          ) : null}
+          <Row
+            label={
+              <Paragraph textStyle="ds.body.standard.strong">
+                {translate(
+                  "team_account_teamplan_changeplan_order_summary_seats_upgraded",
+                  {
+                    upgradedSeats: Math.min(
+                      costData.currentSeats,
+                      costData.totalSeats
+                    ),
+                  }
+                )}
+              </Paragraph>
+            }
+            value={
+              <Paragraph textStyle="ds.body.standard.strong">
                 {translate.price(currency, costData.upgradedSeatsPrice / 100)}
-              </Paragraph>}/>
-          {costData.additionalSeats ? (<Row label={<Paragraph bold size="small">
-                  {translate('team_account_teamplan_changeplan_order_summary_seats_new', {
-                        newSeats: costData.additionalSeats,
-                    })}
-                </Paragraph>} value={<Paragraph bold size="small">
-                  {translate.price(currency, costData.additionalSeatsPrice / 100)}
-                </Paragraph>}/>) : null}
+              </Paragraph>
+            }
+          />
+          {costData.addedSeats ? (
+            <Row
+              label={
+                <Paragraph textStyle="ds.body.standard.strong">
+                  {translate(
+                    "team_account_teamplan_changeplan_order_summary_seats_new",
+                    {
+                      newSeats: costData.addedSeats,
+                    }
+                  )}
+                </Paragraph>
+              }
+              value={
+                <Paragraph textStyle="ds.body.standard.strong">
+                  {translate.price(currency, costData.addedSeatsPrice / 100)}
+                </Paragraph>
+              }
+            />
+          ) : null}
 
           <HorizontalRule />
 
-          <Row label={<Paragraph bold size="small">
-                {translate('team_account_teamplan_changeplan_order_summary_subtotal')}
-              </Paragraph>} value={currency ? (<Paragraph bold size="small">
+          <Row
+            label={
+              <Paragraph textStyle="ds.body.standard.strong">
+                {translate(
+                  "team_account_teamplan_changeplan_order_summary_subtotal"
+                )}
+              </Paragraph>
+            }
+            value={
+              currency ? (
+                <Paragraph textStyle="ds.body.standard.strong">
                   {translate.price(currency, costData.subtotal / 100)}
-                </Paragraph>) : null}/>
-          {costData?.proratedDiscount ? (<Row label={<FlexContainer alignItems="center" gap="5px">
-                  <Paragraph size="small" color={colors.grey00}>
-                    {translate('team_account_teamplan_changeplan_order_summary_prorated_discount')}
+                </Paragraph>
+              ) : null
+            }
+          />
+          {costData?.proratedDiscount ? (
+            <Row
+              label={
+                <Flex alignItems="center" gap="5px">
+                  <Paragraph color="ds.text.neutral.quiet">
+                    {translate(
+                      "team_account_teamplan_changeplan_order_summary_prorated_discount"
+                    )}
                   </Paragraph>
-                  <Tooltip content={translate('team_account_teamplan_changeplan_order_summary_prorated_discount_tooltip')}>
-                    <InfoCircleIcon size={16} color={colors.grey00}/>
-                  </Tooltip>
-                </FlexContainer>} value={isProratedDiscountLoading ? (<LoadingIcon color={colors.black} size={13}/>) : costData.proratedDiscount && currency ? (<Paragraph size="small" color={colors.grey00}>
+                  <Icon
+                    color="ds.text.neutral.quiet"
+                    name="FeedbackInfoOutlined"
+                    size="small"
+                    tooltip={translate(
+                      "team_account_teamplan_changeplan_order_summary_prorated_discount_tooltip"
+                    )}
+                  />
+                </Flex>
+              }
+              value={
+                isProratedDiscountLoading ? (
+                  <IndeterminateLoader mood="neutral" size={13} />
+                ) : costData.proratedDiscount && currency ? (
+                  <Paragraph color="ds.text.neutral.quiet">
                     {translate.price(currency, costData.proratedDiscount / 100)}
-                  </Paragraph>) : null}/>) : null}
-          {costData.tax ? (<Row label={<Paragraph size="small" color={colors.grey00}>
+                  </Paragraph>
+                ) : null
+              }
+            />
+          ) : null}
+          {costData.tax ? (
+            <Row
+              label={
+                <Paragraph color="ds.text.neutral.quiet">
                   {translate(taxCopy)}
-                </Paragraph>} value={isTaxLoading ? (<LoadingIcon color={colors.black} size={13}/>) : (<Paragraph size="small" color={colors.grey00}>
+                </Paragraph>
+              }
+              value={
+                isTaxLoading ? (
+                  <IndeterminateLoader mood="neutral" size={13} />
+                ) : (
+                  <Paragraph color="ds.text.neutral.quiet">
                     {translate.price(currency, costData.tax / 100)}
-                  </Paragraph>)}/>) : null}
-        </React.Fragment>) : null}
-    </React.Fragment>);
+                  </Paragraph>
+                )
+              }
+            />
+          ) : null}
+        </>
+      ) : null}
+    </>
+  );
 };

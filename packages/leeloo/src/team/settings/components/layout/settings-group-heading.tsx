@@ -1,10 +1,17 @@
-import { Heading, jsx } from '@dashlane/design-system';
-import { SettingHeader } from 'team/settings/policies/types';
+import { Heading } from "@dashlane/design-system";
+import { SettingHeader } from "../../policies/types";
 interface Props {
-    header: SettingHeader;
+  header: SettingHeader;
 }
 export const SettingsGroupHeading = ({ header }: Props) => {
-    return (<Heading as="h2" key={header.label} textStyle="ds.title.supporting.small" color="ds.text.neutral.quiet">
+  return (
+    <Heading
+      as="h2"
+      key={header.label}
+      textStyle="ds.title.section.medium"
+      color="ds.text.neutral.standard"
+    >
       {header.label}
-    </Heading>);
+    </Heading>
+  );
 };

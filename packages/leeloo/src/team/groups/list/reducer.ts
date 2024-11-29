@@ -1,3 +1,3 @@
-import { makeLocalReducer } from 'redux-cursor';
-const reducer = makeLocalReducer('list', {}, []);
+import { makeLocalReducer } from "redux-cursor";
+const reducer = makeLocalReducer("list", {}, []);
 export default reducer;

@@ -1,3 +1,3 @@
 export interface State {
-    displayIeDropNotification: boolean;
+  displayIeDropNotification: boolean;
 }

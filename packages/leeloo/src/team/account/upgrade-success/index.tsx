@@ -1,1 +1,1 @@
-export * from './upgrade-success';
+export * from "./upgrade-success";

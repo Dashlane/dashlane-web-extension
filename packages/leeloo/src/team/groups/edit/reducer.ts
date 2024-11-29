@@ -1,3 +1,3 @@
-import { makeLocalReducer } from 'redux-cursor';
-const reducer = makeLocalReducer('edit', {}, []);
+import { makeLocalReducer } from "redux-cursor";
+const reducer = makeLocalReducer("edit", {}, []);
 export default reducer;

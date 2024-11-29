@@ -1,38 +1,39 @@
-import { jsx } from '@dashlane/design-system';
-import { colors, FlexContainer, Heading, LoadingIcon, Paragraph, } from '@dashlane/ui-components';
-import useTranslate from 'libs/i18n/useTranslate';
-import { useCreditCardPaymentMethodDisplay } from '../useCreditCardPaymentDisplay';
+import {
+  Flex,
+  Heading,
+  IndeterminateLoader,
+  Paragraph,
+} from "@dashlane/design-system";
+import useTranslate from "../../../../libs/i18n/useTranslate";
+import { useCreditCardPaymentMethodDisplay } from "../useCreditCardPaymentDisplay";
+import { SMALL_CARD_CONTAINER } from "./styles";
 export const CreditCardSummary = () => {
-    const { translate } = useTranslate();
-    const { loading, last4DigitsFormatted, expFormatted, cardSvg } = useCreditCardPaymentMethodDisplay({});
-    if (loading) {
-        return <LoadingIcon color={colors.midGreen00}/>;
-    }
-    return (<FlexContainer flexDirection="column" gap="16px" sx={{
-            borderStyle: 'solid',
-            borderColor: 'ds.border.neutral.quiet.idle',
-            borderWidth: '1px',
-            backgroundColor: 'ds.container.agnostic.neutral.supershy',
-            padding: '24px',
-            borderRadius: '4px',
-        }}>
-      <Heading size="small">
-        {translate('team_account_addseats_success_credit_card_header')}
+  const { translate } = useTranslate();
+  const { loading, last4DigitsFormatted, expFormatted, cardSvg } =
+    useCreditCardPaymentMethodDisplay({});
+  if (loading) {
+    return <IndeterminateLoader />;
+  }
+  return (
+    <Flex flexDirection="column" gap="16px" sx={SMALL_CARD_CONTAINER}>
+      <Heading as="h2" color="ds.text.neutral.catchy">
+        {translate("team_account_addseats_success_credit_card_header")}
       </Heading>
-      <FlexContainer flexDirection="column" gap="8px">
-        <FlexContainer alignItems="center" gap="8px">
+      <Flex flexDirection="column" gap="8px">
+        <Flex alignItems="center" gap="8px">
           {cardSvg}
           <Paragraph color="ds.text.neutral.standard">
             •••• {last4DigitsFormatted}
           </Paragraph>
-        </FlexContainer>
-        <FlexContainer>
+        </Flex>
+        <Flex>
           <Paragraph color="ds.text.neutral.standard">
-            {translate('team_account_addseats_success_credit_card_expires', {
-            expirationDate: expFormatted,
-        })}
+            {translate("team_account_addseats_success_credit_card_expires", {
+              expirationDate: expFormatted,
+            })}
           </Paragraph>
-        </FlexContainer>
-      </FlexContainer>
-    </FlexContainer>);
+        </Flex>
+      </Flex>
+    </Flex>
+  );
 };

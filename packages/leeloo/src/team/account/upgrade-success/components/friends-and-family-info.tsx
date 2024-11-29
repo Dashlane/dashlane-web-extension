@@ -1,41 +1,38 @@
-import { Button, Icon, jsx } from '@dashlane/design-system';
-import { FlexContainer, Paragraph } from '@dashlane/ui-components';
-import useTranslate from 'libs/i18n/useTranslate';
-const friendsFamilyUrl = '*****';
+import {
+  Button,
+  Flex,
+  Heading,
+  Icon,
+  Paragraph,
+} from "@dashlane/design-system";
+import useTranslate from "../../../../libs/i18n/useTranslate";
+import { BIG_CARD_CONTAINER, ICON_CONTAINER } from "./styles";
+const friendsFamilyUrl = "__REDACTED__";
 export const FriendsAndFamilyInfo = () => {
-    const { translate } = useTranslate();
-    return (<FlexContainer flexWrap="nowrap" gap="16px" sx={{
-            borderStyle: 'solid',
-            borderColor: 'ds.border.neutral.quiet.idle',
-            borderWidth: '1px',
-            backgroundColor: 'ds.container.agnostic.neutral.supershy',
-            borderRadius: '4px',
-            padding: '32px',
-        }}>
-      <FlexContainer sx={{
-            padding: '10px 8px',
-            width: '40px',
-            height: '40px',
-            borderRadius: '8px',
-            backgroundColor: 'ds.container.expressive.brand.quiet.idle',
-        }}>
-        <Icon name="GroupOutlined" color="ds.text.neutral.standard"/>
-      </FlexContainer>
-      <FlexContainer flexDirection="column" gap="16px" sx={{ flexGrow: '1' }}>
-        <FlexContainer flexDirection="column" gap="8px">
-          <Paragraph size="large" bold color="ds.text.neutral.catchy">
-            {translate('team_account_addseats_success_friends_family_header')}
+  const { translate } = useTranslate();
+  return (
+    <Flex flexWrap="nowrap" gap="16px" sx={BIG_CARD_CONTAINER}>
+      <Flex sx={ICON_CONTAINER}>
+        <Icon name="GroupOutlined" color="ds.text.neutral.standard" />
+      </Flex>
+      <Flex flexDirection="column" gap="16px" sx={{ flexGrow: "1" }}>
+        <Flex flexDirection="column" gap="8px">
+          <Heading as="h2" color="ds.text.neutral.catchy">
+            {translate("team_account_addseats_success_friends_family_header")}
+          </Heading>
+          <Paragraph color="ds.text.neutral.quiet">
+            {translate("team_account_addseats_success_friends_family_body")}
           </Paragraph>
-          <Paragraph size="small" color="ds.text.neutral.quiet">
-            {translate('team_account_addseats_success_friends_family_body')}
-          </Paragraph>
-        </FlexContainer>
+        </Flex>
 
         <a href={friendsFamilyUrl} target="_blank" rel="noopener noreferrer">
           <Button mood="neutral" intensity="quiet">
-            {translate('team_account_addseats_success_friends_family_learn_more_cta')}
+            {translate(
+              "team_account_addseats_success_friends_family_learn_more_cta"
+            )}
           </Button>
         </a>
-      </FlexContainer>
-    </FlexContainer>);
+      </Flex>
+    </Flex>
+  );
 };

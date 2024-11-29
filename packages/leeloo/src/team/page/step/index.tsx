@@ -1,28 +1,31 @@
-import React from 'react';
-import { colors, jsx, Paragraph } from '@dashlane/ui-components';
-import styles from './styles.css';
+import { Paragraph, TextColorToken } from "@dashlane/design-system";
+import { SX_STYLES } from "./style";
 interface Props {
-    img: string;
-    title: string;
-    subtitle: string;
-    stepLabel?: string;
-    stepNumber?: number;
-    caps?: boolean;
-    dotStyle?: React.CSSProperties;
+  img: string;
+  title: string;
+  subtitle: string;
+  caps?: boolean;
+  titleColor?: TextColorToken;
 }
-const Step = ({ img, title, subtitle, stepLabel, stepNumber, caps, dotStyle, }: Props) => (<div className={styles.container}>
-    <img src={img} className={styles.img}/>
-    <Paragraph size="medium" caps={caps ? true : undefined} sx={{ marginTop: '-43px', marginBottom: '11px' }}>
+const Step = ({ img, title, subtitle, caps, titleColor }: Props) => (
+  <div sx={SX_STYLES.CONTAINER}>
+    <img src={img} sx={SX_STYLES.IMG} />
+    <Paragraph
+      textStyle="ds.title.block.medium"
+      color={titleColor}
+      sx={{
+        marginBottom: "8px",
+        textTransform: caps ? "uppercase" : undefined,
+      }}
+    >
       {title}
     </Paragraph>
-    <Paragraph color={colors.grey00} size="small">
+    <Paragraph
+      color="ds.text.neutral.quiet"
+      textStyle="ds.body.reduced.regular"
+    >
       {subtitle}
     </Paragraph>
-    <div className={styles.numberContainer}>
-      <div className={styles.dot} style={dotStyle}/>
-      {stepLabel && stepNumber ? (<Paragraph size="small" sx={{ textAlign: 'left' }}>
-          {stepLabel} {stepNumber}
-        </Paragraph>) : null}
-    </div>
-  </div>);
+  </div>
+);
 export default Step;

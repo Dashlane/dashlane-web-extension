@@ -1,41 +1,47 @@
-import { useState } from 'react';
-import { carbonConnector } from 'libs/carbon/connector';
-import { MidCycleTierUpgradePrice } from '@dashlane/communication';
+import {
+  MidCycleTierUpgradePrice,
+  teamPlanUpdateApi,
+} from "@dashlane/team-admin-contracts";
+import { DataStatus, useModuleQuery } from "@dashlane/framework-react";
 interface UseMidCycleTierUpgradePriceProps {
-    seats: number;
-    planName?: string;
-    onError?: () => void;
+  newTotalNumberOfSeats: number;
+  planName?: string;
+  onError?: () => void;
 }
 interface UseMidCycleTierUpgradePriceOutput {
-    isLoading: boolean;
-    midCycleTierUpgradePrice?: MidCycleTierUpgradePrice;
+  isLoading: boolean;
+  midCycleTierUpgradePrice?: MidCycleTierUpgradePrice;
+  isMidCycleGracePeriod?: boolean;
 }
-export function useMidCycleTierUpgradePrice({ seats, planName, onError, }: UseMidCycleTierUpgradePriceProps): UseMidCycleTierUpgradePriceOutput {
-    const [currentSeats, setCurrentSeats] = useState<number>(0);
-    const [currentPlanName, setCurrentPlanName] = useState<string>();
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [midCycleTierUpgradePrice, setMidCycleTierUpgradePrice] = useState<MidCycleTierUpgradePrice>();
-    const getMidCycleTierUpgradePrice = async () => {
-        if (seats !== undefined && planName) {
-            const result = await carbonConnector.getMidCycleTierUpgradePrice({
-                numberOfSeats: seats,
-                newPlan: planName,
-            });
-            setIsLoading(false);
-            if (!result.success) {
-                if (onError) {
-                    onError();
-                }
-                return;
-            }
-            setMidCycleTierUpgradePrice(() => result.data);
-        }
-    };
-    if (seats !== currentSeats || (planName && planName !== currentPlanName)) {
-        setCurrentSeats(seats);
-        setCurrentPlanName(planName);
-        setIsLoading(true);
-        getMidCycleTierUpgradePrice();
+export function useMidCycleTierUpgradePrice({
+  newTotalNumberOfSeats,
+  planName,
+  onError,
+}: UseMidCycleTierUpgradePriceProps): UseMidCycleTierUpgradePriceOutput {
+  const midcycleTierUpgradePrice = useModuleQuery(
+    teamPlanUpdateApi,
+    "getMidcycleTierUpgradePrice",
+    {
+      newTotalNumberOfSeats,
+      newPlan: planName ?? "",
+    },
+    { initialSkip: !newTotalNumberOfSeats || !planName }
+  );
+  switch (midcycleTierUpgradePrice.status) {
+    case DataStatus.Loading: {
+      return { isLoading: true };
     }
-    return { isLoading, midCycleTierUpgradePrice };
+    case DataStatus.Error: {
+      onError?.();
+      const isMidCycleGracePeriod =
+        midcycleTierUpgradePrice.error.tag === "NoMtuDuringGracePeriod";
+      return { isLoading: false, isMidCycleGracePeriod: isMidCycleGracePeriod };
+    }
+    case DataStatus.Success: {
+      return {
+        isLoading: false,
+        midCycleTierUpgradePrice: midcycleTierUpgradePrice.data,
+      };
+    }
+  }
 }
