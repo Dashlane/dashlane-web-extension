@@ -1,6 +1,5 @@
 import * as React from "react";
-import { Paragraph } from "@dashlane/ui-components";
-import { Badge, jsx, mergeSx } from "@dashlane/design-system";
+import { Badge, jsx, mergeSx, Paragraph } from "@dashlane/design-system";
 import { I18nContext } from "../../../context/i18n";
 import { SX_STYLES } from "./Footer.styles";
 interface Props {
@@ -16,6 +15,10 @@ export const Footer = ({
   extensionShortcuts,
 }: Props) => {
   const { translate } = React.useContext(I18nContext);
+  const shortcutDisplayValue =
+    extensionShortcuts && extensionShortcuts.length > 0
+      ? extensionShortcuts.toString().replaceAll(",", " + ")
+      : undefined;
   return (
     <footer>
       {children ? (
@@ -35,25 +38,16 @@ export const Footer = ({
           </div>
         </React.Fragment>
       ) : null}
-      {extensionShortcuts && extensionShortcuts?.length > 0 ? (
-        <div
-          sx={mergeSx([
-            SX_STYLES.EXTENSION_SHORTCUTS_WRAPPER,
-            SX_STYLES.BORDER_TOP,
-          ])}
-        >
+      {shortcutDisplayValue ? (
+        <div sx={SX_STYLES.EXTENSION_SHORTCUTS_WRAPPER}>
           <Paragraph
             sx={SX_STYLES.DESCRIPTION}
-            color={"ds.text.neutral.quiet"}
-            size="x-small"
+            color="ds.text.neutral.quiet"
+            textStyle="ds.body.reduced.regular"
           >
             {translate("openTheExtension")}
           </Paragraph>
-          {extensionShortcuts.map((shortcut: string) => (
-            <div sx={SX_STYLES.SHORTCUT_ITEM} key={shortcut}>
-              <Badge label={shortcut} intensity="supershy" />
-            </div>
-          ))}
+          <Badge label={shortcutDisplayValue} intensity="supershy" />
         </div>
       ) : null}
     </footer>

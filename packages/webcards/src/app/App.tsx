@@ -1,10 +1,15 @@
 import * as React from "react";
 import type { Features } from "@dashlane/communication";
 import { defaultTheme, ThemeProvider } from "@dashlane/ui-components";
-import { defaultTheme as dsTheme, mergeThemes } from "@dashlane/design-system";
-import { DispatcherMessages } from "@dashlane/autofill-engine/dist/autofill-engine/src/dispatcher";
-import { WebcardData } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
-import { getLanguage } from "@dashlane/autofill-engine/dist/autofill-engine/src/spi";
+import {
+  ColorModeProvider,
+  defaultTheme as dsTheme,
+  mergeThemes,
+  useColorMode,
+} from "@dashlane/design-system";
+import { DispatcherMessages } from "@dashlane/autofill-engine/dispatcher";
+import { WebcardData } from "@dashlane/autofill-engine/types";
+import { getLanguage } from "@dashlane/autofill-engine/spi";
 import { DismissType } from "@dashlane/hermes";
 import { UtilsInterface } from "./utils";
 import { useAutofillEngine } from "./utils/useAutofillEngine";
@@ -24,6 +29,17 @@ import { useDispatcher } from "./utils/useDispatcher";
 import { CommunicationContextProvider } from "./context/communication";
 type Props = {
   utils: UtilsInterface;
+};
+export const DASHLANE_DARK_THEME_KEY = "ds.enableDarkTheme";
+const DarkModeWrapper: React.FC = ({ children }) => {
+  const [, setColorMode] = useColorMode();
+  React.useLayoutEffect(() => {
+    const isDarkThemeEnabled = window.localStorage.getItem(
+      DASHLANE_DARK_THEME_KEY
+    );
+    setColorMode(isDarkThemeEnabled === "true" ? "dark" : "light");
+  }, [setColorMode]);
+  return <>{children}</>;
 };
 const App = ({ utils }: Props) => {
   const [timeToWebcard, setTimeToWebcard] = React.useState<number | null>(null);
@@ -142,32 +158,38 @@ const App = ({ utils }: Props) => {
   });
   return (
     <ThemeProvider theme={mergeThemes(dsTheme, defaultTheme)}>
-      <I18nContextProvider langCode={language}>
-        <CommunicationContextProvider
-          autofillEngineCommands={autofillEngineCommands}
-          autofillEngineDispatcher={autofillEngineDispatcher}
-          setAutofillEngineActionsHandlers={setAutofillEngineActionsHandlers}
-        >
-          <FeatureFlipContextProvider featureFlips={featureFlips}>
-            <PerformanceContextProvider timeToWebcard={timeToWebcard}>
-              <LayoutUtilsContext.Provider
-                value={{
-                  sendWebcardGeometry,
-                }}
-              >
-                <AppWrapper
-                  utils={utils}
-                  data={data}
-                  getInitialState={getInitialState}
-                  sandboxKey={data.sandboxKey}
-                  closeWebcard={closeWebcard}
-                />
-              </LayoutUtilsContext.Provider>
-            </PerformanceContextProvider>
-          </FeatureFlipContextProvider>
-        </CommunicationContextProvider>
-      </I18nContextProvider>
+      <ColorModeProvider>
+        <DarkModeWrapper>
+          <I18nContextProvider langCode={language}>
+            <CommunicationContextProvider
+              autofillEngineCommands={autofillEngineCommands}
+              autofillEngineDispatcher={autofillEngineDispatcher}
+              setAutofillEngineActionsHandlers={
+                setAutofillEngineActionsHandlers
+              }
+            >
+              <FeatureFlipContextProvider featureFlips={featureFlips}>
+                <PerformanceContextProvider timeToWebcard={timeToWebcard}>
+                  <LayoutUtilsContext.Provider
+                    value={{
+                      sendWebcardGeometry,
+                    }}
+                  >
+                    <AppWrapper
+                      utils={utils}
+                      data={data}
+                      getInitialState={getInitialState}
+                      sandboxKey={data.sandboxKey}
+                      closeWebcard={closeWebcard}
+                    />
+                  </LayoutUtilsContext.Provider>
+                </PerformanceContextProvider>
+              </FeatureFlipContextProvider>
+            </CommunicationContextProvider>
+          </I18nContextProvider>
+        </DarkModeWrapper>
+      </ColorModeProvider>
     </ThemeProvider>
   );
 };
-export default App;
+export { App };

@@ -251,6 +251,7 @@ export const Combobox = ({
                     ? "CaretUpOutlined"
                     : "CaretDownOutlined"
                 }
+                color="ds.text.neutral.standard"
               />
             </button>
           </div>

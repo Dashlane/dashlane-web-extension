@@ -5,7 +5,7 @@ import {
   AutofillRequestOriginType,
   WebcardItem,
   WebcardItemProperties,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import {
   VaultAutofillViewInterfaces,
   VaultSourceType,
@@ -150,13 +150,15 @@ export const WebcardItemDetailedView = ({
           e.stopPropagation();
           onCloseItemDetails();
         }}
-        icon={<Icon name="CaretLeftOutlined" aria-hidden />}
+        icon={<Icon name="ArrowLeftOutlined" aria-hidden />}
         data-keyboard-accessible
       />
       {iconName ? (
-        <div sx={SX_STYLES.ICON_CONTAINER}>
-          <Icon name={iconName} />
-        </div>
+        <Icon
+          name={iconName}
+          color="ds.text.neutral.standard"
+          sx={{ mr: "4px" }}
+        />
       ) : null}
       <HeaderTitle
         title={
@@ -216,12 +218,7 @@ export const WebcardItemDetailedView = ({
     />
   );
   return (
-    <CardLayout
-      isDropdown
-      header={header}
-      withNoMainPadding
-      webcardData={webcardInfos}
-    >
+    <CardLayout isDropdown header={header} webcardData={webcardInfos}>
       {cardContent}
     </CardLayout>
   );

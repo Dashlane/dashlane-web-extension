@@ -8,11 +8,13 @@ interface Props {
   extensionShortcuts?: string[];
   footerContent?: React.ReactNode;
   headerContent?: React.ReactNode;
+  countdownPercentage?: number;
   withFooterDivider?: boolean;
   withHeaderCloseButton?: boolean;
   withHeaderLogo?: boolean;
   withFooterPadding?: boolean;
   withNoMainPadding?: boolean;
+  withNoContentCardWrapper?: boolean;
 }
 export const DialogContainer = ({
   children,
@@ -20,16 +22,19 @@ export const DialogContainer = ({
   extensionShortcuts,
   footerContent,
   headerContent,
+  countdownPercentage,
   withFooterDivider,
   withHeaderCloseButton,
   withHeaderLogo,
   withFooterPadding,
   withNoMainPadding,
+  withNoContentCardWrapper,
 }: Props) => {
   const header = headerContent ? (
     <Header
       onClickClose={withHeaderCloseButton ? closeWebcard : undefined}
       withDashlaneLogo={withHeaderLogo}
+      countdownPercentage={countdownPercentage}
     >
       {headerContent}
     </Header>
@@ -48,6 +53,7 @@ export const DialogContainer = ({
       header={header}
       footer={footer}
       withNoMainPadding={withNoMainPadding}
+      withNoContentCardWrapper={withNoContentCardWrapper}
     >
       {children}
     </CardLayout>

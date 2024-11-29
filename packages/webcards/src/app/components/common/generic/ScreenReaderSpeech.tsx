@@ -1,12 +1,8 @@
 import React from "react";
-import styles from "./ScreenReaderSpeech.module.scss";
+import { VisuallyHidden } from "@dashlane/design-system";
 interface Props {
   children: React.ReactNode;
 }
 export const ScreenReaderSpeech = ({ children }: Props) => {
-  return (
-    <div aria-live="polite" className={styles.visuallyHidden}>
-      {children}
-    </div>
-  );
+  return <VisuallyHidden>{children}</VisuallyHidden>;
 };

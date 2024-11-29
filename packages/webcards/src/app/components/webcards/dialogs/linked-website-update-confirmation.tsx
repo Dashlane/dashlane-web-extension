@@ -7,7 +7,7 @@ import {
   Paragraph,
   ThemeUIStyleObject,
 } from "@dashlane/design-system";
-import { LinkedWebsiteUpdateConfirmationData } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { LinkedWebsiteUpdateConfirmationData } from "@dashlane/autofill-engine/types";
 import { useCommunication } from "../../../context/communication";
 import { I18nContext } from "../../../context/i18n";
 import { CardLayout } from "../../common/layout/CardLayout";
@@ -26,12 +26,13 @@ interface Props extends WebcardPropsBase {
 const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   CONTAINER: {
     display: "flex",
-    paddingX: "24px",
+    padding: "8px",
+    alignItems: "flex-start",
     justifyContent: "space-between",
+    gap: "8px",
   },
-  CONTENT: {
-    display: "flex",
-    flexDirection: "column",
+  TITLE: {
+    marginY: "7px",
   },
   CONTENT_CONTAINER: {
     overflow: "hidden",
@@ -41,12 +42,8 @@ const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
     alignItems: "flex-start",
   },
   LOGO: {
-    marginRight: "16px",
+    margin: "8px",
     flexShrink: 0,
-  },
-  SUBTITLE: {
-    color: "ds.text.neutral.quiet",
-    fontSize: "10px",
   },
 };
 export const LinkedWebsiteUpdateConfirmation = ({
@@ -76,24 +73,27 @@ export const LinkedWebsiteUpdateConfirmation = ({
   });
   const sanitizedKeyTitle = DOMPurify.sanitize(keyTitle);
   return (
-    <CardLayout>
+    <CardLayout withNoContentCardWrapper withNoMainPadding>
       <div sx={SX_STYLES.CONTAINER}>
-        <Logo sx={SX_STYLES.LOGO} height={32} name="DashlaneLogomark" />
+        <Logo sx={SX_STYLES.LOGO} height={16} name="DashlaneMicroLogomark" />
         <div sx={SX_STYLES.CONTENT_CONTAINER}>
           <Paragraph
-            sx={SX_STYLES.CONTENT}
+            sx={SX_STYLES.TITLE}
             dangerouslySetInnerHTML={{
               __html: sanitizedKeyTitle,
             }}
           />
 
-          <Paragraph sx={SX_STYLES.SUBTITLE}>
+          <Paragraph
+            color="ds.text.neutral.quiet"
+            textStyle="ds.body.reduced.regular"
+          >
             {translate(I18N_KEYS.SUBTITLE)}
           </Paragraph>
         </div>
         <div sx={SX_STYLES.ACTION_CONTAINER}>
           <Button
-            size="medium"
+            size="small"
             type="button"
             intensity="quiet"
             icon={<Icon name="ActionCloseOutlined" />}

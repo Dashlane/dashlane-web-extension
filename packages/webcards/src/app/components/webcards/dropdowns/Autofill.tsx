@@ -9,7 +9,7 @@ import {
   filterWebcardMetadataStore,
   vaultSourceTypeToHermesItemTypeMap,
   WebcardItem,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import {
   AnonymousAutofillAcceptEvent,
   AnonymousAutofillSuggestEvent,
@@ -35,8 +35,8 @@ import { WebcardPropsBase } from "../config";
 import { AutofillFooter } from "./AutofillFooter";
 import { SuggestedItemsList } from "./SuggestedItemsList";
 import { vaultSourceTypeToPageViewMap } from "./EmptyPanel";
-import { ButtonItem } from "../../common/items/ButtonItem";
 import { WebcardItemDetailedView } from "./common/WebcardItemDetailedView";
+import { Button, Flex } from "@dashlane/design-system";
 const I18N_KEYS = {
   CONDITIONAL_UI_FALLBACK_BUTTON: "webauthnConditionalUINotWithDashlaneButton",
 };
@@ -49,6 +49,7 @@ export const Autofill = ({ data, closeWebcard }: Props) => {
     webcardId,
     webcardType,
     items,
+    moreItemsAvailable,
     formType,
     fieldType,
     warningType,
@@ -132,9 +133,11 @@ export const Autofill = ({ data, closeWebcard }: Props) => {
         msToWebcard: timeToWebcard,
         webcardItemTotalCount: items.length,
         isSuggestLastUnsaved,
-        autofillMessageTypeList: warningType
-          ? [dropdownWebcardWarningTypeToHermesWarningType[warningType]]
-          : undefined,
+        autofillMessageTypeList:
+          warningType &&
+          dropdownWebcardWarningTypeToHermesWarningType[warningType]
+            ? [dropdownWebcardWarningTypeToHermesWarningType[warningType]!]
+            : undefined,
       })
     );
     (async () => {
@@ -149,9 +152,11 @@ export const Autofill = ({ data, closeWebcard }: Props) => {
           msToWebcard: timeToWebcard,
           webcardItemTotalCount: items.length,
           isSuggestLastUnsaved,
-          autofillMessageTypeList: warningType
-            ? [dropdownWebcardWarningTypeToHermesWarningType[warningType]]
-            : undefined,
+          autofillMessageTypeList:
+            warningType &&
+            dropdownWebcardWarningTypeToHermesWarningType[warningType]
+              ? [dropdownWebcardWarningTypeToHermesWarningType[warningType]!]
+              : undefined,
         })
       );
     })();
@@ -257,16 +262,35 @@ export const Autofill = ({ data, closeWebcard }: Props) => {
     setShowItemDetails(false);
     setSelectedItem(undefined);
   };
-  const footerContent =
+  const hasWarning =
     warningType &&
     warningType !==
-      AutofillDropdownWebcardWarningType.PossibleDuplicateRegistration ? (
-      <AutofillFooter
-        context={data.context}
-        warningType={data.warningType}
-        closeWebcard={closeWebcard}
-      />
-    ) : null;
+      AutofillDropdownWebcardWarningType.PossibleDuplicateRegistration;
+  const footerContent = (
+    <>
+      {withNonDashlaneKeyButton ? (
+        <Flex alignItems="center" justifyContent="center">
+          <Button
+            key="nonDashlaneKeyButton"
+            onClick={onUseOtherAuthenticator}
+            mood="neutral"
+            intensity="supershy"
+            layout="iconLeading"
+            icon="PasskeyOutlined"
+          >
+            {translate(I18N_KEYS.CONDITIONAL_UI_FALLBACK_BUTTON)}
+          </Button>
+        </Flex>
+      ) : null}
+      {hasWarning ? (
+        <AutofillFooter
+          context={data.context}
+          warningType={data.warningType}
+          closeWebcard={closeWebcard}
+        />
+      ) : null}
+    </>
+  );
   return showItemDetails && selectedItem ? (
     <WebcardItemDetailedView
       closeWebcard={closeWebcard}
@@ -285,8 +309,8 @@ export const Autofill = ({ data, closeWebcard }: Props) => {
       withHeaderLogo
       withHeaderOptionsButton
       withHeaderSearchButton={withSearch}
-      withFooterPadding={false}
-      withNoMainPadding
+      withFooterPadding={!!withNonDashlaneKeyButton || !!hasWarning}
+      withNoContentCardWrapper={!items.length}
     >
       <SuggestedItemsList
         onAddNewItem={closeWebcard}
@@ -299,15 +323,8 @@ export const Autofill = ({ data, closeWebcard }: Props) => {
         withScroll
         withAddNewButton={!withNonDashlaneKeyButton}
         credentialsAtRisk={credentialsAtRisk}
+        withSearchForMoreInfo={moreItemsAvailable}
       />
-      {withNonDashlaneKeyButton ? (
-        <ButtonItem
-          icon={VaultSourceType.Passkey}
-          key="nonDashlaneKeyButton"
-          onClick={onUseOtherAuthenticator}
-          value={translate(I18N_KEYS.CONDITIONAL_UI_FALLBACK_BUTTON)}
-        />
-      ) : null}
     </DropdownContainer>
   );
 };

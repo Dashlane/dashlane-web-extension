@@ -4,7 +4,6 @@ const LINK_BUTTON_SX_STYLE: Partial<ThemeUIStyleObject> = {
   background: "none",
   cursor: "pointer",
   fontSize: "12px",
-  lineHeight: "1.43",
   textDecoration: "none",
   "&:hover": {
     textDecoration: "underline",

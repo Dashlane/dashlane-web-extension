@@ -2,8 +2,8 @@ import {
   AutofillEngineActions,
   AutofillEngineCommands,
   WebExtensionApiManager,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/client";
-import { AutofillEngineClientType } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/client";
+import { AutofillEngineClientType } from "@dashlane/autofill-engine/types";
 import * as React from "react";
 import { UtilsInterface } from ".";
 export const useAutofillEngine = (

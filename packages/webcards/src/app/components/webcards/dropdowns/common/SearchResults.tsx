@@ -8,8 +8,14 @@ import {
   UserSearchVaultItemEvent,
   UserSelectVaultItemEvent,
 } from "@dashlane/hermes";
-import { TextInput } from "@dashlane/ui-components";
-import { jsx, ThemeUIStyleObject } from "@dashlane/design-system";
+import {
+  Button,
+  Icon,
+  IndeterminateLoader,
+  jsx,
+  SearchField,
+  ThemeUIStyleObject,
+} from "@dashlane/design-system";
 import {
   AutofillCredentialsAtRisk,
   AutofillDropdownWebcardConfiguration,
@@ -18,7 +24,7 @@ import {
   AutofillRequestOriginType,
   vaultSourceTypeToHermesItemTypeMap,
   WebcardItem,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import { useCommunication } from "../../../../context/communication";
 import { I18nContext } from "../../../../context/i18n";
 import { getSelectedItemPositionForLog } from "../../../../utils/logs";
@@ -33,7 +39,6 @@ import {
   SelfCorrectingAutofillOptionItem,
 } from "./SelfCorrectingTree";
 import { WebcardItemDetailedView } from "./WebcardItemDetailedView";
-import Loader from "../../../../assets/svg/loader.svg";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
 const SEARCHING_DELAY_IN_MS = 200;
 const I18N_KEYS = {
@@ -42,17 +47,13 @@ const I18N_KEYS = {
 const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   SEARCH_INPUT_CONTAINER: {
     display: "flex",
-    flexDirection: "row",
     alignItems: "center",
     gap: "4px",
-  },
-  SEARCH_INPUT_TEXT: {
-    "&::placeholder": { color: "ds.text.neutral.quiet" },
-    border: "none",
-    background: "none",
-    padding: "0",
-    height: "auto",
-    fontSize: "12px",
+    ml: "4px",
+    width: "100%",
+    "& > div": {
+      width: "100%",
+    },
   },
 };
 export interface SearchResultsProps {
@@ -78,19 +79,19 @@ export const SearchResults = ({
     autofillEngineDispatcher,
     closeWebcard,
   });
-  const initialItems = React.useRef(
+  const suggestedItems =
     webcardData.configuration === AutofillDropdownWebcardConfiguration.Classic
       ? webcardData.items
-      : []
-  );
-  const [results, setResults] = React.useState<WebcardItem[]>(
-    initialItems.current
+      : [];
+  const [results, setResults] = React.useState<WebcardItem[]>(suggestedItems);
+  const [currentItemsCount, setCurrentItemsCount] = React.useState<number>(
+    suggestedItems.length
   );
   const [credentialsAtRisk, setCredentialsAtRisk] = React.useState<
     AutofillCredentialsAtRisk | undefined
   >(undefined);
   const [showMoreResults, setShowMoreResults] = React.useState(
-    initialItems.current.length === 0
+    suggestedItems.length === 0
   );
   const [showItemDetails, setShowItemDetails] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState<WebcardItem>();
@@ -98,11 +99,16 @@ export const SearchResults = ({
     React.useState<string>(srcElementValue);
   const [isSearching, setIsSearching] = React.useState<boolean>(false);
   const searchTimeout = React.useRef<NodeJS.Timeout>();
-  React.useEffect(
-    () => () => searchTimeout.current && clearTimeout(searchTimeout.current),
-    []
-  );
-  React.useEffect(() => setSearchedValue(srcElementValue), [srcElementValue]);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  React.useEffect(() => {
+    return () => searchTimeout.current && clearTimeout(searchTimeout.current);
+  }, []);
+  React.useEffect(() => {
+    if (!srcElementValue && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+    setSearchedValue(srcElementValue);
+  }, [srcElementValue]);
   React.useEffect(() => {
     autofillEngineCommands?.logPageView({
       pageView: PageView.AutofillDropdownSuggestionSearch,
@@ -111,8 +117,9 @@ export const SearchResults = ({
   }, [autofillEngineCommands]);
   React.useEffect(() => {
     if (!searchedValue && !showMoreResults) {
-      setResults(initialItems.current);
-      setShowMoreResults(initialItems.current.length === 0);
+      setResults(suggestedItems);
+      setCurrentItemsCount(suggestedItems.length);
+      setShowMoreResults(suggestedItems.length === 0);
       return;
     }
     setIsSearching(true);
@@ -146,8 +153,9 @@ export const SearchResults = ({
     results,
   ]);
   setAutofillEngineActionsHandlers?.({
-    updateWebcardItems: (items) => {
+    updateWebcardItems: (items, count) => {
       setResults(items);
+      setCurrentItemsCount(count);
       setIsSearching(false);
     },
   });
@@ -159,7 +167,7 @@ export const SearchResults = ({
         highlight: showMoreResults ? Highlight.None : Highlight.Suggested,
         hasInteracted: hasUserInteractedWithSearchResults,
         charactersTypedCount: searchedValue.length,
-        totalCount: results.length,
+        totalCount: currentItemsCount,
       })
     );
   };
@@ -199,7 +207,7 @@ export const SearchResults = ({
           highlight: showMoreResults ? Highlight.None : Highlight.Suggested,
           itemId: item.itemId,
           itemType: hermesItemType,
-          totalCount: results.length,
+          totalCount: currentItemsCount,
           index: getSelectedItemPositionForLog(results, item),
         })
       );
@@ -262,20 +270,41 @@ export const SearchResults = ({
     closeWebcard();
   };
   const header = (
-    <Header isDropdown onClickClose={onClickCloseButton} withDashlaneLogo>
-      <div sx={SX_STYLES.SEARCH_INPUT_CONTAINER}>
-        <TextInput
-          sx={SX_STYLES.SEARCH_INPUT_TEXT}
-          placeholder={
-            srcElementValue || translate(I18N_KEYS.SEARCH_INPUT_PLACEHOLDER)
-          }
-          autoFocus={!srcElementValue}
-          onChange={(e) => onInputChange(e.target.value)}
-          data-testid={"search-input"}
+    <div>
+      <Header isDropdown>
+        <Button
+          type="button"
+          mood="neutral"
+          intensity="supershy"
+          size="small"
+          layout="iconOnly"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClickCloseButton();
+          }}
+          icon={<Icon name="ArrowLeftOutlined" aria-hidden />}
+          data-keyboard-accessible
         />
-        {isSearching ? <Loader /> : null}
-      </div>
-    </Header>
+        <div sx={SX_STYLES.SEARCH_INPUT_CONTAINER}>
+          <SearchField
+            ref={searchInputRef}
+            label={translate(I18N_KEYS.SEARCH_INPUT_PLACEHOLDER)}
+            placeholder={srcElementValue}
+            onChange={(e) => onInputChange(e.target.value)}
+            data-testid={"search-input"}
+          />
+          {isSearching ? <IndeterminateLoader mood="brand" /> : null}
+        </div>
+      </Header>
+      <SearchResultsHeader
+        itemsCount={currentItemsCount}
+        onClickAllItemsButton={onClickAllItemsButton}
+        onClickSuggestedButton={
+          suggestedItems.length ? onClickSuggestedButton : undefined
+        }
+        allItemsButtonSelected={showMoreResults}
+      />
+    </div>
   );
   const footer =
     showMoreResults && results.length > 0 ? (
@@ -297,16 +326,8 @@ export const SearchResults = ({
       header={header}
       footer={footer}
       webcardData={webcardData}
-      withNoMainPadding
+      withNoContentCardWrapper={!results.length}
     >
-      <SearchResultsHeader
-        itemsCount={results.length}
-        onClickAllItemsButton={onClickAllItemsButton}
-        onClickSuggestedButton={
-          initialItems.current.length ? onClickSuggestedButton : undefined
-        }
-        allItemsButtonSelected={showMoreResults}
-      />
       <SuggestedItemsList
         onAddNewItem={onAddNewItem}
         fieldType={webcardData.fieldType?.[0]}

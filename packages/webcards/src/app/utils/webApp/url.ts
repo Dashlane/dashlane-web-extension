@@ -1,9 +1,9 @@
 import {
   AutofillEngineActions,
   AutofillEngineCommands,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/client";
-const GET_PREMIUM_URL = "*****";
-const BUY_B2B_PLAN = "*****";
+} from "@dashlane/autofill-engine/client";
+const GET_PREMIUM_URL = "__REDACTED__";
+const BUY_B2B_PLAN = "__REDACTED__";
 export const getPremiumPricingUrl = (
   subscriptionCode: string,
   utmSource?: string

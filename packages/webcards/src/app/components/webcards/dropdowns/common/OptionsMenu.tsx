@@ -3,7 +3,7 @@ import {
   AutofillDropdownWebcardConfiguration,
   AutofillDropdownWebcardData,
   DisableDashlaneOnFieldOption,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import {
   AnonymousAutofillSettingEvent,
   AutofillConfiguration,
@@ -132,6 +132,7 @@ export const OptionsMenu = ({
       isDropdown
       webcardData={webcardData}
       withNoMainPadding
+      withNoContentCardWrapper
     >
       <DropdownOptionsList
         onCloseOption={onCloseOption}

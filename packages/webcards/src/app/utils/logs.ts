@@ -1,5 +1,5 @@
 import { DomainType } from "@dashlane/hermes";
-import { WebcardItem } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { WebcardItem } from "@dashlane/autofill-engine/types";
 export const createPlaceholderDomain = () => ({
   id: "unknown",
   type: DomainType.Web,

@@ -10,6 +10,7 @@ export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
     width: "100%",
   },
   CURRENT_ELEMENT: {
+    color: "ds.text.neutral.standard",
     alignItems: "center",
     background: "none",
     border: "1px solid",

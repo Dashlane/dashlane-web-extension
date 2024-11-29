@@ -8,10 +8,11 @@ import {
 } from "@dashlane/hermes";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
 import {
+  FollowUpNotificationWebcardData,
   VaultIngredient,
   vaultSourceTypeToHermesItemTypeMap,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
-import { FollowUpNotificationWebcardData } from "@dashlane/autofill-engine/dist/autofill-engine/src/Api/types/webcards/follow-up-notification-webcard";
+  VaultTypeToAuditLogTypeFields,
+} from "@dashlane/autofill-engine/types";
 import { useCommunication } from "../../../context/communication";
 import { I18nContext } from "../../../context/i18n";
 import { InputType } from "../../../communication/types";
@@ -19,6 +20,7 @@ import { HeaderTitle } from "../../common/layout/HeaderTitle";
 import { DialogContainer } from "../../common/layout/DialogContainer";
 import { FollowUpNotificationItemComponent } from "./items/FollowUpNotificationItemComponent";
 import { WebcardPropsBase } from "../config";
+import { Paragraph } from "@dashlane/design-system";
 const I18N_KEYS = {
   title: "headerTitle",
   footer: "footerInformation",
@@ -34,16 +36,6 @@ const I18N_KEYS = {
   cardNumber: "cardNumberLabel",
   securityCode: "securityCodeLabel",
   expireDate: "expireDateLabel",
-};
-const SX_STYLES = {
-  FOOTER: {
-    backgroundColor: "ds.container.agnostic.neutral.quiet",
-    color: "ds.text.neutral.standard",
-    fontWeight: "400",
-    fontSize: "14px",
-    lineHeight: "16px",
-    padding: "16px",
-  },
 };
 interface Props extends WebcardPropsBase {
   data: FollowUpNotificationWebcardData;
@@ -85,6 +77,27 @@ export const FollowUpNotification = ({ data, closeWebcard }: Props) => {
       })
     );
   };
+  const copySensitiveInfo = <
+    T extends
+      | VaultSourceType.Credential
+      | VaultSourceType.BankAccount
+      | VaultSourceType.PaymentCard
+  >(
+    property: VaultIngredient["property"],
+    activityLogProperty: VaultTypeToAuditLogTypeFields[T]
+  ): void => {
+    onClickCopyButton(property);
+    let login: string | undefined = undefined;
+    if (webcardData.type === VaultSourceType.Credential) {
+      login = webcardData.login ? webcardData.login : webcardData.email;
+    }
+    autofillEngineCommands?.sendPropertyCopiedActivityLog({
+      itemType: webcardData.type,
+      field: activityLogProperty,
+      title: webcardData.title,
+      login,
+    });
+  };
   const onCloseWebcard = () => {
     autofillEngineCommands?.logEvent(
       new UserFollowUpNotificationEvent({
@@ -98,11 +111,17 @@ export const FollowUpNotification = ({ data, closeWebcard }: Props) => {
       closeWebcard={onCloseWebcard}
       headerContent={<HeaderTitle title={translate(I18N_KEYS.title)} />}
       footerContent={
-        <div sx={SX_STYLES.FOOTER}>{translate(I18N_KEYS.footer)}</div>
+        <div sx={{ padding: "0 8px 8px 8px", textAlign: "center" }}>
+          <Paragraph
+            textStyle="ds.body.helper.regular"
+            color="ds.text.neutral.standard"
+          >
+            {translate(I18N_KEYS.footer)}
+          </Paragraph>
+        </div>
       }
       withHeaderCloseButton
       withHeaderLogo
-      withNoMainPadding
       withFooterPadding={false}
     >
       {webcardData.type === VaultSourceType.Credential ? (
@@ -164,7 +183,12 @@ export const FollowUpNotification = ({ data, closeWebcard }: Props) => {
               isCopyButtonDisabled={webcardData.hasLimitedRights}
               autofillEngineCommands={autofillEngineCommands}
               previouslyCopiedProperties={copiedPropertiesList}
-              onClickCopyButton={onClickCopyButton}
+              onClickCopyButton={(copiedProperty) =>
+                copySensitiveInfo<VaultSourceType.Credential>(
+                  copiedProperty,
+                  "password"
+                )
+              }
             />
           ) : null}
 
@@ -179,7 +203,12 @@ export const FollowUpNotification = ({ data, closeWebcard }: Props) => {
               inputType={InputType.OtpSecret}
               autofillEngineCommands={autofillEngineCommands}
               previouslyCopiedProperties={copiedPropertiesList}
-              onClickCopyButton={onClickCopyButton}
+              onClickCopyButton={(copiedProperty) =>
+                copySensitiveInfo<VaultSourceType.Credential>(
+                  copiedProperty,
+                  "otp"
+                )
+              }
             />
           ) : null}
         </div>
@@ -213,7 +242,12 @@ export const FollowUpNotification = ({ data, closeWebcard }: Props) => {
               inputType={InputType.IBAN}
               autofillEngineCommands={autofillEngineCommands}
               previouslyCopiedProperties={copiedPropertiesList}
-              onClickCopyButton={onClickCopyButton}
+              onClickCopyButton={(copiedProperty) =>
+                copySensitiveInfo<VaultSourceType.BankAccount>(
+                  copiedProperty,
+                  "iban"
+                )
+              }
             />
           ) : null}
           {webcardData.hasBIC ? (
@@ -227,7 +261,12 @@ export const FollowUpNotification = ({ data, closeWebcard }: Props) => {
               inputType={InputType.BIC}
               autofillEngineCommands={autofillEngineCommands}
               previouslyCopiedProperties={copiedPropertiesList}
-              onClickCopyButton={onClickCopyButton}
+              onClickCopyButton={(copiedProperty) =>
+                copySensitiveInfo<VaultSourceType.BankAccount>(
+                  copiedProperty,
+                  "swift"
+                )
+              }
             />
           ) : null}
         </div>
@@ -261,7 +300,12 @@ export const FollowUpNotification = ({ data, closeWebcard }: Props) => {
               inputType={InputType.CardNumber}
               autofillEngineCommands={autofillEngineCommands}
               previouslyCopiedProperties={copiedPropertiesList}
-              onClickCopyButton={onClickCopyButton}
+              onClickCopyButton={(copiedProperty) =>
+                copySensitiveInfo<VaultSourceType.PaymentCard>(
+                  copiedProperty,
+                  "number"
+                )
+              }
             />
           ) : null}
           {webcardData.hasSecurityCode ? (
@@ -275,7 +319,12 @@ export const FollowUpNotification = ({ data, closeWebcard }: Props) => {
               inputType={InputType.SecurityCode}
               autofillEngineCommands={autofillEngineCommands}
               previouslyCopiedProperties={copiedPropertiesList}
-              onClickCopyButton={onClickCopyButton}
+              onClickCopyButton={(copiedProperty) =>
+                copySensitiveInfo<VaultSourceType.PaymentCard>(
+                  copiedProperty,
+                  "cvv"
+                )
+              }
             />
           ) : null}
           {webcardData.expireDate ? (

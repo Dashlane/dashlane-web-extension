@@ -1,22 +1,28 @@
 import * as React from "react";
-import { FieldDisabledNotificationWebcardData } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { FieldDisabledNotificationWebcardData } from "@dashlane/autofill-engine/types";
 import {
   BrowseComponent,
   HelpCenterArticleCta,
   PageView,
   UserOpenHelpCenterEvent,
 } from "@dashlane/hermes";
-import { FlexContainer, IconButton } from "@dashlane/ui-components";
-import { Icon, jsx, ThemeUIStyleObject } from "@dashlane/design-system";
-import Logo from "../../../assets/svg/dashlane_logo.svg";
+import {
+  Button,
+  Flex,
+  jsx,
+  Logo,
+  Paragraph,
+  ThemeUIStyleObject,
+} from "@dashlane/design-system";
 import { I18nContext } from "../../../context/i18n";
 import { useCommunication } from "../../../context/communication";
 import { LinkButton } from "../../common/generic/buttons/LinkButton";
 import { DropdownContainer } from "../../common/layout/DropdownContainer";
 import { WebcardPropsBase } from "../config";
-import styles from "./FieldDisabledNotification.module.scss";
 const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   MAIN_CONTAINER: {
+    width: "100%",
+    height: "100%",
     color: "ds.text.brand.standard",
     fontSize: "12px",
     fontWeight: "500",
@@ -30,7 +36,12 @@ const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   },
   INLINE_LINK: {
     fontWeight: "500",
-    paddingLeft: "8px",
+  },
+  FEEDBACK: {
+    display: "flow-root",
+    lineHeight: "16px",
+    padding: "10px",
+    paddingLeft: "18px",
   },
 };
 const I18N_KEYS = {
@@ -51,7 +62,7 @@ export const FieldDisabledNotification = ({ closeWebcard, data }: Props) => {
     });
   }, [autofillEngineCommands]);
   const onClickLearnMore = () => {
-    autofillEngineCommands?.openNewTabWithUrl("*****");
+    autofillEngineCommands?.openNewTabWithUrl("__REDACTED__");
     autofillEngineCommands?.logEvent(
       new UserOpenHelpCenterEvent({
         helpCenterArticleCta: HelpCenterArticleCta.GetHelp,
@@ -67,31 +78,38 @@ export const FieldDisabledNotification = ({ closeWebcard, data }: Props) => {
       closeWebcard={closeWebcard}
       webcardData={data}
       withNoMainPadding
-      withAllBordersRounded
+      withNoContentCardWrapper
     >
-      <div className={styles.main} sx={SX_STYLES.MAIN_CONTAINER}>
-        <Logo className={styles.logo} />
+      <Flex
+        className="main"
+        alignItems="center"
+        gap="8px"
+        sx={{ padding: "8px" }}
+      >
+        <Logo height={24} name="DashlaneMicroLogomark" sx={{ margin: "8px" }} />
 
-        <span className={styles.feedback}>
+        <Paragraph id="field-disabled-title">
           {translate(I18N_KEYS.SHUSH_FEEDBACK)}
-          <LinkButton
-            onClick={onClickLearnMore}
-            withUnderline={true}
-            colorToken={"ds.text.brand.standard"}
-            sxStyle={SX_STYLES.INLINE_LINK}
-          >
-            <span>{translate(I18N_KEYS.LEARN_MORE)}</span>
-          </LinkButton>
-        </span>
+        </Paragraph>
+        <LinkButton
+          onClick={onClickLearnMore}
+          withUnderline={true}
+          colorToken={"ds.text.brand.standard"}
+          sxStyle={SX_STYLES.INLINE_LINK}
+        >
+          <span>{translate(I18N_KEYS.LEARN_MORE)}</span>
+        </LinkButton>
 
-        <FlexContainer sx={SX_STYLES.ICON_CONTAINER}>
-          <IconButton
-            aria-label={translate(I18N_KEYS.DISMISS)}
-            icon={<Icon name="ActionCloseOutlined" />}
-            onClick={onClose}
-          />
-        </FlexContainer>
-      </div>
+        <Button
+          onClick={onClose}
+          icon="ActionCloseOutlined"
+          layout="iconOnly"
+          mood="neutral"
+          intensity="supershy"
+          aria-label={translate(I18N_KEYS.DISMISS)}
+          size="small"
+        />
+      </Flex>
     </DropdownContainer>
   );
 };

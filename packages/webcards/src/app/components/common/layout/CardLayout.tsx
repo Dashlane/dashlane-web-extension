@@ -1,6 +1,11 @@
 import { ReactNode, useContext } from "react";
-import { jsx, mergeSx, ThemeUIStyleObject } from "@dashlane/design-system";
-import { AutofillDropdownWebcardDataBase } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import {
+  Card,
+  jsx,
+  mergeSx,
+  ThemeUIStyleObject,
+} from "@dashlane/design-system";
+import { AutofillDropdownWebcardDataBase } from "@dashlane/autofill-engine/types";
 import { LayoutUtilsContext } from "../../../context/layoutUtils";
 import { useWebcardGeometry } from "../../webcards/effects/useWebcardGeometry";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
@@ -13,7 +18,7 @@ export interface CardLayoutProps {
   isDropdown?: boolean;
   webcardData?: AutofillDropdownWebcardDataBase;
   withNoMainPadding?: boolean;
-  withAllBordersRounded?: boolean;
+  withNoContentCardWrapper?: boolean;
 }
 export const CardLayout = ({
   children,
@@ -22,7 +27,7 @@ export const CardLayout = ({
   isDropdown,
   webcardData,
   withNoMainPadding,
-  withAllBordersRounded,
+  withNoContentCardWrapper,
 }: CardLayoutProps) => {
   const { sendWebcardGeometry } = useContext(LayoutUtilsContext);
   const webcardRef = useWebcardGeometry({
@@ -38,13 +43,7 @@ export const CardLayout = ({
     srcElement: webcardData?.srcElement,
   });
   return (
-    <div
-      sx={mergeSx([
-        cardLayout,
-        withAllBordersRounded ? SX_STYLES.ROUNDED_BORDERS : {},
-      ])}
-      ref={webcardRef}
-    >
+    <div sx={cardLayout} ref={webcardRef}>
       {header ?? null}
       <main
         sx={
@@ -53,7 +52,11 @@ export const CardLayout = ({
             : SX_STYLES.MAIN_WITH_PADDING
         }
       >
-        {children}
+        {withNoContentCardWrapper ? (
+          children
+        ) : (
+          <Card padding="8px">{children}</Card>
+        )}
       </main>
       {footer ?? null}
       {activeElementDescription ? (

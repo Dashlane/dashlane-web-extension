@@ -2,13 +2,11 @@ import { ThemeUIStyleObject } from "@dashlane/design-system";
 export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   HEADER: {
     display: "flex",
-    backgroundColor: "ds.container.agnostic.neutral.standard",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "center",
+    padding: "8px",
   },
-  DIALOG: {
-    minHeight: "64px",
-  },
+  DIALOG: {},
   DIALOG_ACTION: {
     backgroundColor: "transparent",
     "&:hover": {
@@ -29,7 +27,6 @@ export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   },
   DIALOG_CONTENT: {
     flex: "1",
-    padding: "16px",
   },
   DIALOG_LOGO: {
     flexShrink: "0",
@@ -69,6 +66,5 @@ export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
     display: "flex",
     alignItems: "center",
     overflowX: "hidden",
-    padding: "16px",
   },
 };

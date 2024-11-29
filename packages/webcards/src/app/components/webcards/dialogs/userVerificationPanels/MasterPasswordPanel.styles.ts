@@ -1,6 +1,6 @@
 import { ThemeUIStyleObject } from "@dashlane/design-system";
 export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
-  MASTERPASSWORD_PANEL_CONTAINER: {},
+  PIN_PANEL_CONTAINER: { padding: "8px 0" },
   LOGGED_IN_INFO: {
     color: "ds.text.neutral.quiet",
     paddingTop: "8px",

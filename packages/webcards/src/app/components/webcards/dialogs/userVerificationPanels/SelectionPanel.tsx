@@ -1,4 +1,3 @@
-import type { UserVerificationMethod } from "@dashlane/communication";
 import { Icon, IconName, jsx, Paragraph } from "@dashlane/design-system";
 import { BrowseComponent, PageView } from "@dashlane/hermes";
 import { useEffect } from "react";
@@ -7,20 +6,23 @@ import { useTranslate } from "../../../../context/i18n";
 import { SecondaryActionButton } from "../../../common/generic/buttons/SecondaryActionButton";
 import { SX_STYLES } from "./SelectionPanel.styles";
 import { UserVerificationPanelProps } from "./UserVerificationPanelProps";
+import { UserVerificationMethods } from "@dashlane/authentication-contracts";
 export const I18N_KEYS = {
   MASTER_PASSWORD: "selectionPanelMasterPassword",
   BIOMETRIC: "selectionPanelBiometric",
+  PIN: "selectionPanelPin",
   TITLE: "selectionPanelTitle",
   CANCEL: "cancel",
 };
-export const buttonLabels: Record<UserVerificationMethod, string> = {
-  masterPassword: I18N_KEYS.MASTER_PASSWORD,
-  webauthn: I18N_KEYS.BIOMETRIC,
+export const buttonLabels: Record<UserVerificationMethods, string> = {
+  [UserVerificationMethods.MasterPassword]: I18N_KEYS.MASTER_PASSWORD,
+  [UserVerificationMethods.Biometrics]: I18N_KEYS.BIOMETRIC,
+  [UserVerificationMethods.Pin]: I18N_KEYS.PIN,
 };
 export interface SelectionPanelProps
   extends Omit<UserVerificationPanelProps, "onVerificationSucessful"> {
-  readonly availableMethods: UserVerificationMethod[];
-  readonly onChooseMethod: (method: UserVerificationMethod) => void;
+  readonly availableMethods: UserVerificationMethods[];
+  readonly onChooseMethod: (method: UserVerificationMethods) => void;
 }
 const MethodButton = (
   leadingIcon: IconName,
@@ -60,10 +62,13 @@ export const SelectionPanel = ({
       browseComponent: BrowseComponent.Webcard,
     });
   }, [autofillEngineCommands]);
-  const getButtonForMethod = (method: UserVerificationMethod) => {
+  const getButtonForMethod = (method: UserVerificationMethods) => {
     const callback = () => onChooseMethod(method);
     const label = translate(buttonLabels[method]);
-    const icon = method === "webauthn" ? "FingerprintOutlined" : "LockOutlined";
+    const icon =
+      method === UserVerificationMethods.Biometrics
+        ? "FingerprintOutlined"
+        : "LockOutlined";
     return MethodButton(icon, label, callback);
   };
   const content = (

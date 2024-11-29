@@ -5,7 +5,7 @@ import {
   AutofillDropdownWebcardWarningType,
   DisableDashlaneOnFieldOption,
   vaultSourceTypeToHermesItemTypeMap,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import {
   AnonymousAutofillCorrectEvent,
   AnonymousRightClickMenuActionEvent,
@@ -19,7 +19,7 @@ import {
   UserAutofillCorrectEvent,
   UserRightClickMenuActionEvent,
 } from "@dashlane/hermes";
-import { Icon } from "@dashlane/design-system";
+import { Button, Flex, Icon } from "@dashlane/design-system";
 import { I18nContext } from "../../../../context/i18n";
 import { useCommunication } from "../../../../context/communication";
 import { CardLayout } from "../../../common/layout/CardLayout";
@@ -38,7 +38,6 @@ import {
   SelfCorrectingAutofillWebcardStep,
   SOURCE_TYPE_TO_LOCALIZATION_KEY,
 } from "./SelfCorrectingTree";
-import styles from "./SelfCorrectingMenu.module.scss";
 interface Props {
   closeWebcard: () => void;
   data: AutofillDropdownWebcardData;
@@ -174,19 +173,24 @@ export const SelfCorrectingMenu = ({
     />
   );
   const headerContent = (
-    <div className={styles.header}>
+    <Flex alignItems="center">
       {selfCorrectingStep === SelfCorrectingAutofillWebcardStep.Options ? (
-        <button
+        <Button
           type="button"
-          className={styles.backLink}
-          onClick={onBackLinkClick}
+          mood="neutral"
+          intensity="supershy"
+          size="small"
+          layout="iconOnly"
+          onClick={(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+            event.stopPropagation();
+            onBackLinkClick();
+          }}
+          icon={<Icon name="ArrowLeftOutlined" aria-hidden />}
           data-keyboard-accessible
-        >
-          <Icon name="CaretLeftOutlined" />
-        </button>
+        />
       ) : null}
       <HeaderTitle title={cardTitle} />
-    </div>
+    </Flex>
   );
   const footerContent =
     warningType &&
@@ -231,7 +235,6 @@ export const SelfCorrectingMenu = ({
       footer={<Footer withFooterPadding={false}>{footerContent}</Footer>}
       isDropdown
       webcardData={data}
-      withNoMainPadding={withNoMainPadding}
     >
       {mainContent}
     </CardLayout>

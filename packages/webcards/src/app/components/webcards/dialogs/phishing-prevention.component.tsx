@@ -2,14 +2,8 @@ import { useContext, useEffect } from "react";
 import {
   PhishingPreventionWebcardData,
   vaultSourceTypeToHermesItemTypeMap,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
-import {
-  Button,
-  Icon,
-  jsx,
-  mergeSx,
-  ThemeUIStyleObject,
-} from "@dashlane/design-system";
+} from "@dashlane/autofill-engine/types";
+import { Flex, jsx, LinkButton, TextField } from "@dashlane/design-system";
 import {
   AnonymousAutofillAcceptEvent,
   AnonymousAutofillSuggestEvent,
@@ -35,72 +29,10 @@ import { usePerformanceContext } from "../../../context/performance";
 import { SecondaryActionButton } from "../../../components/common/generic/buttons/SecondaryActionButton";
 import { PrimaryActionButton } from "../../../components/common/generic/buttons/PrimaryActionButton";
 import { IS_NATIVE_APP } from "../../../utils/logs";
+import { HeaderTitle } from "../../../components/common/layout/HeaderTitle";
 interface Props extends WebcardPropsBase {
   data: PhishingPreventionWebcardData;
 }
-const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
-  BUTTONS_CONTAINER: {
-    display: "flex",
-    width: "100%",
-    justifyContent: "flex-end",
-    button: {
-      marginRight: "8px",
-      fontSize: "16px",
-      height: "40px",
-      borderRadius: "3px",
-    },
-  },
-  CONTAINER: {
-    display: "flex",
-    flexDirection: "column",
-    padding: "0px 24px",
-  },
-  FIELD: {
-    height: "40px",
-    marginBottom: "12px",
-    fontWeight: "400",
-    fontSize: "16px",
-    lineHeight: "20px",
-    color: "ds.text.neutral.catchy",
-    textIndent: "12px",
-    border: "0px",
-    borderRadius: "4px",
-  },
-  FOOTER: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  LABEL: {
-    fontWeight: "600",
-    fontSize: "10px",
-    margin: "6px 0px",
-    span: {
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "flex-end",
-    },
-    textTransform: "uppercase",
-  },
-  LINK: {
-    backgroundColor: "transparent",
-    marginLeft: "8px",
-    fontSize: "14px",
-    "&:hover": {
-      textDecoration: "underline",
-      cursor: "pointer",
-    },
-  },
-  MORE_INFO: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: "12px",
-    button: {
-      borderRadius: "3px",
-    },
-  },
-};
 const I18N_KEYS = {
   title: "headerTitle",
   trustedUrl: "trustedUrlLabel",
@@ -109,7 +41,7 @@ const I18N_KEYS = {
   cancel: "cancelButton",
   ok: "okButton",
 };
-const PHISHING_BLOG_ARTICLE_URL = "*****";
+const PHISHING_BLOG_ARTICLE_URL = "__REDACTED__";
 export const PhishingPreventionPrompt = ({ data, closeWebcard }: Props) => {
   const { autofillEngineCommands } = useCommunication();
   const { translate } = useContext(I18nContext);
@@ -226,22 +158,20 @@ export const PhishingPreventionPrompt = ({ data, closeWebcard }: Props) => {
     closeWebcard();
   };
   const footerContent = (
-    <div sx={SX_STYLES.FOOTER}>
-      <div sx={SX_STYLES.BUTTONS_CONTAINER}>
-        <SecondaryActionButton
-          onClick={handleAcceptPaste}
-          label={translate(I18N_KEYS.ok)}
-          aria-label={translate(I18N_KEYS.ok)}
-        />
-        <PrimaryActionButton
-          onClick={handleCancelPaste}
-          label={translate(I18N_KEYS.cancel)}
-          aria-label={translate(I18N_KEYS.cancel)}
-        />
-      </div>
-    </div>
+    <Flex justifyContent="flex-end" alignItems="center" gap="8px">
+      <SecondaryActionButton
+        onClick={handleAcceptPaste}
+        label={translate(I18N_KEYS.ok)}
+        aria-label={translate(I18N_KEYS.ok)}
+      />
+      <PrimaryActionButton
+        onClick={handleCancelPaste}
+        label={translate(I18N_KEYS.cancel)}
+        aria-label={translate(I18N_KEYS.cancel)}
+      />
+    </Flex>
   );
-  const headerContent = <span>{translate(I18N_KEYS.title)}</span>;
+  const headerContent = <HeaderTitle title={translate(I18N_KEYS.title)} />;
   return (
     <DialogContainer
       closeWebcard={handleCloseWebcard}
@@ -250,75 +180,37 @@ export const PhishingPreventionPrompt = ({ data, closeWebcard }: Props) => {
       withHeaderLogo
       withHeaderCloseButton
     >
-      <div sx={SX_STYLES.CONTAINER}>
-        <label
-          htmlFor="trustedUrlInput"
-          sx={mergeSx([SX_STYLES.LABEL, { color: "ds.text.neutral.quiet" }])}
-        >
-          <span>
-            {translate(I18N_KEYS.trustedUrl)}
-            <Icon
-              name="LockFilled"
-              size="xsmall"
-              sx={{
-                width: "10px",
-                marginLeft: "5px",
-                color: "ds.text.neutral.standard",
-              }}
-            />
-          </span>
-        </label>
-        <input
-          type="text"
+      <Flex flexDirection="column" gap="8px">
+        <TextField
           id="trustedUrlInput"
+          label={translate(I18N_KEYS.trustedUrl)}
           value={data.urlOfCopiedItem}
-          disabled
-          sx={mergeSx([
-            SX_STYLES.FIELD,
-            {
-              backgroundColor: "ds.container.expressive.positive.quiet.idle",
+          readOnly
+          sx={{
+            "& label": {
+              color: "ds.text.brand.quiet",
             },
-          ])}
+          }}
         />
-        <label
-          htmlFor="currentUrlInput"
-          sx={mergeSx([SX_STYLES.LABEL, { color: "ds.text.warning.quiet" }])}
-        >
-          {translate(I18N_KEYS.currentUrl)}
-        </label>
-        <input
-          type="text"
+        <TextField
           id="currentUrlInput"
+          label={translate(I18N_KEYS.currentUrl)}
           value={data.urlOfPasteDestination}
-          disabled
-          sx={mergeSx([
-            SX_STYLES.FIELD,
-            {
-              backgroundColor: "ds.container.expressive.warning.quiet.idle",
+          readOnly
+          sx={{
+            "& label": {
+              color: "ds.text.warning.quiet",
             },
-          ])}
+          }}
         />
-        <div sx={SX_STYLES.MORE_INFO}>
-          <Button
-            role="link"
-            layout="iconOnly"
-            mood="neutral"
-            intensity="quiet"
-            size="small"
-            aria-label={translate(I18N_KEYS.phishingInfo)}
-            icon={<Icon name="FeedbackInfoOutlined" />}
-            onClick={handleClickMoreInfo}
-          ></Button>
-          <button
-            role="link"
-            aria-label={translate(I18N_KEYS.phishingInfo)}
-            onClick={handleClickMoreInfo}
-            sx={SX_STYLES.LINK}
-          >
-            {translate(I18N_KEYS.phishingInfo)}
-          </button>
-        </div>
-      </div>
+        <LinkButton
+          onClick={handleClickMoreInfo}
+          role="link"
+          sx={{ ml: "8px" }}
+        >
+          {translate(I18N_KEYS.phishingInfo)}
+        </LinkButton>
+      </Flex>
     </DialogContainer>
   );
 };

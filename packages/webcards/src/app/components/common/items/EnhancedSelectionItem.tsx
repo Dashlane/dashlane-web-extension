@@ -1,11 +1,18 @@
 import * as React from "react";
 import classNames from "classnames";
-import { EnhancedWebcardItem } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { EnhancedWebcardItem } from "@dashlane/autofill-engine/types";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
-import { Badge, Button, Icon, jsx, mergeSx } from "@dashlane/design-system";
+import {
+  Badge,
+  Button,
+  HighlightText,
+  Icon,
+  jsx,
+  ListItem,
+  mergeSx,
+} from "@dashlane/design-system";
 import { I18nContext } from "../../../context/i18n";
 import { KEYBOARD_EVENTS } from "../../../constants";
-import { HighlightedSearchValue } from "./HighlightedSearchValue";
 import { MORE_BUTTON_CLASS, SX_STYLES } from "./Items.styles";
 import styles from "./EnhancedSelectionItem.module.scss";
 const I18N_KEYS = {
@@ -116,86 +123,98 @@ export const EnhancedSelectionItem = ({
     warning = translate(I18N_KEYS.INCOMPLETE);
   }
   return (
-    <div
+    <ListItem
       key={itemId}
-      sx={SX_STYLES.ITEM}
       onClick={() => onClick(item)}
-      onKeyUp={(e) => {
-        if (
-          e.key !== KEYBOARD_EVENTS.ENTER &&
-          e.key !== KEYBOARD_EVENTS.SPACE
-        ) {
-          return;
-        }
-        onClick(item);
-      }}
-      data-testid={itemId}
-      role="button"
-      tabIndex={0}
-      data-keyboard-accessible={`${title}: ${content}`}
+      aria-label={`${title}: ${content}`}
     >
-      {showIcon && itemType === VaultSourceType.BankAccount ? (
-        <div sx={SX_STYLES.ICON_CONTAINER}>
-          <Icon name={"ItemBankAccountOutlined"} size="large" />
-        </div>
-      ) : null}
-      {showIcon && itemType !== VaultSourceType.BankAccount ? (
-        <div
-          sx={SX_STYLES.ICON_CONTAINER}
-          className={classNames(
-            iconClass,
-            chosenCountry && styles[chosenCountry],
-            driverLicenseType && styles[driverLicenseType],
-            color && styles[color]
-          )}
-        ></div>
-      ) : null}
       <div
-        sx={mergeSx([SX_STYLES.CONTENT, warning ? SX_STYLES.WITH_WARNING : {}])}
+        sx={SX_STYLES.ITEM}
+        onKeyUp={(e) => {
+          if (
+            e.key !== KEYBOARD_EVENTS.ENTER &&
+            e.key !== KEYBOARD_EVENTS.SPACE
+          ) {
+            return;
+          }
+          onClick(item);
+        }}
+        role="button"
+        tabIndex={0}
+        data-keyboard-accessible={`${title}: ${content}`}
+        data-testid={itemId}
       >
-        <div data-testid="item-title" sx={SX_STYLES.TITLE}>
-          <div sx={SX_STYLES.TITLE_BADGE_CONTAINER}>
-            <HighlightedSearchValue text={title ?? ""} search={searchValue} />
-            {warning ? (
-              <Badge
-                mood="warning"
-                intensity="quiet"
-                label={warning}
-                sx={{ marginLeft: "5px" }}
-              />
-            ) : null}
-          </div>
-        </div>
-        {content ? (
-          <div sx={SX_STYLES.SUBTITLE}>
-            {paymentCardNetworkIconClass ? (
-              <div
-                className={classNames(
-                  styles.paymentCardNetworkContainer,
-                  paymentCardNetworkIconClass
-                )}
-              />
-            ) : null}
-            <HighlightedSearchValue text={content} search={searchValue} />
+        {showIcon && itemType === VaultSourceType.BankAccount ? (
+          <div sx={SX_STYLES.ICON_CONTAINER}>
+            <Icon name={"ItemBankAccountOutlined"} size="large" />
           </div>
         ) : null}
+        {showIcon && itemType !== VaultSourceType.BankAccount ? (
+          <div
+            sx={SX_STYLES.ICON_CONTAINER}
+            className={classNames(
+              iconClass,
+              chosenCountry && styles[chosenCountry],
+              driverLicenseType && styles[driverLicenseType],
+              color && styles[color]
+            )}
+          ></div>
+        ) : null}
+        <div
+          sx={mergeSx([
+            SX_STYLES.CONTENT,
+            warning ? SX_STYLES.WITH_WARNING : {},
+          ])}
+        >
+          <div data-testid="item-title" sx={SX_STYLES.TITLE}>
+            <div sx={SX_STYLES.TITLE_BADGE_CONTAINER}>
+              <div sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                <HighlightText
+                  text={title ?? ""}
+                  highlightedText={searchValue}
+                />
+              </div>
+              {warning ? (
+                <Badge
+                  mood="warning"
+                  intensity="quiet"
+                  label={warning}
+                  sx={{ marginLeft: "5px" }}
+                />
+              ) : null}
+            </div>
+          </div>
+          {content ? (
+            <div sx={SX_STYLES.SUBTITLE}>
+              {paymentCardNetworkIconClass ? (
+                <div
+                  className={classNames(
+                    styles.paymentCardNetworkContainer,
+                    paymentCardNetworkIconClass
+                  )}
+                />
+              ) : null}
+              <HighlightText text={content} highlightedText={searchValue} />
+            </div>
+          ) : null}
+        </div>
+        {onClickMoreButton ? (
+          <Button
+            type="button"
+            mood="neutral"
+            intensity="supershy"
+            size="small"
+            layout="iconOnly"
+            className={MORE_BUTTON_CLASS}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClickMoreButton(item);
+            }}
+            icon={<Icon name="CaretRightOutlined" aria-hidden />}
+            data-keyboard-accessible
+          />
+        ) : null}
       </div>
-      {onClickMoreButton ? (
-        <Button
-          type="button"
-          mood="neutral"
-          intensity="supershy"
-          size="small"
-          layout="iconOnly"
-          className={MORE_BUTTON_CLASS}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClickMoreButton(item);
-          }}
-          icon={<Icon name="CaretRightOutlined" aria-hidden />}
-          data-keyboard-accessible
-        />
-      ) : null}
-    </div>
+    </ListItem>
   );
 };

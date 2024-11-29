@@ -11,7 +11,7 @@ import {
 import {
   OnboardingNotificationConfiguration,
   OnboardingNotificationWebcardData,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import { I18nContext } from "../../../context/i18n";
 import { useCommunication } from "../../../context/communication";
 import { KEYBOARD_EVENTS } from "../../../constants";
@@ -87,6 +87,7 @@ export const Onboarding = ({
       headerContent={<HeaderTitle title={translate(`${configuration}Title`)} />}
       withHeaderLogo
       withHeaderCloseButton
+      withNoContentCardWrapper
     >
       <div className={styles.buttonsContainer}>
         {configuration === OnboardingNotificationConfiguration.AfterCancel ? (

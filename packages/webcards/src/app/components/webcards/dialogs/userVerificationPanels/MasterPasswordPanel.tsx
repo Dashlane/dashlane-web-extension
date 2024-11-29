@@ -104,7 +104,6 @@ export const MasterPasswordPanel = ({
   const sanitizedLoggedIn = DOMPurify.sanitize(loggedIn);
   const content = (
     <form
-      sx={SX_STYLES.MASTERPASSWORD_PANEL_CONTAINER}
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit();

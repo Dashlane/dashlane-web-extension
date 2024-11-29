@@ -1,11 +1,5 @@
 import * as React from "react";
-import classNames from "classnames";
-import {
-  Icon,
-  jsx,
-  mergeSx,
-  ThemeUIStyleObject,
-} from "@dashlane/design-system";
+import { Flex, Icon, jsx, ListItem, Paragraph } from "@dashlane/design-system";
 import { I18nContext } from "../../../../context/i18n";
 import { List } from "../../../common/generic/List";
 import { getIconName } from "../../../common/icons/icons";
@@ -14,18 +8,6 @@ import {
   SelfCorrectingAutofillCardItem,
   SelfCorrectingAutofillWebcardStep,
 } from "./SelfCorrectingTree";
-import styles from "./SelfCorrectingMenu.module.scss";
-const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
-  ITEM: {
-    backgroundColor: "transparent",
-    "&:hover": {
-      backgroundColor: "ds.container.agnostic.neutral.quiet",
-      cursor: "pointer",
-    },
-    display: "flex",
-    alignItems: "center",
-  },
-};
 interface SelfCorrectingContentProps {
   selfCorrectingOptions?: SelfCorrectingAutofillCardItem[];
   selfCorrectingStep: SelfCorrectingAutofillWebcardStep;
@@ -52,18 +34,6 @@ export const SelfCorrectingContent = ({
       ].includes(item.localizationKey)
     );
   };
-  const getItemSx = (item: SelfCorrectingAutofillCardItem) => {
-    if (isItemDisabled(item)) {
-      return mergeSx([
-        SX_STYLES.ITEM,
-        {
-          color: "ds.text.oddity.disabled",
-          "&:hover": { cursor: "not-allowed" },
-        },
-      ]);
-    }
-    return SX_STYLES.ITEM;
-  };
   return (
     <List
       pager={{
@@ -71,36 +41,65 @@ export const SelfCorrectingContent = ({
         hasScroll: true,
       }}
       data={selfCorrectingOptions.map((item) => (
-        <button
-          type="button"
+        <ListItem
           key={item.itemType + item.localizationKey}
-          className={classNames(styles.item, styles.withIcon)}
-          sx={getItemSx(item)}
-          onClick={() =>
-            selfCorrectingStep === SelfCorrectingAutofillWebcardStep.Categories
-              ? onClickSelfCorrectingCategory(item)
-              : onClickSelfCorrectingOption(item)
+          onClick={
+            isItemDisabled(item)
+              ? undefined
+              : () =>
+                  selfCorrectingStep ===
+                  SelfCorrectingAutofillWebcardStep.Categories
+                    ? onClickSelfCorrectingCategory(item)
+                    : onClickSelfCorrectingOption(item)
           }
-          disabled={isItemDisabled(item)}
-          data-keyboard-accessible={translate(item.localizationKey)}
+          sx={
+            isItemDisabled(item)
+              ? {
+                  color: "ds.text.oddity.disabled",
+                  "&:hover": { cursor: "not-allowed" },
+                }
+              : {}
+          }
+          aria-label={translate(item.localizationKey)}
         >
-          {(() => {
-            if (
-              selfCorrectingStep ===
-              SelfCorrectingAutofillWebcardStep.Categories
-            ) {
-              const iconName =
-                item.itemType === OtherCategory.Nothing
-                  ? "MuteAutofillOutlined"
-                  : getIconName(item.itemType);
-              if (iconName) {
-                return <Icon name={iconName} size="large" />;
+          <Flex
+            alignItems="center"
+            gap="8px"
+            flexWrap="unset"
+            data-keyboard-accessible={translate(item.localizationKey)}
+          >
+            {(() => {
+              if (
+                selfCorrectingStep ===
+                SelfCorrectingAutofillWebcardStep.Categories
+              ) {
+                const iconName =
+                  item.itemType === OtherCategory.Nothing
+                    ? "MuteAutofillOutlined"
+                    : getIconName(item.itemType);
+                if (iconName) {
+                  return (
+                    <Icon
+                      name={iconName}
+                      size="large"
+                      color="ds.text.neutral.standard"
+                    />
+                  );
+                }
               }
-            }
-            return null;
-          })()}
-          <div className={styles.text}>{translate(item.localizationKey)}</div>
-        </button>
+              return null;
+            })()}
+            <Paragraph
+              sx={{
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {translate(item.localizationKey)}
+            </Paragraph>
+          </Flex>
+        </ListItem>
       ))}
     />
   );

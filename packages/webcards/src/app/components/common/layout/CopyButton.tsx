@@ -1,9 +1,9 @@
 import React, { useContext, useState } from "react";
 import { Tooltip } from "@dashlane/ui-components";
-import { AutofillEngineCommands } from "@dashlane/autofill-engine/dist/autofill-engine/src/client";
+import { AutofillEngineCommands } from "@dashlane/autofill-engine/client";
 import { Button, Icon, jsx } from "@dashlane/design-system";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
-import { VaultIngredient } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { VaultIngredient } from "@dashlane/autofill-engine/types";
 import { I18nContext } from "../../../context/i18n";
 const I18N_KEYS = {
   copyTooltip: "copyTooltip",

@@ -1,13 +1,9 @@
-import { UserVerificationResult } from "@dashlane/autofill-engine/dist/autofill-engine/src/client";
+import { UserVerificationResult } from "@dashlane/autofill-engine/client";
 import {
   NeverAskAgainMode,
   UserVerificationWebcardData,
   WebcardMetadataType,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
-import {
-  UserVerificationMethod,
-  UserVerificationMethods,
-} from "@dashlane/communication";
+} from "@dashlane/autofill-engine/types";
 import { Checkbox, Infobox, jsx } from "@dashlane/design-system";
 import {
   CeremonyStatus,
@@ -30,7 +26,11 @@ import { WebcardPropsBase } from "../config";
 import { MasterPasswordPanel } from "./userVerificationPanels/MasterPasswordPanel";
 import { SelectionPanel } from "./userVerificationPanels/SelectionPanel";
 import { WebauthnPanel } from "./userVerificationPanels/WebauthnPanel";
+import { PinCodePanel } from "./userVerificationPanels/PinCodePanel";
 import { SX_STYLES } from "./UserVerificationWebcard.styles";
+import { UserVerificationMethods } from "@dashlane/authentication-contracts";
+import { assertUnreachable } from "@dashlane/framework-types";
+import { HeaderTitle } from "../../common/layout/HeaderTitle";
 export const I18N_KEYS = {
   TITLE: "webcardTitle",
   USE_ANOTHER_METHOD: "useAnotherMethod",
@@ -38,12 +38,14 @@ export const I18N_KEYS = {
   NEVER_ASK_AGAIN_ANY: "neverAskAgainAnyCredentialCheckbox",
   NEVER_ASK_AGAIN_INFOBOX: "neverAskAgainAnyCredentialInfobox",
 };
-function eventModeForMethod(method: UserVerificationMethod): Mode {
+function eventModeForMethod(method: UserVerificationMethods): Mode {
   switch (method) {
-    case UserVerificationMethods.Webauthn:
+    case UserVerificationMethods.Biometrics:
       return Mode.Biometric;
     case UserVerificationMethods.MasterPassword:
       return Mode.MasterPassword;
+    case UserVerificationMethods.Pin:
+      return Mode.Pin;
   }
 }
 export interface UserVerificationProps extends WebcardPropsBase {
@@ -159,14 +161,21 @@ export const UserVerification = ({
   }, [data.neverAskAgainMode, neverAskMeAgain, setNeverAskMeAgain, translate]);
   const makeUserVerificationDialog = (
     content: ReactNode,
-    customFooterPart: ReactNode
+    customFooterPart: ReactNode,
+    closeWebcard: () => Promise<void> = onClose,
+    onChooseOtherMethodCleanup?: () => void
   ) => {
     const footerContent = (
       <div sx={SX_STYLES.BUTTONS_CONTAINER}>
         <div sx={SX_STYLES.BUTTONS_GROUP}>
           {currentMethod !== undefined && onChooseOtherMethod ? (
             <SecondaryActionButton
-              onClick={onChooseOtherMethod}
+              onClick={() => {
+                if (onChooseOtherMethodCleanup) {
+                  onChooseOtherMethodCleanup();
+                }
+                onChooseOtherMethod();
+              }}
               label={translate(I18N_KEYS.USE_ANOTHER_METHOD)}
               intensity={"supershy"}
             />
@@ -185,8 +194,8 @@ export const UserVerification = ({
     );
     return (
       <DialogContainer
-        closeWebcard={onClose}
-        headerContent={translate(I18N_KEYS.TITLE)}
+        closeWebcard={closeWebcard}
+        headerContent={<HeaderTitle title={translate(I18N_KEYS.TITLE)} />}
         footerContent={footerContent}
         withHeaderCloseButton
         withHeaderLogo
@@ -197,7 +206,7 @@ export const UserVerification = ({
   };
   let content: JSX.Element | null = null;
   switch (currentMethod) {
-    case "masterPassword":
+    case UserVerificationMethods.MasterPassword:
       content = (
         <MasterPasswordPanel
           onVerificationSucessful={onVerificationSucessful}
@@ -212,11 +221,25 @@ export const UserVerification = ({
         />
       );
       break;
-    case "webauthn":
+    case UserVerificationMethods.Biometrics:
       content = (
         <WebauthnPanel
           onVerificationSucessful={onVerificationSucessful}
           onCancel={onCancel}
+          makeUserVerificationDialog={makeUserVerificationDialog}
+          usageLogDetails={data.usageLogDetails}
+          attemptCounter={attemptCounter}
+          incrementAttemptCounter={incrementAttemptCounter}
+        />
+      );
+      break;
+    case UserVerificationMethods.Pin:
+      content = (
+        <PinCodePanel
+          webcardId={webcardId}
+          onVerificationSucessful={onVerificationSucessful}
+          onCancel={onCancel}
+          closeWebcard={closeWebcard}
           makeUserVerificationDialog={makeUserVerificationDialog}
           usageLogDetails={data.usageLogDetails}
           attemptCounter={attemptCounter}
@@ -254,6 +277,8 @@ export const UserVerification = ({
         closeWebcard();
       }
       break;
+    default:
+      return assertUnreachable(currentMethod);
   }
   return content;
 };

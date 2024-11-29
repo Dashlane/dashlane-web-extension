@@ -3,6 +3,38 @@ import {
   VaultSourceType,
 } from "@dashlane/autofill-contracts";
 import { IconName } from "@dashlane/design-system";
+export const getThumbnailName = (itemtype: AutofillDataSourceType) => {
+  switch (itemtype) {
+    case VaultSourceType.Identity:
+      return "id-card";
+    case VaultSourceType.Email:
+      return "email";
+    case VaultSourceType.Phone:
+      return "phone-number";
+    case VaultSourceType.Address:
+      return "address";
+    case VaultSourceType.Company:
+      return "company";
+    case VaultSourceType.PersonalWebsite:
+      return "website";
+    case VaultSourceType.PaymentCard:
+      return "payment-card";
+    case VaultSourceType.BankAccount:
+      return "bank-account";
+    case VaultSourceType.Passport:
+      return "passport";
+    case VaultSourceType.SocialSecurityId:
+      return "social-security-number";
+    case VaultSourceType.DriverLicense:
+      return "drivers-license";
+    case VaultSourceType.IdCard:
+      return "id-card";
+    case VaultSourceType.FiscalId:
+      return "tax-number";
+    default:
+      return null;
+  }
+};
 export const getIconName = (
   itemType: AutofillDataSourceType
 ): IconName | null => {

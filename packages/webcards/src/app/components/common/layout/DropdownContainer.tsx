@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AutofillDropdownWebcardData } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { AutofillDropdownWebcardData } from "@dashlane/autofill-engine/types";
 import { OptionsMenu } from "../../webcards/dropdowns/common/OptionsMenu";
 import { SearchResults } from "../../webcards/dropdowns/common/SearchResults";
 import { CardLayout } from "./CardLayout";
@@ -14,7 +14,6 @@ interface Props {
   isSearchActive?: boolean;
   srcElementValue?: string;
   webcardData: AutofillDropdownWebcardData;
-  withAllBordersRounded?: boolean;
   withFooterDivider?: boolean;
   withHeaderCloseButton?: boolean;
   withHeaderLogo?: boolean;
@@ -22,6 +21,7 @@ interface Props {
   withHeaderSearchButton?: boolean;
   withFooterPadding?: boolean;
   withNoMainPadding?: boolean;
+  withNoContentCardWrapper?: boolean;
 }
 export const DropdownContainer = ({
   children,
@@ -32,7 +32,6 @@ export const DropdownContainer = ({
   isSearchActive = false,
   srcElementValue,
   webcardData,
-  withAllBordersRounded,
   withFooterDivider,
   withHeaderCloseButton,
   withHeaderLogo,
@@ -40,6 +39,7 @@ export const DropdownContainer = ({
   withHeaderSearchButton,
   withFooterPadding,
   withNoMainPadding,
+  withNoContentCardWrapper,
 }: Props) => {
   const [showSearch, setShowSearch] = React.useState(isSearchActive);
   const onClickSearch = () => setShowSearch(true);
@@ -100,8 +100,8 @@ export const DropdownContainer = ({
       header={header}
       footer={footer}
       webcardData={webcardData}
-      withAllBordersRounded={withAllBordersRounded}
       withNoMainPadding={withNoMainPadding}
+      withNoContentCardWrapper={withNoContentCardWrapper}
     >
       {children}
     </CardLayout>

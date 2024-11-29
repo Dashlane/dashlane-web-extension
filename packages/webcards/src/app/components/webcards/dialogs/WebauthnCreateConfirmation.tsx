@@ -1,8 +1,6 @@
 import * as React from "react";
-import {
-  WebauthnCreateConfirmationWebcardData,
-  WebauthnOperationType,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { ExpressiveIcon, Flex, ItemHeader, jsx } from "@dashlane/design-system";
+import { WebauthnCreateConfirmationWebcardData } from "@dashlane/autofill-engine/types";
 import {
   BrowseComponent,
   DismissType,
@@ -21,8 +19,6 @@ import { PrimaryActionButton } from "../../common/generic/buttons/PrimaryActionB
 import { DialogContainer } from "../../common/layout/DialogContainer";
 import { HeaderTitle } from "../../common/layout/HeaderTitle";
 import { WebcardPropsBase } from "../config";
-import styles from "./WebauthnCreateConfirmation.module.scss";
-import DOMPurify from "dompurify";
 const I18N_KEYS = {
   HEADER_TITLE: "create_headerTitle",
   CONTENT: "create_content",
@@ -83,16 +79,11 @@ export const WebauthnCreateConfirmation = ({
     );
     autofillEngineCommands?.webauthnCreateUserConfirmed(request, webcardId);
   };
-  const userName = translate(I18N_KEYS.CONTENT, {
-    0: `<span class=${styles.highlite}>${userDisplayName}</span>`,
-    1: `<span class=${styles.highlite}>${rpName}</span>`,
-  });
-  const sanitizedUserName = DOMPurify.sanitize(userName);
   return (
     <DialogContainer
       closeWebcard={onClose}
       footerContent={
-        <div className={styles.footer}>
+        <Flex gap="8px" justifyContent="flex-end">
           <SecondaryActionButton
             onClick={onCancel}
             label={translate(I18N_KEYS.CANCEL_BUTTON)}
@@ -101,19 +92,17 @@ export const WebauthnCreateConfirmation = ({
             onClick={onSubmit}
             label={translate(I18N_KEYS.CONFIRM)}
           />
-        </div>
+        </Flex>
       }
       headerContent={<HeaderTitle title={translate(I18N_KEYS.HEADER_TITLE)} />}
       withHeaderCloseButton
       withHeaderLogo
     >
-      <div className={styles.main}>
-        <p
-          dangerouslySetInnerHTML={{
-            __html: sanitizedUserName,
-          }}
-        ></p>
-      </div>
+      <ItemHeader
+        thumbnail={<ExpressiveIcon name="PasskeyOutlined" />}
+        title={userDisplayName}
+        description={rpName}
+      />
     </DialogContainer>
   );
 };

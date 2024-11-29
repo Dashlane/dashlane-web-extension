@@ -1,5 +1,10 @@
 import * as React from "react";
-import { Button } from "@dashlane/design-system";
+import {
+  Button,
+  ExpressiveIcon,
+  Flex,
+  ItemHeader,
+} from "@dashlane/design-system";
 import {
   BrowseComponent,
   DismissType,
@@ -9,7 +14,7 @@ import {
   UserAutofillDismissEvent,
   UserAutofillSuggestEvent,
 } from "@dashlane/hermes";
-import { WebauthnGetConfirmationWebcardData } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { WebauthnGetConfirmationWebcardData } from "@dashlane/autofill-engine/types";
 import { I18nContext } from "../../../context/i18n";
 import { useCommunication } from "../../../context/communication";
 import { usePerformanceContext } from "../../../context/performance";
@@ -18,8 +23,6 @@ import { PrimaryActionButton } from "../../common/generic/buttons/PrimaryActionB
 import { DialogContainer } from "../../common/layout/DialogContainer";
 import { HeaderTitle } from "../../common/layout/HeaderTitle";
 import { WebcardPropsBase } from "../config";
-import styles from "./WebauthnGetConfirmation.module.scss";
-import DOMPurify from "dompurify";
 const I18N_KEYS = {
   HEADER_TITLE: "headerTitle",
   CONTENT: "content",
@@ -99,16 +102,11 @@ export const WebauthnGetConfirmation = ({
       webcardId
     );
   };
-  const userName = translate(I18N_KEYS.CONTENT, {
-    0: `<span class=${styles.highlite}>${passkey.userDisplayName}</span>`,
-    1: `<span class=${styles.highlite}>${rpName}</span>`,
-  });
-  const sanitizedUserName = DOMPurify.sanitize(userName);
   return (
     <DialogContainer
       closeWebcard={onClose}
       footerContent={
-        <div className={styles.footer}>
+        <Flex gap="8px" justifyContent="flex-end">
           {allowUsingOtherAuthenticator ? (
             <Button
               mood="brand"
@@ -129,19 +127,17 @@ export const WebauthnGetConfirmation = ({
             onClick={onSubmit}
             label={translate(I18N_KEYS.CONFIRM)}
           />
-        </div>
+        </Flex>
       }
       headerContent={<HeaderTitle title={translate(I18N_KEYS.HEADER_TITLE)} />}
       withHeaderCloseButton
       withHeaderLogo
     >
-      <div className={styles.main}>
-        <p
-          dangerouslySetInnerHTML={{
-            __html: sanitizedUserName,
-          }}
-        ></p>
-      </div>
+      <ItemHeader
+        thumbnail={<ExpressiveIcon name="PasskeyOutlined" />}
+        title={passkey.userDisplayName}
+        description={rpName}
+      />
     </DialogContainer>
   );
 };

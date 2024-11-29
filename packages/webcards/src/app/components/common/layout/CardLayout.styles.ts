@@ -11,9 +11,10 @@ export const ACTIVE_OUTLINE_STYLES: Record<
 };
 export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   CARD_LAYOUT: {
-    backgroundColor: "ds.container.agnostic.neutral.supershy",
+    backgroundColor: "ds.background.alternate",
     margin: "0",
     overflow: "hidden",
+    borderRadius: "8px",
     ...ACTIVE_OUTLINE_STYLES,
   },
   DIALOG_LAYOUT: {
@@ -22,11 +23,8 @@ export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   DROPDOWN_LAYOUT: {
     maxWidth: "650px",
   },
-  ROUNDED_BORDERS: {
-    borderRadius: "8px",
-  },
   MAIN_WITH_PADDING: {
-    padding: "16px 0",
+    padding: "0 8px 8px 8px",
   },
   MAIN_WITHOUT_PADDING: {
     padding: "0",

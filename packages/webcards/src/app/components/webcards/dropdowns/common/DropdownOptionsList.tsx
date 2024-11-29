@@ -1,5 +1,5 @@
 import * as React from "react";
-import { jsx, ThemeUIStyleObject } from "@dashlane/design-system";
+import { Card, Flex, jsx, ThemeUIStyleObject } from "@dashlane/design-system";
 import { DropdownOption, OPTIONS_TYPE } from "./DropdownOption";
 import styles from "./DropdownOptionsList.module.scss";
 const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
@@ -25,26 +25,25 @@ export const DropdownOptionsList = ({
 }: Props) => {
   return (
     <div className={styles.dropdownOptionsList}>
-      <DropdownOption
-        onClick={onCloseOption}
-        type={OPTIONS_TYPE.OPTION_CLOSE}
-      />
+      <Card sx={{ marginX: "8px", padding: "8px", gap: 0 }}>
+        <DropdownOption
+          onClick={onCloseOption}
+          type={OPTIONS_TYPE.OPTION_CLOSE}
+        />
 
-      <hr sx={SX_STYLES.DIVIDER} />
-
-      <DropdownOption
-        onClick={onNeverSuggestOption}
-        type={OPTIONS_TYPE.OPTION_NEVER_SUGGEST}
-      />
+        <DropdownOption
+          onClick={onNeverSuggestOption}
+          type={OPTIONS_TYPE.OPTION_NEVER_SUGGEST}
+        />
+      </Card>
 
       {showSelfCorrectingOption ? (
-        <React.Fragment>
-          <hr sx={SX_STYLES.DIVIDER} />
+        <Flex justifyContent="center" sx={{ paddingY: "8px" }}>
           <DropdownOption
             onClick={onSelfCorrectOption}
             type={OPTIONS_TYPE.OPTION_SELF_CORRECT}
           />
-        </React.Fragment>
+        </Flex>
       ) : null}
     </div>
   );

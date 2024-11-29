@@ -2,8 +2,8 @@ import * as React from "react";
 import {
   AutofillEngineActions,
   AutofillEngineCommands,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/client";
-import { AutofillEngineDispatcher } from "@dashlane/autofill-engine/dist/autofill-engine/src/dispatcher";
+} from "@dashlane/autofill-engine/client";
+import { AutofillEngineDispatcher } from "@dashlane/autofill-engine/dispatcher";
 interface State {
   autofillEngineCommands?: AutofillEngineCommands;
   autofillEngineDispatcher?: AutofillEngineDispatcher;

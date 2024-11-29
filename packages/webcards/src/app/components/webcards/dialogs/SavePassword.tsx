@@ -1,14 +1,21 @@
 import * as React from "react";
-import classNames from "classnames";
-import { Checkbox, PasswordInput } from "@dashlane/ui-components";
-import { Icon, Infobox, jsx } from "@dashlane/design-system";
+import {
+  Button,
+  Checkbox,
+  ExpressiveIcon,
+  Flex,
+  ItemHeader,
+  jsx,
+  Logo,
+  PasswordField,
+} from "@dashlane/design-system";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
 import {
   SavePasswordWebcardData,
   vaultSourceTypeToHermesItemTypeMap,
   WebcardCollectionData,
   WebcardItem,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import {
   AnonymousAutofillAcceptEvent,
   AnonymousAutofillDismissEvent,
@@ -31,13 +38,11 @@ import {
   UserClickEvent,
   WebcardSaveOptions,
 } from "@dashlane/hermes";
-import Logo from "../../../assets/svg/dashlane_logo.svg";
 import { I18nContext } from "../../../context/i18n";
 import { useCommunication } from "../../../context/communication";
 import { usePerformanceContext } from "../../../context/performance";
 import { KEYBOARD_EVENTS } from "../../../constants";
 import {
-  getPremiumPricingUrl,
   redirectToBuyDashlaneB2B,
   redirectToGetPremiumPage,
 } from "../../../utils/webApp/url";
@@ -49,7 +54,7 @@ import { useSpaceInfosPatcher } from "../../common/generic/Space";
 import { SuggestedItemsList } from "../dropdowns/SuggestedItemsList";
 import { WebcardPropsBase } from "../config";
 import { SavePasswordFooter } from "./SavePasswordFooter";
-import styles from "./SavePassword.module.scss";
+import { Header } from "../../common/layout/Header";
 const FORM_ID = "save-password-form";
 const SAVE_PWD_COMBOBOX_ID = "savePassword-combobox-email";
 const SAVE_PWD_COMBOBOX_COLLECTION_ID = "savePassword-combobox-collection";
@@ -57,13 +62,10 @@ const SAVE_PWD_READONLY_ID = "savePassword-password-readonly";
 const SAVE_PWD_COMBOBOX_SPACE_ID = "savePassword-combobox-spaces";
 const SAVE_PWD_PROTECTED_OPT_LABEL_ID = "savePassword-checkProtectedOpt-label";
 const SAVE_PWD_SUBDOMAIN_OPT_LABEL_ID = "savePassword-checkSubdomainOpt-label";
-const UTM_SOURCE_CODE =
-  "button:buy_dashlane+click_origin:button+origin_page:autofill/notification/update_or_save_as_new+origin_component:webcard";
 const I18N_KEYS = {
   BUTTON_HIDE_PASSWORD: "passwordHideButton",
   BUTTON_SHOW_PASSWORD: "passwordShowButton",
   BUTTON_SAVE: "save",
-  HEADER_TITLE_REPLACE_NOHTML: "headerReplace_nohtml",
   HEADER_TITLE_UPDATE_OR_CREATE_NEW: "updatePasswordOrCreateNewLogin",
   HEADER_TITLE_UPDATE_OR_CREATE_NEW_LIMIT:
     "updatePasswordOrCreateNewLoginLimit",
@@ -74,9 +76,6 @@ const I18N_KEYS = {
   OPTION_ALWAYS_USE_MP: "alwaysUseMasterPwd",
   OPTION_ONLY_ON_SUBDOMAIN: "useOnlyOnSubdomain",
   PLACEHOLDER_LOGIN: "selectEmailOrUsernamePlaceholder",
-  PASSWORD_LIMITED_WARNING_REACHED_TITLE: "passwordLimitReachedTitle",
-  PASSWORD_LIMITED_WARNING_REACHED_SUBTITLE: "passwordLimitReachedSubtitle",
-  PASSWORD_LIMITED_WARNING_NEAR_LIMIT_TITLE: "passwordNearLimitTitle",
   UPGRADE_TO_PREMIUM: "upgradeToPremium",
   INFOBOX_B2B_TRIAL_DISCONTINUED_TITLE: "infoboxTitleB2BTrialDiscontinued",
   INFOBOX_B2B_TRIAL_DISCONTINUED_DESCRIPTION:
@@ -84,9 +83,6 @@ const I18N_KEYS = {
   SAVE_WEBCARD_ADD_COLLECTION_SELECT_LABEL: "selectCollectionPlaceholder",
 };
 const SX_STYLES = {
-  CHECKBOX_LABEL: {
-    color: "ds.text.neutral.quiet",
-  },
   DOMAIN: {
     fontSize: "10px",
     textTransform: "uppercase" as const,
@@ -94,11 +90,6 @@ const SX_STYLES = {
     letterSpacing: "0.2px",
     lineHeight: "100%",
     fontWeight: "500",
-  },
-  PASSWORD_INPUT: {
-    border: "1px solid",
-    borderColor: "ds.border.brand.standard.idle",
-    backgroundColor: "ds.container.expressive.brand.quiet.disabled !important",
   },
 };
 interface Props extends WebcardPropsBase {
@@ -476,6 +467,7 @@ export const SavePassword = ({ data, closeWebcard }: Props) => {
   };
   const handleClickOnBackButton = () => {
     setIsReplaceWebcardFormat((toggle) => !toggle);
+    setHasBackButton(false);
   };
   const handleReplace = (item?: WebcardItem) => {
     if (item) {
@@ -484,6 +476,7 @@ export const SavePassword = ({ data, closeWebcard }: Props) => {
     }
     autofillEngineCommands?.updateCredential(webcardId, {
       id: item?.itemId ?? existingCredentialId,
+      title: item?.title ?? "",
       newPassword: passwordToSave,
       onlyForThisSubdomain: checkSubdomainOpt,
       spaceId:
@@ -511,6 +504,8 @@ export const SavePassword = ({ data, closeWebcard }: Props) => {
       formId={FORM_ID}
       isReplaceWebcardFormat={isReplaceWebcardFormat}
       isLimited={passwordLimitStatus.shouldShowPasswordLimitReached}
+      passwordsLeft={passwordLimitStatus.passwordsLeft}
+      isNearLimit={passwordLimitStatus.shouldShowNearPasswordLimit}
       isB2BDiscontinued={isB2BDiscontinued}
       saveButtonRef={saveButton}
       mainButtonLabel={translate(I18N_KEYS.BUTTON_SAVE)}
@@ -521,6 +516,9 @@ export const SavePassword = ({ data, closeWebcard }: Props) => {
       onClickExtraInfo={onClickExtraInfo}
       withExtraInfoButton={shouldShowExtraInfoInFooter}
       accountSubscriptionCode={subscriptionCode}
+      handleClickUpgradeFromNearLimitWarning={
+        handleClickUpgradeFromNearLimitWarning
+      }
     />
   );
   const getHeaderTitle = () => {
@@ -537,15 +535,16 @@ export const SavePassword = ({ data, closeWebcard }: Props) => {
     return translate(I18N_KEYS.HEADER_TITLE_NOHTML);
   };
   const passwordInput = (
-    <PasswordInput
-      sx={SX_STYLES.PASSWORD_INPUT}
+    <PasswordField
       id={SAVE_PWD_READONLY_ID}
       label={translate(I18N_KEYS.LABEL_PASSWORD_FIELD)}
-      hidePasswordTooltipText={translate(I18N_KEYS.BUTTON_HIDE_PASSWORD)}
-      showPasswordTooltipText={translate(I18N_KEYS.BUTTON_SHOW_PASSWORD)}
+      toggleVisibilityLabel={{
+        show: translate(I18N_KEYS.BUTTON_SHOW_PASSWORD),
+        hide: translate(I18N_KEYS.BUTTON_HIDE_PASSWORD),
+      }}
       value={passwordToSave}
       readOnly
-      onPasswordVisibilityChanged={() => {
+      onValueVisibilityChangeRequest={async () => {
         if (event) {
           event.preventDefault();
         }
@@ -557,104 +556,54 @@ export const SavePassword = ({ data, closeWebcard }: Props) => {
     <DialogContainer
       closeWebcard={onClose}
       footerContent={footerContent}
-      withFooterDivider={
-        isReplaceWebcardFormat &&
-        !passwordLimitStatus.shouldShowPasswordLimitReached
-      }
       headerContent={
-        <React.Fragment>
-          <div className={styles.logoTitleContainer}>
-            <div className={styles.logoContainer}>
-              {hasBackButton ? (
-                <div
-                  onClick={() => handleClickOnBackButton()}
-                  className={classNames(styles.logo, styles.backButton)}
-                  aria-hidden
-                  data-keyboard-accessible
-                >
-                  <Icon name="ArrowLeftOutlined" />
-                </div>
-              ) : (
-                <Logo
-                  viewBox={"0 0 10.4 14.9"}
-                  className={classNames(styles.logo)}
-                  aria-hidden
-                />
-              )}
-            </div>
-            <div>
-              {fullDomain ? (
-                <div sx={SX_STYLES.DOMAIN}>{fullDomain}</div>
-              ) : null}
-              <HeaderTitle title={getHeaderTitle()} />
-            </div>
-          </div>
-          {isReplaceWebcardFormat ? (
-            <div className={styles.passwordContainer}>{passwordInput}</div>
+        <Flex alignItems="flex-start" gap="8px">
+          {hasBackButton ? (
+            <Button
+              id="save-password-back-button"
+              mood="neutral"
+              intensity="supershy"
+              icon="ArrowLeftOutlined"
+              layout="iconOnly"
+              type="button"
+              onClick={handleClickOnBackButton}
+              size="small"
+              data-keyboard-accessible
+              aria-hidden
+            />
           ) : null}
-        </React.Fragment>
+          <HeaderTitle title={getHeaderTitle()} />
+        </Flex>
       }
       withHeaderCloseButton
+      withHeaderLogo={!hasBackButton}
     >
       {isReplaceWebcardFormat ? (
-        <SuggestedItemsList
-          onAddNewItem={closeWebcard}
-          items={existingCredentialsForDomain}
-          onClickItem={handleReplace}
-          withScroll={true}
-          withLastUsedBadge={existingCredentialsForDomain.length > 2}
-        />
+        <React.Fragment>
+          {passwordInput}
+          <SuggestedItemsList
+            onAddNewItem={closeWebcard}
+            items={existingCredentialsForDomain}
+            onClickItem={handleReplace}
+            withScroll={true}
+            withLastUsedBadge={existingCredentialsForDomain.length > 2}
+          />
+        </React.Fragment>
       ) : (
-        <form id={FORM_ID} className={styles.main} onSubmit={onSubmitForm}>
-          {isB2BDiscontinued ? (
-            <Infobox
-              sx={{ marginBottom: "12px" }}
-              title={translate(I18N_KEYS.INFOBOX_B2B_TRIAL_DISCONTINUED_TITLE)}
-              description={translate(
-                I18N_KEYS.INFOBOX_B2B_TRIAL_DISCONTINUED_DESCRIPTION
-              )}
-              mood="danger"
-            />
-          ) : null}
-          {passwordLimitStatus.shouldShowPasswordLimitReached ? (
-            <Infobox
-              sx={{ marginBottom: "12px" }}
-              title={translate(
-                I18N_KEYS.PASSWORD_LIMITED_WARNING_REACHED_TITLE
-              )}
-              description={translate(
-                I18N_KEYS.PASSWORD_LIMITED_WARNING_REACHED_SUBTITLE
-              )}
-              mood="danger"
-              icon="PremiumOutlined"
-            />
-          ) : null}
-          {passwordLimitStatus.shouldShowNearPasswordLimit &&
-          passwordLimitStatus.passwordsLeft ? (
-            <Infobox
-              sx={{ marginBottom: "12px" }}
-              title={translate(
-                I18N_KEYS.PASSWORD_LIMITED_WARNING_NEAR_LIMIT_TITLE,
-                {
-                  count: passwordLimitStatus.passwordsLeft,
-                }
-              )}
-              description={
-                <a
-                  href={getPremiumPricingUrl(subscriptionCode, UTM_SOURCE_CODE)}
-                  key={translate(I18N_KEYS.UPGRADE_TO_PREMIUM)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={handleClickUpgradeFromNearLimitWarning}
-                >
-                  {translate(I18N_KEYS.UPGRADE_TO_PREMIUM)}
-                </a>
-              }
-              mood="brand"
-              icon="PremiumOutlined"
-            />
-          ) : null}
-          <div className={styles.selectRow}>
+        <form id={FORM_ID} sx={{ padding: "4px" }} onSubmit={onSubmitForm}>
+          <Flex gap="8px" flexDirection="column">
+            {fullDomain ? (
+              <ItemHeader
+                thumbnail={<ExpressiveIcon name="ItemLoginOutlined" />}
+                title={fullDomain}
+                sx={{
+                  width: "100%",
+                  backgroundColor: "ds.container.agnostic.neutral.standard",
+                  padding: "8px",
+                  borderRadius: "8px",
+                }}
+              />
+            ) : null}
             <Combobox
               id={SAVE_PWD_COMBOBOX_ID}
               label={translate(I18N_KEYS.LABEL_LOGIN_FIELD)}
@@ -680,106 +629,94 @@ export const SavePassword = ({ data, closeWebcard }: Props) => {
               required={true}
               data-keyboard-accessible={translate(I18N_KEYS.PLACEHOLDER_LOGIN)}
             />
-          </div>
 
-          <div className={styles.selectRow}>{passwordInput}</div>
+            {passwordInput}
 
-          {displayExtraInfo ? (
-            <React.Fragment>
-              {showSpacesList ? (
-                <div className={styles.selectRow}>
-                  <Combobox
-                    id={SAVE_PWD_COMBOBOX_SPACE_ID}
-                    value={selectedSpace?.displayName}
-                    options={spaces.map((space) => ({
-                      id: SAVE_PWD_COMBOBOX_SPACE_ID,
-                      value: space.displayName,
-                      key: space.spaceId,
-                    }))}
-                    onChange={onSpaceChange}
-                    letter={selectedSpace?.letter}
-                    color={selectedSpace?.color}
-                    name={selectedSpace?.displayName}
-                    dropdownElementsToDisplay={
-                      dropdownElementsToDisplayForSpaces
-                    }
-                    data-keyboard-accessible
-                  />
+            {displayExtraInfo ? (
+              <React.Fragment>
+                {showSpacesList ? (
+                  <div>
+                    <Combobox
+                      id={SAVE_PWD_COMBOBOX_SPACE_ID}
+                      value={selectedSpace?.displayName}
+                      options={spaces.map((space) => ({
+                        id: SAVE_PWD_COMBOBOX_SPACE_ID,
+                        value: space.displayName,
+                        key: space.spaceId,
+                      }))}
+                      onChange={onSpaceChange}
+                      letter={selectedSpace?.letter}
+                      color={selectedSpace?.color}
+                      name={selectedSpace?.displayName}
+                      dropdownElementsToDisplay={
+                        dropdownElementsToDisplayForSpaces
+                      }
+                      data-keyboard-accessible
+                    />
+                  </div>
+                ) : null}
+                {showCollectionList ? (
+                  <div>
+                    <Combobox
+                      label={translate(
+                        I18N_KEYS.SAVE_WEBCARD_ADD_COLLECTION_SELECT_LABEL
+                      )}
+                      placeholder={translate(
+                        I18N_KEYS.SAVE_WEBCARD_ADD_COLLECTION_SELECT_LABEL
+                      )}
+                      id={SAVE_PWD_COMBOBOX_COLLECTION_ID}
+                      value={selectedCollection?.name}
+                      options={
+                        collections
+                          ? collections.map((collection) => ({
+                              id: SAVE_PWD_COMBOBOX_COLLECTION_ID,
+                              value: collection.name,
+                              key: collection.id,
+                            }))
+                          : []
+                      }
+                      onChange={onCollectionChange}
+                      name={selectedCollection?.name}
+                      dropdownElementsToDisplay={
+                        dropdownElementsToDisplayForSpaces
+                      }
+                      data-keyboard-accessible
+                    />
+                  </div>
+                ) : null}
+
+                <div>
+                  {allowMasterPasswordProtection ? (
+                    <Checkbox
+                      id={SAVE_PWD_PROTECTED_OPT_LABEL_ID}
+                      label={translate(I18N_KEYS.OPTION_ALWAYS_USE_MP)}
+                      checked={checkProtectedOpt || false}
+                      onChange={(e) =>
+                        setCheckProtectedOpt(e.currentTarget.checked)
+                      }
+                      data-keyboard-accessible={translate(
+                        I18N_KEYS.OPTION_ALWAYS_USE_MP
+                      )}
+                    />
+                  ) : null}
+
+                  {showSubdomainOpt ? (
+                    <Checkbox
+                      id={SAVE_PWD_SUBDOMAIN_OPT_LABEL_ID}
+                      label={translate(I18N_KEYS.OPTION_ONLY_ON_SUBDOMAIN)}
+                      checked={checkSubdomainOpt || false}
+                      onChange={(e) =>
+                        setCheckSubdomainOpt(e.currentTarget.checked)
+                      }
+                      data-keyboard-accessible={translate(
+                        I18N_KEYS.OPTION_ONLY_ON_SUBDOMAIN
+                      )}
+                    />
+                  ) : null}
                 </div>
-              ) : null}
-              {showCollectionList ? (
-                <div className={styles.selectRow}>
-                  <Combobox
-                    label={translate(
-                      I18N_KEYS.SAVE_WEBCARD_ADD_COLLECTION_SELECT_LABEL
-                    )}
-                    placeholder={translate(
-                      I18N_KEYS.SAVE_WEBCARD_ADD_COLLECTION_SELECT_LABEL
-                    )}
-                    id={SAVE_PWD_COMBOBOX_COLLECTION_ID}
-                    value={selectedCollection?.name}
-                    options={
-                      collections
-                        ? collections.map((collection) => ({
-                            id: SAVE_PWD_COMBOBOX_COLLECTION_ID,
-                            value: collection.name,
-                            key: collection.id,
-                          }))
-                        : []
-                    }
-                    onChange={onCollectionChange}
-                    name={selectedCollection?.name}
-                    dropdownElementsToDisplay={
-                      dropdownElementsToDisplayForSpaces
-                    }
-                    data-keyboard-accessible
-                  />
-                </div>
-              ) : null}
-
-              {allowMasterPasswordProtection ? (
-                <label
-                  className={styles.checkboxLabel}
-                  sx={SX_STYLES.CHECKBOX_LABEL}
-                  id={SAVE_PWD_PROTECTED_OPT_LABEL_ID}
-                >
-                  <Checkbox
-                    checked={checkProtectedOpt || false}
-                    onChange={(e) =>
-                      setCheckProtectedOpt(e.currentTarget.checked)
-                    }
-                    data-keyboard-accessible={translate(
-                      I18N_KEYS.OPTION_ALWAYS_USE_MP
-                    )}
-                  />
-                  <span className={styles.labelText}>
-                    {translate(I18N_KEYS.OPTION_ALWAYS_USE_MP)}
-                  </span>
-                </label>
-              ) : null}
-
-              {showSubdomainOpt ? (
-                <label
-                  className={styles.checkboxLabel}
-                  sx={SX_STYLES.CHECKBOX_LABEL}
-                  id={SAVE_PWD_SUBDOMAIN_OPT_LABEL_ID}
-                >
-                  <Checkbox
-                    checked={checkSubdomainOpt}
-                    onChange={(e) =>
-                      setCheckSubdomainOpt(e.currentTarget.checked)
-                    }
-                    data-keyboard-accessible={translate(
-                      I18N_KEYS.OPTION_ONLY_ON_SUBDOMAIN
-                    )}
-                  />
-                  <span className={styles.labelText}>
-                    {translate(I18N_KEYS.OPTION_ONLY_ON_SUBDOMAIN)}
-                  </span>
-                </label>
-              ) : null}
-            </React.Fragment>
-          ) : null}
+              </React.Fragment>
+            ) : null}
+          </Flex>
         </form>
       )}
     </DialogContainer>

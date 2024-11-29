@@ -1,6 +1,6 @@
-import { WebExtensionApiManager } from "@dashlane/autofill-engine/dist/autofill-engine/src/client";
-import { AutofillEngineDispatcher } from "@dashlane/autofill-engine/dist/autofill-engine/src/dispatcher";
-import { AutofillEngineClientType } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { WebExtensionApiManager } from "@dashlane/autofill-engine/client";
+import { AutofillEngineDispatcher } from "@dashlane/autofill-engine/dispatcher";
+import { AutofillEngineClientType } from "@dashlane/autofill-engine/types";
 import * as React from "react";
 import { UtilsInterface } from ".";
 export const useDispatcher = (

@@ -1,7 +1,6 @@
 import { ReactNode, useContext } from "react";
-import { Icon, jsx, mergeSx } from "@dashlane/design-system";
+import { Button, Countdown, jsx, Logo, mergeSx } from "@dashlane/design-system";
 import { DismissType } from "@dashlane/hermes";
-import Logo from "../../../assets/svg/dashlane_logo.svg";
 import { I18nContext } from "../../../context/i18n";
 import { HeaderCloseButton } from "./HeaderCloseButton";
 import { HeaderOptionsButton } from "./HeaderOptionsButton";
@@ -18,12 +17,14 @@ interface Props {
   onClickOptions?: () => void;
   onClickSearch?: () => void;
   withDashlaneLogo?: boolean;
+  countdownPercentage?: number;
 }
 export const Header = ({
   children,
   withDashlaneLogo,
   isOptionsMenuOpen,
   isDropdown,
+  countdownPercentage,
   onClickClose,
   onClickOptions,
   onClickSearch,
@@ -38,8 +39,9 @@ export const Header = ({
     >
       {withDashlaneLogo ? (
         <Logo
-          viewBox={"0 0 10.4 14.9"}
-          sx={isDropdown ? SX_STYLES.DROPDOWN_LOGO : SX_STYLES.DIALOG_LOGO}
+          sx={{ margin: "8px" }}
+          height={16}
+          name="DashlaneMicroLogomark"
           aria-hidden
         />
       ) : null}
@@ -49,22 +51,29 @@ export const Header = ({
         {children}
       </div>
       {isDropdown && onClickSearch ? (
-        <button
-          id="dropdownSearchButton"
-          type="button"
-          sx={SX_STYLES.DROPDOWN_ACTION}
+        <Button
           onClick={onClickSearch}
+          id="dropdownSearchButton"
+          data-testid="dropdownSearchButton"
+          mood="neutral"
+          intensity="supershy"
+          layout="iconOnly"
+          icon="ActionSearchOutlined"
+          size="small"
           data-keyboard-accessible={`${translate(I18N_KEYS.SEARCH_BUTTON)}:
-            ${translate(I18N_KEYS.ROLE_BUTTON)}`}
-        >
-          <Icon name="ActionSearchOutlined" size="small" aria-hidden />
-        </button>
+${translate(I18N_KEYS.ROLE_BUTTON)}`}
+        />
       ) : null}
       {isDropdown && onClickOptions ? (
         <HeaderOptionsButton
           onMoreOptions={onClickOptions}
           autofillOptionsVisible={isOptionsMenuOpen}
         />
+      ) : null}
+      {!isDropdown && countdownPercentage ? (
+        <div sx={{ marginTop: "6px" }}>
+          <Countdown percentage={countdownPercentage} />
+        </div>
       ) : null}
       {onClickClose ? (
         <HeaderCloseButton

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AutofillDropdownWebcardPasswordGenerationSettings } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { AutofillDropdownWebcardPasswordGenerationSettings } from "@dashlane/autofill-engine/types";
 import { Checkbox, jsx } from "@dashlane/design-system";
 import { I18nContext } from "../../../../context/i18n";
 import styles from "./GeneratorOptions.module.scss";

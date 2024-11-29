@@ -3,7 +3,6 @@ export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   MAIN: {
     display: "flex",
     flexDirection: "column",
-    padding: "0 16px",
     gap: "8px",
   },
   ROW: {
@@ -11,8 +10,12 @@ export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
     flexDirection: "row",
     justifyContent: "space-between",
     background: "transparent",
-    padding: "12px",
     cursor: "pointer",
+    padding: "8px",
+    borderRadius: "4px",
+    "&:hover": {
+      backgroundColor: "ds.container.expressive.neutral.quiet.hover",
+    },
   },
   ROW_LABEL_CONTAINER: {
     display: "flex",

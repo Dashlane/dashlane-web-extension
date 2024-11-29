@@ -2,14 +2,18 @@ import * as React from "react";
 import {
   AutofillCredentialRisk,
   SimpleWebcardItem,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import {
   Badge,
   BadgeProps,
   Button,
+  ExpressiveIcon,
+  Flex,
+  HighlightText,
   Icon,
+  ItemHeader,
   jsx,
-  mergeSx,
+  ListItem,
   Tooltip,
 } from "@dashlane/design-system";
 import { KEYBOARD_EVENTS } from "../../../constants";
@@ -18,7 +22,6 @@ import { useCommunication } from "../../../context/communication";
 import { getItemSubtitle } from "../../../utils/formatter/simpleWebcardItemStrings";
 import { Space, useSpaceInfosPatcher } from "../generic/Space";
 import { getIconName } from "../icons/icons";
-import { HighlightedSearchValue } from "./HighlightedSearchValue";
 import { MORE_BUTTON_CLASS, SX_STYLES } from "./Items.styles";
 interface Props {
   item: SimpleWebcardItem;
@@ -76,6 +79,7 @@ export const SimpleSelectionItem = ({
   const {
     content,
     communicationType,
+    domain: itemDomain,
     isLinkedWebsite,
     isTitleFixedType,
     space,
@@ -145,82 +149,91 @@ export const SimpleSelectionItem = ({
     }
     return null;
   };
+  const thumbnail =
+    showIcon && iconName ? <ExpressiveIcon name={iconName} /> : null;
   return (
-    <div
+    <ListItem
       key={itemId}
-      sx={SX_STYLES.ITEM}
+      aria-label={`${title}: ${content}`}
       onClick={() => onClick(item)}
-      onKeyUp={(e) => {
-        if (
-          e.key !== KEYBOARD_EVENTS.ENTER &&
-          e.key !== KEYBOARD_EVENTS.SPACE
-        ) {
-          return;
-        }
-        onClick(item);
-      }}
-      data-testid={itemId}
-      role="button"
-      tabIndex={0}
-      data-keyboard-accessible={`${title}: ${content}`}
     >
-      {showIcon && iconName ? (
-        <div
-          sx={mergeSx([
-            SX_STYLES.ICON_CONTAINER,
-            SX_STYLES.SIMPLE_ICON_BACKGROUND,
-          ])}
-        >
-          <Icon name={iconName} size="large" />
-        </div>
-      ) : null}
-      <div sx={SX_STYLES.CONTENT}>
-        <div data-testid="item-title" sx={SX_STYLES.TITLE}>
-          <div sx={SX_STYLES.TITLE_BADGE_CONTAINER} data-testid="title-badge">
-            <div sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-              <HighlightedSearchValue
-                text={itemTitle || defaultEmptyTitle}
-                search={searchValue}
-              />
-            </div>
-            {badge()}
-            {space ? (
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        flexWrap="unset"
+        onKeyUp={(e) => {
+          if (
+            e.key !== KEYBOARD_EVENTS.ENTER &&
+            e.key !== KEYBOARD_EVENTS.SPACE
+          ) {
+            return;
+          }
+          onClick(item);
+        }}
+        data-keyboard-accessible={`${title}: ${content}`}
+        data-testid={itemId}
+      >
+        <Flex flexWrap="unset" sx={{ overflow: "hidden" }}>
+          {thumbnail}
+          <div sx={SX_STYLES.CONTENT}>
+            <div data-testid="item-title" sx={SX_STYLES.TITLE}>
               <div
-                sx={SX_STYLES.SPACE}
-                data-testid={`SpaceBadge-${itemIndex?.toString()}`}
+                sx={SX_STYLES.TITLE_BADGE_CONTAINER}
+                data-testid="title-badge"
               >
-                <Space {...getSpaceInfos(space)} name={space.displayName} />
+                <div sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <HighlightText
+                    text={itemTitle || defaultEmptyTitle}
+                    highlightedText={searchValue}
+                  />
+                </div>
+                {badge()}
+                {space ? (
+                  <div
+                    sx={SX_STYLES.SPACE}
+                    data-testid={`SpaceBadge-${itemIndex?.toString()}`}
+                  >
+                    <Space {...getSpaceInfos(space)} name={space.displayName} />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            {itemContent ? (
+              <div sx={SX_STYLES.SUBTITLE}>
+                <HighlightText
+                  text={itemContent}
+                  highlightedText={searchValue}
+                />
+                {isLinkedWebsite ? (
+                  <div sx={SX_STYLES.ICON} data-testid="LinkIcon">
+                    <Icon
+                      name="LinkOutlined"
+                      size="xsmall"
+                      color="ds.text.neutral.standard"
+                    />
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>
-        </div>
-        {itemContent ? (
-          <div sx={SX_STYLES.SUBTITLE}>
-            <HighlightedSearchValue text={itemContent} search={searchValue} />
-            {isLinkedWebsite ? (
-              <div sx={SX_STYLES.ICON} data-testid="LinkIcon">
-                <Icon name="LinkOutlined" size="xsmall" />
-              </div>
-            ) : null}
-          </div>
+        </Flex>
+        {onClickMoreButton ? (
+          <Button
+            type="button"
+            mood="neutral"
+            intensity="supershy"
+            size="small"
+            layout="iconOnly"
+            className={MORE_BUTTON_CLASS}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClickMoreButton(item);
+            }}
+            icon={<Icon name="CaretRightOutlined" aria-hidden />}
+            data-keyboard-accessible
+          />
         ) : null}
-      </div>
-      {onClickMoreButton ? (
-        <Button
-          type="button"
-          mood="neutral"
-          intensity="supershy"
-          size="small"
-          layout="iconOnly"
-          className={MORE_BUTTON_CLASS}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClickMoreButton(item);
-          }}
-          icon={<Icon name="CaretRightOutlined" aria-hidden />}
-          data-keyboard-accessible
-        />
-      ) : null}
-    </div>
+      </Flex>
+    </ListItem>
   );
 };

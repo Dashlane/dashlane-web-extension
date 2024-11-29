@@ -2,7 +2,7 @@ import * as React from "react";
 import {
   AutofillDropdownWebcardConfiguration,
   WebcardType,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import { I18nContext } from "../../context/i18n";
 import { WebcardPropsBase } from "./config";
 import { AutofillConfirmation } from "./dialogs/AutofillConfirmation";
@@ -10,7 +10,6 @@ import { AutoLoginSelection } from "./dialogs/AutologinSelection";
 import { DataCapture } from "./dialogs/DataCapture";
 import { FeedbackNotification } from "./dialogs/FeedbackNotification";
 import { FollowUpNotification } from "./dialogs/FollowUpNotification";
-import { MasterPassword } from "./dialogs/MasterPassword";
 import { Onboarding } from "./dialogs/Onboarding";
 import { PhishingPreventionPrompt } from "./dialogs/phishing-prevention.component";
 import { SavePassword } from "./dialogs/SavePassword";
@@ -38,7 +37,6 @@ export const translationNamespaceForWebcardType: Record<WebcardType, string> = {
   [WebcardType.FollowUpNotification]: "follow-up-notification",
   [WebcardType.LinkedWebsiteUpdateConfirmation]:
     "linked-website-update-confirmation",
-  [WebcardType.MasterPassword]: "master-password",
   [WebcardType.OnboardingNotification]: "notification",
   [WebcardType.PhishingPrevention]: "phishing-prevention",
   [WebcardType.SavePassword]: "save-password",
@@ -73,8 +71,6 @@ export const WebcardWrapper = (props: WebcardPropsBase) => {
         return <PhishingPreventionPrompt {...props} data={data} />;
       case WebcardType.LinkedWebsiteUpdateConfirmation:
         return <LinkedWebsiteUpdateConfirmation {...props} data={data} />;
-      case WebcardType.MasterPassword:
-        return <MasterPassword {...props} data={data} />;
       case WebcardType.SavePassword:
         return <SavePassword {...props} data={data} />;
       case WebcardType.AutologinSelection:

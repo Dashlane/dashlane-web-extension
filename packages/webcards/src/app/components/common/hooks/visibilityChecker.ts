@@ -1,7 +1,7 @@
 import {
   AutofillEngineDispatcher,
   DispatcherMessages,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/dispatcher";
+} from "@dashlane/autofill-engine/dispatcher";
 export const useWebcardVisibilityChecker =
   (options: {
     autofillEngineDispatcher?: AutofillEngineDispatcher;

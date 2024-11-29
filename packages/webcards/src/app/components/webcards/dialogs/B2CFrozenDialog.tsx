@@ -1,7 +1,7 @@
-import { Fragment, useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { Button, ClickOrigin, UserClickEvent } from "@dashlane/hermes";
-import { Infobox, jsx } from "@dashlane/design-system";
-import { B2CFrozenDialogWebcardData } from "@dashlane/autofill-engine/dist/autofill-engine/src/Api/types/webcards/b2c-frozen-dialog-webcard";
+import { Flex, Infobox, jsx } from "@dashlane/design-system";
+import { B2CFrozenDialogWebcardData } from "@dashlane/autofill-engine/types";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
 import { I18nContext } from "../../../context/i18n";
 import { useCommunication } from "../../../context/communication";
@@ -19,31 +19,12 @@ const I18N_KEYS = {
   BUTTON_BUY: "buttonBuy",
   BUTTON_CANCEL: "buttonCancel",
 };
-const SX_STYLES = {
-  DOMAIN: {
-    fontSize: "10px",
-    textTransform: "uppercase" as const,
-    color: "ds.text.brand.standard.quiet",
-    letterSpacing: "0.2px",
-    lineHeight: "100%",
-    fontWeight: "500",
-  },
-  BUTTONS: {
-    margin: "12px 12px 0px 12px",
-    display: "flex",
-    justifyContent: "end",
-    gap: "8px",
-  },
-  INFOBOX: {
-    margin: "0px 12px",
-  },
-};
 interface Props extends WebcardPropsBase {
   data: B2CFrozenDialogWebcardData;
 }
 export const B2CFrozenDialog = ({ data, closeWebcard }: Props) => {
   const { translate } = useContext(I18nContext);
-  const { savePasswordDisplayUrl, passwordLimit } = data;
+  const { passwordLimit } = data;
   const { autofillEngineCommands } = useCommunication();
   const onCancel = useCallback(
     ({ withEscapeKey = false } = {}) => {
@@ -75,14 +56,10 @@ export const B2CFrozenDialog = ({ data, closeWebcard }: Props) => {
   return (
     <DialogContainer
       closeWebcard={onCancel}
-      headerContent={
-        <>
-          {<p sx={SX_STYLES.DOMAIN}>{savePasswordDisplayUrl}</p>}
-          <HeaderTitle title={translate(I18N_KEYS.HEADER_TITLE)} />
-        </>
-      }
+      headerContent={<HeaderTitle title={translate(I18N_KEYS.HEADER_TITLE)} />}
       withHeaderLogo
       withHeaderCloseButton
+      withNoMainPadding
     >
       <Infobox
         title={translate(I18N_KEYS.INFOBOX_TITLE)}
@@ -91,9 +68,8 @@ export const B2CFrozenDialog = ({ data, closeWebcard }: Props) => {
         description={translate(I18N_KEYS.INFOBOX_DESCRIPTION, {
           count: passwordLimit,
         })}
-        sx={SX_STYLES.INFOBOX}
       />
-      <div sx={SX_STYLES.BUTTONS}>
+      <Flex justifyContent="flex-end" alignItems="center" gap="8px">
         <SecondaryActionButton
           onClick={onCancel}
           label={translate(I18N_KEYS.BUTTON_CANCEL)}
@@ -102,7 +78,7 @@ export const B2CFrozenDialog = ({ data, closeWebcard }: Props) => {
           onClick={onClickBuy}
           label={translate(I18N_KEYS.BUTTON_BUY)}
         />
-      </div>
+      </Flex>
     </DialogContainer>
   );
 };

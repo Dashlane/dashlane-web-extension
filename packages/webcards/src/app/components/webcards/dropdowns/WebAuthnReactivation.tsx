@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button } from "@dashlane/design-system";
+import { Button, Flex } from "@dashlane/design-system";
 import { Paragraph } from "@dashlane/ui-components";
 import {
   AnonymousAutofillAcceptEvent,
@@ -12,14 +12,13 @@ import {
 import {
   WebAuthnReactivationWebcardData,
   WebAuthnStatus,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import { I18nContext } from "../../../context/i18n";
 import { useCommunication } from "../../../context/communication";
 import { startAssertion } from "../../../utils/webAuthn/credential";
 import { DropdownContainer } from "../../common/layout/DropdownContainer";
 import { HeaderTitle } from "../../common/layout/HeaderTitle";
 import { WebcardPropsBase } from "../config";
-import styles from "./WebAuthnReactivation.module.scss";
 interface Props extends WebcardPropsBase {
   data: WebAuthnReactivationWebcardData;
 }
@@ -106,7 +105,7 @@ export const WebAuthnReactivation = ({ closeWebcard, data }: Props) => {
       withHeaderCloseButton
       withHeaderLogo
     >
-      <div className={styles.main}>
+      <Flex flexDirection="column" gap="8px">
         {error && (
           <Paragraph
             color="errors.5"
@@ -127,6 +126,8 @@ export const WebAuthnReactivation = ({ closeWebcard, data }: Props) => {
           fullsize={true}
           onClick={onLoginWithWebAuthn}
           size="small"
+          layout="iconLeading"
+          icon="FingerprintOutlined"
         >
           {translate(
             error ? I18N_KEYS.ERROR.loginButton : I18N_KEYS.BASE.loginButton
@@ -139,6 +140,8 @@ export const WebAuthnReactivation = ({ closeWebcard, data }: Props) => {
           fullsize={true}
           onClick={onLoginWithMasterPassword}
           size="small"
+          layout="iconLeading"
+          icon="ItemLoginOutlined"
         >
           {translate(I18N_KEYS.BASE.fallbackButton)}
         </Button>
@@ -152,7 +155,7 @@ export const WebAuthnReactivation = ({ closeWebcard, data }: Props) => {
         >
           {translate(I18N_KEYS.BASE.dontAskAgain)}
         </Button>
-      </div>
+      </Flex>
     </DropdownContainer>
   );
 };

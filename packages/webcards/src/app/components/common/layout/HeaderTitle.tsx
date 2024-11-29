@@ -5,6 +5,7 @@ interface Props {
 }
 const HEADING_STYLES: Partial<ThemeUIStyleObject> = {
   overflowWrap: "anywhere",
+  marginY: "7px",
 };
 export const HeaderTitle = ({ title }: Props) => {
   const sanitizedTitle = DOMPurify.sanitize(title);

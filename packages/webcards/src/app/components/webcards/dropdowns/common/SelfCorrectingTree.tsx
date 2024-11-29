@@ -22,7 +22,6 @@ export const SOURCE_TYPE_TO_LOCALIZATION_KEY: Record<
   [VaultSourceType.IdCard]: "TR_SELFCORRECT_STEP1_IDCARD",
   [VaultSourceType.Identity]: "TR_SELFCORRECT_STEP1_PERSONALINFO",
   [VaultSourceType.Note]: "",
-  [VaultSourceType.NoteCategory]: "",
   [VaultSourceType.Passkey]: "",
   [VaultSourceType.Passport]: "TR_SELFCORRECT_STEP1_PASSPORT",
   [VaultSourceType.PaymentCard]: "TR_SELFCORRECT_STEP1_PAYMENTINFO",

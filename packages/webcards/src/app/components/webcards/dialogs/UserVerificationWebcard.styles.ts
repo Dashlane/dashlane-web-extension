@@ -1,8 +1,7 @@
 import { ThemeUIStyleObject } from "@dashlane/design-system";
 export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   CONTENT_CONTAINER: {
-    paddingLeft: "16px",
-    paddingRight: "16px",
+    paddingX: "8px",
   },
   NEVER_ASK_AGAIN_CONTAINER: {
     display: "inline-grid",

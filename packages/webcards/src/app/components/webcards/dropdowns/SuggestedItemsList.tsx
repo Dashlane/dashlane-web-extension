@@ -5,7 +5,7 @@ import {
   AutofillCredentialsAtRisk,
   WebcardItem,
   WebcardItemType,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import { List } from "../../common/generic/List";
 import { SimpleSelectionItem } from "../../common/items/SimpleSelectionItem";
 import { EnhancedSelectionItem } from "../../common/items/EnhancedSelectionItem";
@@ -25,6 +25,7 @@ interface Props {
   withLastUsedBadge?: boolean;
   withAddNewButton?: boolean;
   credentialsAtRisk?: AutofillCredentialsAtRisk;
+  withSearchForMoreInfo?: boolean;
 }
 export const SuggestedItemsList = ({
   withLastUsedBadge,
@@ -40,6 +41,7 @@ export const SuggestedItemsList = ({
   withScroll,
   withAddNewButton,
   credentialsAtRisk,
+  withSearchForMoreInfo,
 }: Props) => {
   const getRiskForItem = (
     item: WebcardItem
@@ -86,6 +88,7 @@ export const SuggestedItemsList = ({
           );
         }
       })}
+      withSearchForMoreInfo={withSearchForMoreInfo}
     />
   ) : (
     <EmptyPanel

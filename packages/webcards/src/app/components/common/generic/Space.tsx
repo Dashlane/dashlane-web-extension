@@ -1,6 +1,6 @@
 import * as React from "react";
 import { I18nContext } from "../../../context/i18n";
-import { WebcardSpacesData } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { WebcardSpacesData } from "@dashlane/autofill-engine/types";
 interface Props {
   letter: string;
   color: string;
@@ -29,7 +29,7 @@ export const Space = ({ letter, color, name }: Props) => (
     height="16"
     viewBox="0 0 16 16"
     fill="none"
-    xmlns="*****"
+    xmlns="__REDACTED__"
   >
     <path
       d="M0.800014 5.10801V15.148H10.836L15.136 10.876V0.800018H5.06001L0.800014 5.10801Z"

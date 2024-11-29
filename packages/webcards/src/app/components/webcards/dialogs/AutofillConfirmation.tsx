@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Icon, jsx, mergeSx } from "@dashlane/design-system";
+import { Flex, Infobox, jsx, mergeSx } from "@dashlane/design-system";
 import {
   AnonymousAutofillDismissEvent,
   DismissType,
@@ -7,7 +7,7 @@ import {
   hashDomain,
   UserAutofillDismissEvent,
 } from "@dashlane/hermes";
-import { AutofillConfirmationPasswordLessWebcardData } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { AutofillConfirmationPasswordLessWebcardData } from "@dashlane/autofill-engine/types";
 import { COMMON_SX_STYLES } from "../../../../styles";
 import { I18nContext } from "../../../context/i18n";
 import { useCommunication } from "../../../context/communication";
@@ -17,10 +17,6 @@ import { HeaderTitle } from "../../common/layout/HeaderTitle";
 import { SecondaryActionButton } from "../../common/generic/buttons/SecondaryActionButton";
 import { PrimaryActionButton } from "../../common/generic/buttons/PrimaryActionButton";
 import { WebcardPropsBase } from "../config";
-import styles from "./AutofillConfirmation.module.scss";
-const SX_STYLES = {
-  FOOTER_TEXT: mergeSx([COMMON_SX_STYLES, { paddingLeft: "16px" }]),
-};
 const I18N_KEYS = {
   CANCEL: "cancel",
   CONFIRM: "confirm",
@@ -97,26 +93,27 @@ export const AutofillConfirmation = ({
     <DialogContainer
       closeWebcard={onClose}
       footerContent={
-        <div className={styles.footer}>
-          <Icon name="UnlockOutlined" />
-          <div sx={SX_STYLES.FOOTER_TEXT}>{translate(I18N_KEYS.WARNING)}</div>
-        </div>
+        <Flex alignItems="center" justifyContent="flex-end" gap="8px">
+          <SecondaryActionButton
+            onClick={onCancel}
+            label={translate(I18N_KEYS.CANCEL)}
+          />
+          <PrimaryActionButton
+            onClick={onSubmit}
+            label={translate(I18N_KEYS.CONFIRM)}
+          />
+        </Flex>
       }
       headerContent={<HeaderTitle title={translate(I18N_KEYS.TITLE)} />}
-      withFooterDivider
       withHeaderCloseButton
       withHeaderLogo
+      withNoContentCardWrapper
     >
-      <div className={styles.main}>
-        <SecondaryActionButton
-          onClick={onCancel}
-          label={translate(I18N_KEYS.CANCEL)}
-        />
-        <PrimaryActionButton
-          onClick={onSubmit}
-          label={translate(I18N_KEYS.CONFIRM)}
-        />
-      </div>
+      <Infobox
+        mood="positive"
+        icon="FeedbackWarningOutlined"
+        title={translate(I18N_KEYS.WARNING)}
+      />
     </DialogContainer>
   );
 };

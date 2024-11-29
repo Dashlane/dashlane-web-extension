@@ -2,9 +2,9 @@ import * as React from "react";
 import classNames from "classnames";
 import {
   DataCaptureWebcardData,
+  DataCaptureWebcardItem,
   vaultSourceTypeToHermesItemTypeMap,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
-import { DataCaptureWebcardItem } from "@dashlane/autofill-engine/dist/autofill-engine/src/Api/types/data-capture";
+} from "@dashlane/autofill-engine/types";
 import {
   AnonymousAutofillAcceptEvent,
   AnonymousAutofillDismissEvent,

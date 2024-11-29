@@ -1,4 +1,3 @@
-import { WebAuthnStatus } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
 import { Icon, Infobox, jsx, Paragraph } from "@dashlane/design-system";
 import {
   BrowseComponent,
@@ -8,14 +7,15 @@ import {
   UserUserVerificationAttemptedEvent,
   UserUserVerificationCompletedEvent,
 } from "@dashlane/hermes";
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useCommunication } from "../../../../context/communication";
 import { useTranslate } from "../../../../context/i18n";
-import { startAssertion } from "../../../../utils/webAuthn/credential";
 import { PrimaryActionButton } from "../../../common/generic/buttons/PrimaryActionButton";
 import { SecondaryActionButton } from "../../../common/generic/buttons/SecondaryActionButton";
 import { UserVerificationPanelProps } from "./UserVerificationPanelProps";
 import { SX_STYLES } from "./WebauthnPanel.styles";
+import { useWebAuthnHook } from "./useWebAuthnHook";
+import { WebAuthnStatus } from "@dashlane/autofill-engine/types";
 export const I18N_KEYS = {
   TITLE: "webauthnPanelTitle",
   TRY_AGAIN: "tryAgain",
@@ -39,15 +39,25 @@ export const WebauthnPanel = ({
       }
     | undefined
   >(undefined);
-  const { autofillEngineCommands, setAutofillEngineActionsHandlers } =
-    useCommunication();
-  const startWebauthnFlow = useCallback(() => {
-    autofillEngineCommands?.startWebAuthnUserVerificationFlow();
-  }, [autofillEngineCommands]);
+  const { autofillEngineCommands } = useCommunication();
+  const { startWebauthnFlow, abortWebauthnFlow } = useWebAuthnHook((status) => {
+    if (status === WebAuthnStatus.Success) {
+      onVerificationSucessful();
+    } else {
+      setErrorMessage({
+        title: I18N_KEYS.WEBAUTHN_GENERIC_ERROR_TITLE,
+        description: I18N_KEYS.WEBAUTHN_GENERIC_ERROR_DESCRIPTION,
+      });
+    }
+  });
   const tryAgain = () => {
     incrementAttemptCounter();
     setErrorMessage(undefined);
     startWebauthnFlow();
+  };
+  const onWebauthnFlowCancel = () => {
+    abortWebauthnFlow();
+    onCancel();
   };
   useEffect(() => {
     const pageView =
@@ -76,40 +86,11 @@ export const WebauthnPanel = ({
     autofillEngineCommands?.logEvent(event);
   }, [attemptCounter, autofillEngineCommands, errorMessage, usageLogDetails]);
   useEffect(() => {
-    setAutofillEngineActionsHandlers?.({
-      updateWebAuthnChallenge: async ({ publicKeyOptions }) => {
-        try {
-          const assertion = await startAssertion(publicKeyOptions);
-          autofillEngineCommands?.validateWebAuthnUserVerificationFlow(
-            assertion
-          );
-        } catch (error) {
-          setErrorMessage({
-            title: I18N_KEYS.WEBAUTHN_GENERIC_ERROR_TITLE,
-            description: I18N_KEYS.WEBAUTHN_GENERIC_ERROR_DESCRIPTION,
-          });
-        }
-      },
-      updateWebAuthnStatus: async (status) => {
-        if (status === WebAuthnStatus.Success) {
-          onVerificationSucessful();
-        } else {
-          setErrorMessage({
-            title: I18N_KEYS.WEBAUTHN_GENERIC_ERROR_TITLE,
-            description: I18N_KEYS.WEBAUTHN_GENERIC_ERROR_DESCRIPTION,
-          });
-        }
-      },
-    });
-  }, [
-    autofillEngineCommands,
-    onVerificationSucessful,
-    setAutofillEngineActionsHandlers,
-    translate,
-  ]);
-  useEffect(() => {
     startWebauthnFlow();
-  }, [startWebauthnFlow]);
+    return () => {
+      abortWebauthnFlow();
+    };
+  }, [abortWebauthnFlow, startWebauthnFlow]);
   const content = (
     <div sx={SX_STYLES.CONTAINER}>
       {errorMessage ? (
@@ -120,7 +101,10 @@ export const WebauthnPanel = ({
         />
       ) : (
         <Fragment>
-          <Paragraph textStyle="ds.body.standard.regular">
+          <Paragraph
+            textStyle="ds.body.standard.regular"
+            sx={{ textAlign: "center" }}
+          >
             {translate(I18N_KEYS.TITLE)}
           </Paragraph>
           <div sx={SX_STYLES.ICON_CONTAINER}>
@@ -142,9 +126,16 @@ export const WebauthnPanel = ({
     />
   ) : (
     <SecondaryActionButton
-      onClick={onCancel}
+      onClick={onWebauthnFlowCancel}
       label={translate(I18N_KEYS.CANCEL)}
     />
   );
-  return makeUserVerificationDialog(content, customFooter);
+  return makeUserVerificationDialog(
+    content,
+    customFooter,
+    () => {},
+    () => {
+      abortWebauthnFlow();
+    }
+  );
 };

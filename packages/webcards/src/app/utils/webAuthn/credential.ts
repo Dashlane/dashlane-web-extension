@@ -1,13 +1,14 @@
 import {
   AssertionCredentialJSON,
   PublicKeyCredentialRequestOptionsJSON,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import {
   arrayBufferToBase64Url,
   base64UrlToArrayBuffer,
 } from "@dashlane/framework-encoding";
 async function createAssertionAuthenticator(
-  publicKeyJSON: PublicKeyCredentialRequestOptionsJSON
+  publicKeyJSON: PublicKeyCredentialRequestOptionsJSON,
+  signal?: AbortSignal
 ) {
   const publicKey: PublicKeyCredentialRequestOptions = {
     challenge: base64UrlToArrayBuffer(publicKeyJSON.challenge),
@@ -19,7 +20,7 @@ async function createAssertionAuthenticator(
       type: cred.type,
     })),
   };
-  const credential = await navigator.credentials.get({ publicKey });
+  const credential = await navigator.credentials.get({ publicKey, signal });
   if (!credential) {
     throw new Error(
       "Passwordless assertion could not be completed as credential cannot be created"
@@ -30,9 +31,10 @@ async function createAssertionAuthenticator(
   };
 }
 export async function startAssertion(
-  publicKey: PublicKeyCredentialRequestOptionsJSON
+  publicKey: PublicKeyCredentialRequestOptionsJSON,
+  signal?: AbortSignal
 ): Promise<AssertionCredentialJSON> {
-  const credential = await createAssertionAuthenticator(publicKey);
+  const credential = await createAssertionAuthenticator(publicKey, signal);
   const credentialResponse =
     credential.response as AuthenticatorAssertionResponse;
   const credentialJSON: AssertionCredentialJSON = {

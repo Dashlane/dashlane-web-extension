@@ -13,7 +13,7 @@ import {
   WebauthnPasskeySelectionWebcardData,
   WebcardItem,
   WebcardMetadataType,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import { Button } from "@dashlane/design-system";
 import { I18nContext } from "../../../context/i18n";
 import { KEYBOARD_EVENTS } from "../../../constants";

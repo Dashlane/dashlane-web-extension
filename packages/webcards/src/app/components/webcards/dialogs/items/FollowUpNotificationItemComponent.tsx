@@ -1,8 +1,8 @@
 import * as React from "react";
 import { jsx } from "@dashlane/design-system";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
-import { VaultIngredient } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
-import { AutofillEngineCommands } from "@dashlane/autofill-engine/dist/autofill-engine/src/client";
+import { VaultIngredient } from "@dashlane/autofill-engine/types";
+import { AutofillEngineCommands } from "@dashlane/autofill-engine/client";
 import { getStarsRepresentationForHiddenValues } from "../../../../utils/helpers";
 import { InputType } from "../../../../communication/types";
 import { CopyButton } from "../../../common/layout/CopyButton";
@@ -114,7 +114,6 @@ export const FollowUpNotificationItemComponent = <T extends VaultSourceType>(
           />
         </div>
       </div>
-      <hr sx={SX_STYLES.DIVIDER} />
     </React.Fragment>
   );
 };

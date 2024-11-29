@@ -3,7 +3,7 @@ import {
   AutofillRequestOriginType,
   AutologinSelectionWebcardData,
   WebcardItem,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import {
   AnonymousAutofillAcceptEvent,
   AnonymousAutofillDismissEvent,
@@ -146,7 +146,6 @@ export const AutoLoginSelection = ({
       headerContent={<HeaderTitle title={translate("header")} />}
       withHeaderCloseButton
       withHeaderLogo
-      withNoMainPadding
     >
       <SuggestedItemsList
         onAddNewItem={onClose}

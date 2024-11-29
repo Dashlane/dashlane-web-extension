@@ -1,5 +1,11 @@
-import { Fragment, useContext } from "react";
-import { Icon, jsx, ThemeUIStyleObject } from "@dashlane/design-system";
+import { useContext } from "react";
+import {
+  Button,
+  Card,
+  Flex,
+  jsx,
+  ThemeUIStyleObject,
+} from "@dashlane/design-system";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
 import {
   AutofillButton,
@@ -10,7 +16,6 @@ import { I18nContext } from "../../../context/i18n";
 import { useCommunication } from "../../../context/communication";
 import { vaultSourceTypeToWebappRouteNameMap } from "../../../utils/routes/routes";
 import { vaultSourceTypeKeyMap } from "../../../utils/formatter/keys";
-import styles from "./EmptyPanel.module.scss";
 const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   DIVIDER: {
     border: "none",
@@ -89,25 +94,27 @@ export const EmptyPanel = ({
     onAddNewItem();
   };
   return (
-    <div className={styles.emptyState}>
-      <div sx={SX_STYLES.EMPTY_STATE_MESSAGE}>{noDataNotification}</div>
+    <div>
+      <Card padding="8px">
+        <div sx={SX_STYLES.EMPTY_STATE_MESSAGE}>{noDataNotification}</div>
+      </Card>
       {withAddNewButton ? (
-        <>
-          <hr sx={SX_STYLES.DIVIDER} />
-          <button
-            className={styles.emptyStateAddItem}
-            sx={SX_STYLES.EMPTY_STATE_ADD_ITEM}
+        <Flex justifyContent="center" sx={{ marginTop: "8px" }}>
+          <Button
             onClick={onClickAddNewItem}
+            mood="brand"
+            intensity="catchy"
+            layout="iconLeading"
+            icon="ActionAddOutlined"
+            size="small"
             data-keyboard-accessible={translate(
               `v5_addNew_${vaultSourceTypeKeyMap[fieldType]}`
             )}
+            fullsize
           >
-            <div className={styles.iconWrapper}>
-              <Icon name="ActionAddOutlined" size="xsmall" />
-            </div>
             {translate(`v5_addNew_${vaultSourceTypeKeyMap[fieldType]}`)}
-          </button>
-        </>
+          </Button>
+        </Flex>
       ) : null}
     </div>
   );

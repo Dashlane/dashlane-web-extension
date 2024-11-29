@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Button } from "@dashlane/design-system";
-import { ReactivationWebcardData } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { Button, Flex, Paragraph } from "@dashlane/design-system";
+import { ReactivationWebcardData } from "@dashlane/autofill-engine/types";
 import {
   AnonymousAutofillAcceptEvent,
   BrowseComponent,
@@ -14,11 +14,10 @@ import { useCommunication } from "../../../context/communication";
 import { DropdownContainer } from "../../common/layout/DropdownContainer";
 import { HeaderTitle } from "../../common/layout/HeaderTitle";
 import { WebcardPropsBase } from "../config";
-import styles from "./Reactivation.module.scss";
 const I18N_KEYS = {
   DONT_ASK_AGAIN: "mavReactivationDismiss",
   LOGIN: "mavReactivationBtn",
-  REACTIVATION_TITLE: "mavReactivationTitle",
+  TITLE: "webAuthnReactivationHeader",
 };
 interface Props extends WebcardPropsBase {
   data: ReactivationWebcardData;
@@ -47,7 +46,7 @@ export const Reactivation = ({ closeWebcard, data }: Props) => {
         },
       })
     );
-    autofillEngineCommands?.openWebapp({});
+    autofillEngineCommands?.openPopup({});
     closeWebcard();
   };
   const onNeverAgain = () => {
@@ -58,14 +57,12 @@ export const Reactivation = ({ closeWebcard, data }: Props) => {
     <DropdownContainer
       closeWebcard={closeWebcard}
       extensionShortcuts={extensionShortcuts}
-      headerContent={
-        <HeaderTitle title={translate(I18N_KEYS.REACTIVATION_TITLE)} />
-      }
+      headerContent={<HeaderTitle title={translate(I18N_KEYS.TITLE)} />}
       webcardData={data}
       withHeaderCloseButton
       withHeaderLogo
     >
-      <div className={styles.main}>
+      <Flex flexDirection="column" gap="8px">
         <Button
           type="button"
           mood="brand"
@@ -86,7 +83,7 @@ export const Reactivation = ({ closeWebcard, data }: Props) => {
         >
           {translate(I18N_KEYS.DONT_ASK_AGAIN)}
         </Button>
-      </div>
+      </Flex>
     </DropdownContainer>
   );
 };

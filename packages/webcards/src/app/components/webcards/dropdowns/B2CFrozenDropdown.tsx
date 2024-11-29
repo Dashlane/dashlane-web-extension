@@ -1,6 +1,6 @@
 import * as React from "react";
 import { OtherSourceType, VaultSourceType } from "@dashlane/autofill-contracts";
-import { AccountFrozenDropdownWebcardData } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { AccountFrozenDropdownWebcardData } from "@dashlane/autofill-engine/types";
 import {
   ClickOrigin,
   Button as HermesButton,
@@ -29,10 +29,8 @@ const I18N_KEYS = {
 };
 const SX_STYLES: Record<string, ThemeUIStyleObject> = {
   INFOBOX: {
-    margin: "16px",
-  },
-  BUTTON: {
-    margin: "0px 16px 16px 16px",
+    marginX: "8px",
+    marginBottom: "8px",
   },
 };
 interface Props extends WebcardPropsBase {
@@ -68,7 +66,21 @@ export const B2CFrozenDropdown = ({ data, closeWebcard }: Props) => {
     <DropdownContainer
       closeWebcard={closeWebcard}
       headerContent={<HeaderTitle title={cardTitle} />}
-      footerContent={<AutofillFooter closeWebcard={closeWebcard} />}
+      footerContent={
+        <div>
+          <Infobox
+            title={translate(I18N_KEYS.INFOBOX_TITLE)}
+            description={translate(I18N_KEYS.INFOBOX_DESC, {
+              count: passwordLimit,
+            })}
+            mood="danger"
+            icon="FeedbackFailOutlined"
+            size="medium"
+            sx={SX_STYLES.INFOBOX}
+          />
+          <AutofillFooter closeWebcard={closeWebcard} />
+        </div>
+      }
       isSearchActive={false}
       srcElementValue={""}
       webcardData={data}
@@ -76,23 +88,11 @@ export const B2CFrozenDropdown = ({ data, closeWebcard }: Props) => {
       withHeaderOptionsButton={false}
       withHeaderSearchButton={false}
       withFooterPadding={false}
-      withNoMainPadding
+      withNoContentCardWrapper
     >
-      <Infobox
-        title={translate(I18N_KEYS.INFOBOX_TITLE)}
-        description={translate(I18N_KEYS.INFOBOX_DESC, {
-          count: passwordLimit,
-        })}
-        mood="danger"
-        icon="FeedbackFailOutlined"
-        size="medium"
-        sx={SX_STYLES.INFOBOX}
-      />
-      <div sx={SX_STYLES.BUTTON}>
-        <Button onClick={onClick} fullsize>
-          {translate(I18N_KEYS.CTA)}
-        </Button>
-      </div>
+      <Button onClick={onClick} fullsize>
+        {translate(I18N_KEYS.CTA)}
+      </Button>
     </DropdownContainer>
   );
 };

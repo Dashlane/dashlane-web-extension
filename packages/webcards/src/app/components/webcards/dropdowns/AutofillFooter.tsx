@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AutofillDropdownWebcardWarningType } from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+import { AutofillDropdownWebcardWarningType } from "@dashlane/autofill-engine/types";
 import { useCommunication } from "../../../context/communication";
 import { DropdownMessage } from "./common/DropdownMessage";
 interface Props {

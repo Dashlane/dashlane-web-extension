@@ -15,12 +15,11 @@ export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   EXTENSION_SHORTCUTS_WRAPPER: {
     display: "flex",
     alignItems: "center",
-    flexDirection: "row",
-    padding: "14px 16px 12px 16px",
+    justifyContent: "space-between",
+    padding: "0 8px 8px 8px",
   },
   FOOTER: {
-    padding: "16px",
-    paddingTop: "8px",
+    padding: "0 8px 8px 8px",
   },
   WITH_DIVIDER: {
     paddingTop: "16px",

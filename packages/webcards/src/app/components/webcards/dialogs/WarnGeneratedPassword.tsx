@@ -12,7 +12,7 @@ import { OtherSourceType } from "@dashlane/autofill-contracts";
 import {
   isAutofillDetailsForOtherDataSource,
   WarnGeneratedPasswordWebcardData,
-} from "@dashlane/autofill-engine/dist/autofill-engine/src/types";
+} from "@dashlane/autofill-engine/types";
 import { I18nContext } from "../../../context/i18n";
 import { useCommunication } from "../../../context/communication";
 import { DialogContainer } from "../../common/layout/DialogContainer";

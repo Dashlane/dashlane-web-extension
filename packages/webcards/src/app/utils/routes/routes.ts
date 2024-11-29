@@ -1,4 +1,4 @@
-import { WebappRoute } from "@dashlane/autofill-engine/dist/autofill-engine/src/spi";
+import { WebappRoute } from "@dashlane/autofill-engine/spi";
 import { VaultSourceType } from "@dashlane/autofill-contracts";
 export const vaultSourceTypeToWebappRouteNameMap: Partial<
   Record<VaultSourceType, WebappRoute>

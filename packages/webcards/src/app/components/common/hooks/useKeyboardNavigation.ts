@@ -1,5 +1,5 @@
 import React from "react";
-import { DispatcherMessages } from "@dashlane/autofill-engine/dist/autofill-engine/src/dispatcher";
+import { DispatcherMessages } from "@dashlane/autofill-engine/dispatcher";
 import { useCommunication } from "../../../context/communication";
 import { KEYBOARD_EVENTS } from "../../../constants";
 export const KEYBOARD_ACCESSIBLE_ATTRIBUTE = "data-keyboard-accessible";

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Icon, jsx, mergeSx } from "@dashlane/design-system";
+import { Button, Icon, jsx, mergeSx } from "@dashlane/design-system";
 import { I18nContext } from "../../../context/i18n";
 import { SX_STYLES } from "./Header.styles";
 const I18N_KEYS = {
@@ -26,16 +26,17 @@ export const HeaderOptionsButton = ({
       ])
     : SX_STYLES.DROPDOWN_ACTION;
   return (
-    <button
-      id="dropdownMoreOptions"
-      type="button"
-      sx={optionsSx}
+    <Button
       onClick={onMoreOptions}
+      id="dropdownMoreOptions"
+      mood="neutral"
+      intensity="supershy"
+      layout="iconOnly"
+      icon="ActionMoreOutlined"
+      size="small"
       data-keyboard-accessible={`${ariaLabel}: ${translate(
         I18N_KEYS.ROLE_BUTTON
       )}`}
-    >
-      <Icon name="ActionMoreOutlined" aria-hidden size="large" />
-    </button>
+    />
   );
 };

@@ -7,6 +7,7 @@ const MORE_BUTTON_VISIBLE: Partial<ThemeUIStyleObject> = {
 };
 export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
   CONTENT: {
+    marginLeft: "16px",
     overflow: "hidden",
     fontSize: "12px",
   },
@@ -25,30 +26,11 @@ export const SX_STYLES: Record<string, Partial<ThemeUIStyleObject>> = {
     backgroundColor: "transparent",
     borderWidth: "0px",
   },
-  SIMPLE_ICON_BACKGROUND: {
-    backgroundColor: "ds.container.agnostic.neutral.quiet",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: "ds.border.neutral.quiet.idle",
-  },
   ITEM: {
     display: "flex",
     alignItems: "center",
-    padding: "12px 16px",
-    cursor: "pointer",
-    backgroundColor: "transparent",
-    "&:hover": {
-      backgroundColor: "ds.container.agnostic.neutral.quiet",
-    },
-    [`.${MORE_BUTTON_CLASS}`]: {
-      display: "none",
-      "&.active": {
-        ...MORE_BUTTON_VISIBLE,
-        ...ACTIVE_OUTLINE_STYLES,
-      },
-    },
-    [`&.active .${MORE_BUTTON_CLASS}, &:hover .${MORE_BUTTON_CLASS}`]:
-      MORE_BUTTON_VISIBLE,
+    marginLeft: "auto",
+    [`.${MORE_BUTTON_CLASS}`]: MORE_BUTTON_VISIBLE,
   },
   TITLE: {
     color: "ds.text.neutral.catchy",
