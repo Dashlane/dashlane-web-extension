@@ -1,11 +1,15 @@
-import { AnyModuleApis, ClientsOf as ApplicationClient, } from '@dashlane/framework-contracts';
-let applicationClient: ApplicationClient<AnyModuleApis> | undefined = undefined;
-export function getApplicationClient(): ApplicationClient<AnyModuleApis> {
-    if (!applicationClient) {
-        throw new Error('No application client available');
-    }
-    return applicationClient;
+import type { ClientsOf as ApplicationClient } from "@dashlane/framework-contracts";
+import type { LeelooDependencies } from "./application-dependencies";
+let applicationClient: ApplicationClient<LeelooDependencies> | undefined =
+  undefined;
+export function getApplicationClient(): ApplicationClient<LeelooDependencies> {
+  if (!applicationClient) {
+    throw new Error("No application client available");
+  }
+  return applicationClient;
 }
-export function setApplicationClient(appClient: ApplicationClient<AnyModuleApis>) {
-    applicationClient = appClient;
+export function setApplicationClient(
+  appClient: ApplicationClient<LeelooDependencies>
+) {
+  applicationClient = appClient;
 }

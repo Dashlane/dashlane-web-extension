@@ -1,4 +1,4 @@
 export const stores = {
-    PLAYSTORE: '*****',
-    APPLE: '*****',
+  PLAYSTORE: "__REDACTED__",
+  APPLE: "__REDACTED__",
 };

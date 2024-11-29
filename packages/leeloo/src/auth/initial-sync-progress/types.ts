@@ -1,4 +1,4 @@
 export interface State {
-    isPending: boolean;
-    isIntroPhasePending: boolean;
+  isPending: boolean;
+  isIntroPhasePending: boolean;
 }

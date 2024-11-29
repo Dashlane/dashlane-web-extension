@@ -1,12 +1,15 @@
-import { RequestStatus } from '@dashlane/communication';
+import { RequestStatus } from "@dashlane/communication";
 interface AdminAssistedARUnset {
-    processStatus: 'UNSET';
+  processStatus: "UNSET";
 }
 interface AdminAssistedARError {
-    processStatus: 'ERROR';
+  processStatus: "ERROR";
 }
 interface AdminAssistedARPending {
-    processStatus: 'PENDING';
-    requestStatus: RequestStatus;
+  processStatus: "PENDING";
+  requestStatus: RequestStatus;
 }
-export type AdminAssistedARStatus = AdminAssistedARUnset | AdminAssistedARError | AdminAssistedARPending;
+export type AdminAssistedARStatus =
+  | AdminAssistedARUnset
+  | AdminAssistedARError
+  | AdminAssistedARPending;

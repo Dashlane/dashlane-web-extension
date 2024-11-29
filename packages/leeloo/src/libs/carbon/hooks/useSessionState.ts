@@ -1,12 +1,14 @@
-import { sessionApi } from '@dashlane/session-contracts';
-import { DataStatus, useModuleQuery } from '@dashlane/framework-react';
-import { useUserLogin } from 'libs/hooks/useUserLogin';
-export const useSessionState = () => {
-    const userLogin = useUserLogin();
-    const sessionStateResult = useModuleQuery(sessionApi, 'sessionState', {
-        email: userLogin ?? '',
-    });
-    return sessionStateResult.status === DataStatus.Success
-        ? sessionStateResult.data
-        : undefined;
+import {
+  sessionApi,
+  SessionState,
+  SessionStates,
+} from "@dashlane/session-contracts";
+import { DataStatus, useModuleQuery } from "@dashlane/framework-react";
+export const useSessionState = (): SessionState | undefined => {
+  const sessionStateResult = useModuleQuery(sessionApi, "currentSessionInfo");
+  return sessionStateResult.status === DataStatus.Success
+    ? SessionStates.Open
+    : sessionStateResult.error?.tag === "no-user-logged-in"
+    ? SessionStates.Closed
+    : undefined;
 };

@@ -1,4 +1,4 @@
 export enum OrderDir {
-    ascending = 'ascending',
-    descending = 'descending'
+  ascending = "ascending",
+  descending = "descending",
 }

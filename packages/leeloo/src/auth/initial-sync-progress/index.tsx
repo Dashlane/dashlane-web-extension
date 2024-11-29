@@ -1,1 +1,1 @@
-export { InitialSyncProgress } from './initial-sync-progress';
+export { InitialSyncProgress } from "./initial-sync-progress";

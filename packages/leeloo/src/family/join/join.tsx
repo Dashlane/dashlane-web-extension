@@ -1,17 +1,23 @@
-import * as React from 'react';
-import { Lockup, LockupColor, LockupSize } from '@dashlane/ui-components';
-import useTranslate from 'libs/i18n/useTranslate';
-import { Footer } from 'libs/dashlane-style/footer';
-import styles from './styles.css';
+import * as React from "react";
+import useTranslate from "../../libs/i18n/useTranslate";
+import { Footer } from "../../libs/dashlane-style/footer";
+import styles from "./styles.css";
+import { Logo } from "@dashlane/design-system";
 export const JoinFamily = ({ children }: React.PropsWithChildren<{}>) => {
-    const { translate } = useTranslate();
-    return (<div className={styles.wrapper}>
+  const { translate } = useTranslate();
+  return (
+    <div className={styles.wrapper}>
       <div className={styles.joinFamilyWrapper}>
         <div className={styles.logo}>
-          <Lockup color={LockupColor.DashGreen} size={LockupSize.Size39} title={translate('_common_dashlane_logo_title')}/>
+          <Logo
+            height={40}
+            name="DashlaneLockup"
+            title={translate("_common_dashlane_logo_title")}
+          />
         </div>
         {children}
       </div>
       <Footer />
-    </div>);
+    </div>
+  );
 };

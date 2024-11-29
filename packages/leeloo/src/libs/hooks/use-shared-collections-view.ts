@@ -1,9 +1,9 @@
-import { sharingCollectionsApi } from '@dashlane/sharing-contracts';
-import { DataStatus, useModuleQuery } from '@dashlane/framework-react';
+import { sharingCollectionsApi } from "@dashlane/sharing-contracts";
+import { DataStatus, useModuleQuery } from "@dashlane/framework-react";
 export const useSharedCollectionsView = () => {
-    return useModuleQuery(sharingCollectionsApi, 'sharedCollectionsWithItems');
+  return useModuleQuery(sharingCollectionsApi, "sharedCollectionsWithItems");
 };
 export const useSharedCollectionsViewData = () => {
-    const result = useSharedCollectionsView();
-    return result.status === DataStatus.Success ? result.data : [];
+  const result = useSharedCollectionsView();
+  return result.status === DataStatus.Success ? result.data : [];
 };

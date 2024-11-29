@@ -1,1 +1,1 @@
-export * from './account-recovery-with-key-dialog';
+export * from "./account-recovery-with-key-dialog";

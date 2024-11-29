@@ -1,17 +1,12 @@
-import { detectBestMatchingSupportedCountry, detectBestMatchingSupportedLanguage, } from './detectLanguage';
-export { getNavigatorLocaleHints } from './detectLanguage';
-export function getPreferredLanguage(languageInStore: string, locales: string[], defaultLocale: string): string {
-    const preferredLocaleFromNavigator = detectBestMatchingSupportedLanguage(window, locales);
-    const lastPreferredLanguage = languageInStore;
-    const preferredLocale = lastPreferredLanguage ||
-        FORCE_DEFAULT_LOCALE ||
-        preferredLocaleFromNavigator ||
-        defaultLocale;
-    return preferredLocale.toLowerCase();
+import { getLanguage } from "@dashlane/framework-infra/spi";
+import { detectBestMatchingSupportedCountry } from "./detectLanguage";
+export function getPreferredLanguage(languageOverride?: string): string {
+  const preferredLocale = languageOverride ?? getLanguage();
+  return preferredLocale.toLowerCase();
 }
-export function getPreferredCountry(countryInStore: string, locales: string[], defaultCountry: string): string {
-    const preferredCountryFromNavigator = detectBestMatchingSupportedCountry(window);
-    const lastPreferredCountry = countryInStore;
-    const preferredCountry = preferredCountryFromNavigator || lastPreferredCountry || defaultCountry;
-    return preferredCountry.toUpperCase();
+export function getPreferredCountry(defaultCountry: string): string {
+  const preferredCountryFromNavigator =
+    detectBestMatchingSupportedCountry(window);
+  const preferredCountry = preferredCountryFromNavigator || defaultCountry;
+  return preferredCountry.toUpperCase();
 }

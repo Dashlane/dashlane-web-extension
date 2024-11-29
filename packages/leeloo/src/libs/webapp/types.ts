@@ -1,6 +1,5 @@
-import { CallingCodeCollection, GeographicStateCollection, } from '@dashlane/communication';
+import { GeographicStateCollection } from "@dashlane/communication";
 export interface State {
-    currentSpaceId: string | null;
-    callingCodes?: CallingCodeCollection;
-    geographicStates?: GeographicStateCollection;
+  currentSpaceId: string | null;
+  geographicStates?: GeographicStateCollection;
 }

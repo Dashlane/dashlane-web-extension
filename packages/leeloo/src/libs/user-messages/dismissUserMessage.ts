@@ -1,7 +1,8 @@
-import { carbonConnector } from 'libs/carbon/connector';
+import { carbonConnector } from "../carbon/connector";
 interface DismissUserMessageProps {
-    type: string;
+  type: string;
 }
-export const dismissUserMessage = ({ type }: DismissUserMessageProps) => carbonConnector.dismissUserMessages({
+export const dismissUserMessage = ({ type }: DismissUserMessageProps) =>
+  carbonConnector.dismissUserMessages({
     type,
-});
+  });

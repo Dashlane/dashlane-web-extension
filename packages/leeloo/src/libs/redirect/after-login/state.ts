@@ -1,4 +1,4 @@
 export interface State {
-    redirectPath?: string;
-    hasBeenRedirected: boolean;
+  redirectPath?: string;
+  hasBeenRedirected: boolean;
 }

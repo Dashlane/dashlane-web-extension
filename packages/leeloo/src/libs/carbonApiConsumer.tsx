@@ -3,7 +3,7 @@ import { equals } from 'ramda';
 import { DEFAULT_PARAM, Slot } from 'ts-event-bus';
 import type { Diff, PickByValueExact, Unionize } from 'utility-types';
 import type { ValuesType } from '@dashlane/framework-types';
-import { AsRemoteData, getLoading, getRemoteError, getRemoteSuccess, RemoteData, RemoteDataEmptyTypes, } from 'libs/remoteData';
+import { AsRemoteData, getLoading, getRemoteError, getRemoteSuccess, RemoteData, RemoteDataEmptyTypes, } from './remoteData';
 import { CarbonEvents } from './carbon/connector/events';
 const logPerfs = false;
 type CarbonApiSlot = ValuesType<Unionize<CarbonEvents>>;

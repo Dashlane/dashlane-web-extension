@@ -1,1 +1,1 @@
-export { OneDeviceLimit } from './one-device-limit';
+export { OneDeviceLimit } from "./one-device-limit";

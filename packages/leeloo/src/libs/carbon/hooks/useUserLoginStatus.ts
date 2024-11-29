@@ -1,14 +1,17 @@
-import { DataStatus, useCarbonEndpoint } from '@dashlane/carbon-api-consumers';
-import { carbonConnector } from 'libs/carbon/connector';
-import { GetLoginStatus as UserLoginStatus } from '@dashlane/communication';
+import { DataStatus, useCarbonEndpoint } from "@dashlane/carbon-api-consumers";
+import { carbonConnector } from "../connector";
+import { GetLoginStatus as UserLoginStatus } from "@dashlane/communication";
 export const useUserLoginStatus = (): UserLoginStatus | undefined => {
-    const result = useCarbonEndpoint({
-        queryConfig: {
-            query: carbonConnector.getUserLoginStatus,
-        },
-        liveConfig: {
-            live: carbonConnector.liveLoginStatus,
-        },
-    }, []);
-    return result.status === DataStatus.Success ? result.data : undefined;
+  const result = useCarbonEndpoint(
+    {
+      queryConfig: {
+        query: carbonConnector.getUserLoginStatus,
+      },
+      liveConfig: {
+        live: carbonConnector.liveLoginStatus,
+      },
+    },
+    []
+  );
+  return result.status === DataStatus.Success ? result.data : undefined;
 };

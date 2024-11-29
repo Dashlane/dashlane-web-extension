@@ -1,40 +1,42 @@
-import { Button, Icon, jsx } from '@dashlane/design-system';
-import { DropdownElement, DropdownMenu } from '@dashlane/ui-components';
-import { openUrl } from 'libs/external-urls';
-import useTranslate from 'libs/i18n/useTranslate';
-const SX_STYLES = {
-    LINK: {
-        width: '100%',
-        fontSize: ' 15px',
-        fontStyle: 'normal',
-        lineHeight: '20px ',
-        color: 'ds.text.neutral.catchy',
-    },
-    CONTAINER: {
-        display: 'flex',
-        fontWeight: '400',
-        padding: '10px 6px',
-        alignItems: 'center',
-        gap: '8px',
-    },
-};
+import {
+  DropdownContent,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTriggerButton,
+} from "@dashlane/design-system";
+import { openUrl } from "../external-urls";
 interface Props {
-    dropdownItems: Record<string, {
-        i18nKey: string;
-        url: string;
-    }>;
-    titleKey: string;
+  dropdownItems: Record<
+    string,
+    {
+      label: string;
+      url: string;
+    }
+  >;
+  title: string;
 }
-export const LearnMoreDropdown = ({ dropdownItems, titleKey }: Props) => {
-    const { translate } = useTranslate();
-    return (<DropdownMenu sx={{ zIndex: 1001 }} placement="bottom-start" content={Object.keys(dropdownItems).map((item) => (<DropdownElement key={dropdownItems[item].i18nKey} sx={SX_STYLES.LINK} onClick={() => openUrl(dropdownItems[item].url)}>
-          <div sx={SX_STYLES.CONTAINER} role="link">
-            <Icon name="ActionOpenExternalLinkOutlined" color="ds.text.neutral.catchy"/>
-            {translate(dropdownItems[item].i18nKey)}
-          </div>
-        </DropdownElement>))}>
-      <Button mood="brand" intensity="supershy" icon="CaretDownOutlined" layout="iconTrailing">
-        {translate(titleKey)}
-      </Button>
-    </DropdownMenu>);
+export const LearnMoreDropdown = ({ dropdownItems, title }: Props) => {
+  return (
+    <DropdownMenu>
+      <DropdownTriggerButton
+        mood="brand"
+        intensity="supershy"
+        icon="CaretDownOutlined"
+        layout="iconTrailing"
+      >
+        {title}
+      </DropdownTriggerButton>
+
+      <DropdownContent>
+        {Object.keys(dropdownItems).map((item) => (
+          <DropdownItem
+            key={dropdownItems[item].label}
+            onSelect={() => openUrl(dropdownItems[item].url)}
+            label={dropdownItems[item].label}
+            leadingIcon="ActionOpenExternalLinkOutlined"
+          />
+        ))}
+      </DropdownContent>
+    </DropdownMenu>
+  );
 };

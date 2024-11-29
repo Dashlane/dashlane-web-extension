@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { Redirect } from 'libs/router/dom';
+import * as React from "react";
+import { Redirect } from "./dom";
 export const NotFound = () => {
-    return <Redirect to="/"/>;
+  return <Redirect to="/" />;
 };

@@ -1,7 +1,8 @@
-import { carbonConnector } from 'libs/carbon/connector';
+import { carbonConnector } from "../carbon/connector";
 interface AddUserMessageProps {
-    type: string;
+  type: string;
 }
-export const addUserMessage = ({ type }: AddUserMessageProps) => carbonConnector.addUserMessage({
+export const addUserMessage = ({ type }: AddUserMessageProps) =>
+  carbonConnector.addUserMessage({
     type,
-});
+  });

@@ -1,35 +1,53 @@
-import React from 'react';
-import { useSelector, useStore } from 'react-redux';
-import { DataStatus, useCarbonEndpoint } from '@dashlane/carbon-api-consumers';
-import { carbonConnector } from 'libs/carbon/connector';
-import { redirectAfterLogin } from 'libs/redirect/after-login/helpers';
-import { GlobalState } from 'store/types';
-import { isInitialSyncAnimationPendingSelector } from 'auth/initial-sync-progress/selectors';
+import React, { useState } from "react";
+import { useSelector, useStore } from "react-redux";
+import { redirectAfterLogin } from "../../libs/redirect/after-login/helpers";
+import { GlobalState } from "../../store/types";
+import { isInitialSyncAnimationPendingSelector } from "../initial-sync-progress/selectors";
+import { useRouterGlobalSettingsContext } from "../../libs/router";
+import { DataStatus, useModuleQuery } from "@dashlane/framework-react";
+import { NotAllowedReason, vaultAccessApi } from "@dashlane/session-contracts";
 export function useLoginRedirection() {
-    const endpointResult = useCarbonEndpoint({
-        queryConfig: {
-            query: carbonConnector.getLoginStatus,
-        },
-        liveConfig: {
-            live: carbonConnector.loginStatusChanged,
-        },
-    }, []);
-    const isInitialSyncAnimationPending = useSelector(isInitialSyncAnimationPendingSelector);
-    const store = useStore<GlobalState>();
-    const shouldRedirectAfterLogin = React.useRef(true);
-    React.useEffect(() => {
-        if (endpointResult.status === DataStatus.Success) {
-            const { loggedIn, needsSSOMigration } = endpointResult.data;
-            if (!loggedIn) {
-                shouldRedirectAfterLogin.current = true;
-            }
-            if (loggedIn &&
-                shouldRedirectAfterLogin.current &&
-                !isInitialSyncAnimationPending &&
-                !needsSSOMigration) {
-                redirectAfterLogin(store);
-                shouldRedirectAfterLogin.current = false;
-            }
-        }
-    }, [store, endpointResult, isInitialSyncAnimationPending]);
+  const routerGlobalSettings = useRouterGlobalSettingsContext();
+  const { data, status } = useModuleQuery(vaultAccessApi, "isAllowed");
+  const needsSSOMigration =
+    !data?.isAllowed &&
+    (data?.reasons.includes(NotAllowedReason.RequiresMP2SSOMigration) ||
+      data?.reasons.includes(NotAllowedReason.RequiresSSO2MPMigration));
+  const isInitialSyncAnimationPending = useSelector(
+    isInitialSyncAnimationPendingSelector
+  );
+  const store = useStore<GlobalState>();
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    store.getState().carbon.loginStatus.loggedIn
+  );
+  store.subscribe(() => {
+    setIsLoggedIn(() => store.getState().carbon.loginStatus.loggedIn);
+  });
+  const shouldRedirectAfterLogin = React.useRef(
+    !store.getState().carbon.loginStatus.loggedIn
+  );
+  React.useEffect(() => {
+    if (status !== DataStatus.Success) {
+      return;
+    }
+    if (!isLoggedIn) {
+      shouldRedirectAfterLogin.current = true;
+      return;
+    }
+    if (
+      shouldRedirectAfterLogin.current &&
+      !isInitialSyncAnimationPending &&
+      !needsSSOMigration
+    ) {
+      shouldRedirectAfterLogin.current = false;
+      redirectAfterLogin(store, routerGlobalSettings.routes);
+    }
+  }, [
+    store,
+    status,
+    isInitialSyncAnimationPending,
+    routerGlobalSettings.routes,
+    isLoggedIn,
+    needsSSOMigration,
+  ]);
 }
