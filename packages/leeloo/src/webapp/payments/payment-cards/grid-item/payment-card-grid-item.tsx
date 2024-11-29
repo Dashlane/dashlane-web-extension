@@ -4,7 +4,7 @@ import { PaymentCard, PaymentCardColorType } from "@dashlane/vault-contracts";
 import { colors } from "@dashlane/ui-components";
 import useTranslate from "../../../../libs/i18n/useTranslate";
 import getBackgroundColorForCard from "../../../payment-card-icon/getBackgroundColorForPaymentCard";
-import { getDisplayedCardNumber, _redacted_ } from "../utils";
+import { getDisplayedCardNumber, __REDACTED__ } from "../utils";
 import styles from "./payment-card-grid-item.css";
 const getBorderColor = (itemColorType: PaymentCardColorType) => {
   return itemColorType === PaymentCardColorType.White

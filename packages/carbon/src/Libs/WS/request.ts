@@ -1,6 +1,6 @@
 import { postDataToUrl } from "Utils/index";
 import { CarbonError } from "Libs/Error";
-import { _redacted_ } from "Libs/Http/cloudflare-headers";
+import { __REDACTED__ } from "Libs/Http/cloudflare-headers";
 import { HttpRequestResponseTypes } from "Libs/Http/types";
 import { WSError, WSErrorCode } from "Libs/WS/Errors";
 import { config } from "config-service";

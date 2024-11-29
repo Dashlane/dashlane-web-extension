@@ -26,7 +26,7 @@ export function getLatestBrazeContentCard(publicUserId: string | null) {
   }
   try {
     const brazeApiKey = "__REDACTED__";
-    const baseUrl = "sdk.iad-01.braze.com";
+    const baseUrl = "__REDACTED__";
     initializeBraze(brazeApiKey, {
       baseUrl,
       allowUserSuppliedJavascript: true,

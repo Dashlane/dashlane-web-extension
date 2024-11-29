@@ -5,7 +5,7 @@ import {
   ApplicationModulesAccess,
   PlatformInfo,
 } from "@dashlane/communication";
-import { _redacted_ } from "Libs/Http/cloudflare-headers";
+import { __REDACTED__ } from "Libs/Http/cloudflare-headers";
 import { setConfig } from "config-service";
 import { InitOptions } from "init-options";
 const __REDACTED__ = "__REDACTED__";
@@ -42,7 +42,7 @@ export async function initWebServicesConfig(
     const __REDACTED__ =
       isSuccess(__REDACTED__) && getSuccess(__REDACTED__).api;
     if (__REDACTED__?.override) {
-      _redacted_(
+      __REDACTED__(
         __REDACTED__.cloudflareAccessKeyOverride,
         __REDACTED__.cloudflareSecretKeyOverride
       );
@@ -55,7 +55,10 @@ export async function initWebServicesConfig(
       return;
     }
     if (options.keys.cloudflareAccess && options.keys.cloudflareSecret) {
-      _redacted_(options.keys.cloudflareAccess, options.keys.cloudflareSecret);
+      __REDACTED__(
+        options.keys.cloudflareAccess,
+        options.keys.cloudflareSecret
+      );
     }
     if (options.config.DASHLANE_API_HOST_WITH_SCHEME) {
       setConfig({

@@ -27,7 +27,7 @@ import {
   SessionEncryptorKeys,
 } from "Session/Store/session/types";
 import { getCommonAppSetting } from "Application/ApplicationSettings";
-import { _redacted_ } from "UserManagement/is-internal-test-user";
+import { __REDACTED__ } from "UserManagement/is-internal-test-user";
 const ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 const isTimestampOlderThanADay = (date: number): boolean =>
   Date.now() - date > ONE_DAY_IN_MILLISECONDS;

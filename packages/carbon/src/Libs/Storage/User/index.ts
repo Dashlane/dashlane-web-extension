@@ -9,7 +9,7 @@ import {
 } from "@dashlane/communication";
 import Debugger, { log } from "Logs/Debugger";
 import { PersonalData } from "Session/Store/personalData/types";
-import { _redacted_ } from "UserManagement/is-internal-test-user";
+import { __REDACTED__ } from "UserManagement/is-internal-test-user";
 import { LocalSettings } from "Session/Store/localSettings/types";
 import { SharingData } from "Session/Store/sharingData/types";
 import { SharingSyncState } from "Session/Store/sharingSync";

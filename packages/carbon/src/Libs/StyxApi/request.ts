@@ -24,13 +24,13 @@ import {
 } from "Libs/Http";
 import { assertUnreachable } from "Helpers/assert-unreachable";
 import { getStyxApiCredentials } from "./credentials";
-import { _redacted_ } from "UserManagement/is-internal-test-user";
+import { __REDACTED__ } from "UserManagement/is-internal-test-user";
 import { StyxApiResponse } from "./response";
 import type { AnonymousBaseEvent, UserBaseEvent } from "@dashlane/hermes";
 import { signRequest } from "Libs/DashlaneApi/signature";
 import { ApiCredentials } from "Libs/DashlaneApi/credentials";
 import { ApplicationBuildType, PlatformInfo } from "@dashlane/communication";
-function _redacted_() {}
+function __REDACTED__() {}
 function sendJSONLines(
   methodParams: MethodParams<string>,
   endpointUrl: string,

@@ -7,7 +7,7 @@ import {
   DataLeaksBreachContent,
 } from "DataManagement/Breaches/types";
 import { config } from "config-service";
-import { _redacted_ } from "Libs/Http/cloudflare-headers";
+import { __REDACTED__ } from "Libs/Http/cloudflare-headers";
 const WSNAME = "dataleak";
 const WSVERSION = 1;
 export interface WSDataLeaks {

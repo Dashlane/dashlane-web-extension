@@ -18,7 +18,7 @@ export const useBraze = () => {
       ? publicUserIdQuery.data
       : null;
   const hasBrazeFF = useFeatureFlip(
-    SESSION_FEATURE_FLIPS.BrazeWithDesignSystemDev,
+    SESSION_FEATURE_FLIPS.BrazeWithDesignSystemDev
   );
   const brazeKillSwitchResponse = useIsBrazeContentDisabled();
   const brazeKillSwitchEnabled =

@@ -27,7 +27,7 @@ export function openDashlaneUrl(
   tracking: TrackingParams,
   options: {
     newTab: boolean;
-  } = { newTab: true },
+  } = { newTab: true }
 ) {
   const parsedQueryString = qs.parse(qs.extract(url));
   const queryStringIndex = url.indexOf("?");
@@ -54,7 +54,7 @@ export const onLinkClickOpenDashlaneUrl =
     openDashlaneUrl(url, tracking);
   };
 export const augmentUrlWithProperSsoQueryParameters = (
-  redirectUrl: string,
+  redirectUrl: string
 ): string => {
   const currentLocation = window.location;
   const currentHost = currentLocation.host;

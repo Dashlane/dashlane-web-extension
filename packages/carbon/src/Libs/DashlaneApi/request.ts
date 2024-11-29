@@ -27,7 +27,7 @@ import {
   getApiCredentials,
 } from "Libs/DashlaneApi/credentials";
 import { config } from "config-service";
-import { _redacted_ } from "Libs/Http/cloudflare-headers";
+import { __REDACTED__ } from "Libs/Http/cloudflare-headers";
 import { HttpRequestResponseTypes } from "Libs/Http/types";
 export function getMakeApiRequest<
   AuthType extends ApiAuthType,

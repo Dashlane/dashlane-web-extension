@@ -66,7 +66,7 @@ export const BrazeProvider = ({ children }: Props) => {
     featureFlipsApi,
     "userFeatureFlip",
     { featureFlip: SESSION_FEATURE_FLIPS.BrazeWithDesignSystemDev },
-    { initialSkip: !publicUserId },
+    { initialSkip: !publicUserId }
   );
   const hasBrazeFF = Boolean(featureFlipsData);
   useEffect(() => {
@@ -93,8 +93,8 @@ export const BrazeProvider = ({ children }: Props) => {
     brazeData instanceof ModalMessage
       ? "modal"
       : brazeData instanceof SlideUpMessage
-        ? "slideup"
-        : "other";
+      ? "slideup"
+      : "other";
   const contextValue = useMemo(
     () => ({
       brazeData,
@@ -105,7 +105,7 @@ export const BrazeProvider = ({ children }: Props) => {
       showMessage: showInAppMessage,
       flushBrazeData: setShouldFlushBrazeData,
     }),
-    [brazeData],
+    [brazeData]
   );
   return (
     <BrazeContext.Provider value={contextValue}>
